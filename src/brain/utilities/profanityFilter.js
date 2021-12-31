@@ -7,9 +7,6 @@ import fs from 'fs';
 import { __dirname } from "./__dirname.js";
 import { makeHFRequest } from "./makeHFRequest.js";
 
-import { config } from "dotenv";
-config();
-
 const HF_API_TOKEN = process.env.HF_API_TOKEN;
 
 function nWord(text) {

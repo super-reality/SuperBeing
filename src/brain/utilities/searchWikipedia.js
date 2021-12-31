@@ -1,15 +1,13 @@
-import wiki from 'wikipedia';
-import {
-  __dirname
-} from "./__dirname.js";
-import weaviate from "weaviate-client";
 import fs from 'fs';
+import glob from "glob";
+import weaviate from "weaviate-client";
+import wiki from 'wikipedia';
 import {
   makeGPTRequest
 } from "./makeGPTRequest.js";
-import axios from "axios";
-import path from "path";
-import glob from "glob";
+import {
+  __dirname
+} from "./__dirname.js";
 
 const client = weaviate.client({
   scheme: "http",

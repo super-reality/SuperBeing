@@ -1,5 +1,3 @@
-import { config } from "dotenv";
-config();
 import { Autohook } from 'twitter-autohook';
 import http from 'http';
 import url from 'url';

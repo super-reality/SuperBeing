@@ -26,9 +26,7 @@
     "start-wikibeing": "cross-env TERMINAL=TRUE node src/index.js",
     "dev-thales": "cross-env DEBUG=TRUE TERMINAL=TRUE AGENT=Thales SPEAKER=Eliza node src/index.js",
     "start-morpheus": "cross-env TERMINAL=TRUE AGENT=Morpheus node src/index.js",
-    "dev-morpheus": "cross-env DEBUG=TRUE TERMINAL=TRUE SPEAKER=Neo AGENT=Morpheus node src/index.js",
-    "start-twitter": "cross-env TERMINAL=TRUE AGENT=Shawbot node src/twitter.js",
-    "dev-twitter": "cross-env DEBUG=TRUE TERMINAL=TRUE AGENT=Shawbot node src/twitter.js"
+    "dev-morpheus": "cross-env DEBUG=TRUE TERMINAL=TRUE SPEAKER=Neo AGENT=Morpheus node src/index.js"
   },
   "dependencies": {
     "@2toad/profanity": "^1.3.1",
@@ -42,7 +40,6 @@
     "discord-reply": "0.1.2",
     "discord.js": "13.5.0",
     "dotenv": "10.0.0",
-    "dotenv-flow": "3.2.0",
     "emoji-dictionary": "1.0.11",
     "emoji-regex": "10.0.0",
     "express": "4.17.2",

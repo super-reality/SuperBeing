@@ -1,12 +1,10 @@
 import cors from "cors";
-import { config } from "dotenv";
 import express, { json, urlencoded } from "express";
 import { Server } from "socket.io";
 import { createServer } from "http";
 import { handleInput } from "./handleInput.js";
 import { createAgent } from "./utilities/createAgent.js";
 import { initTerminal } from "./utilities/terminal.js";
-config();
 
 export default function initializeBrain(){
 

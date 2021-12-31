@@ -2,7 +2,7 @@ import { Spine } from "./body/Spine.js";
 import { createWebServer } from "./body/webserver.js";
 import initializeBrain from "./brain/index.js";
 
-import dotenv from "dotenv-flow";
+import dotenv from "dotenv";
 dotenv.config();
 initializeBrain();
 

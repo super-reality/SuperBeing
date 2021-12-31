@@ -1,10 +1,8 @@
-import { handleInput } from "../handleInput.js";
-import { states, prompt, namePrompt } from "./prompt.js";
-import { searchWikipedia } from "./searchWikipedia.js";
-import { __dirname } from "./__dirname.js";
-import { makeGPTRequest } from "./makeGPTRequest.js";
 import fs from "fs";
+import { handleInput } from "../handleInput.js";
 import { createAgent } from "./createAgent.js";
+import { namePrompt, prompt, states } from "./prompt.js";
+import { __dirname } from "./__dirname.js";
 
 let currentState = states.READY;
 
