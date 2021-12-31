@@ -1,6 +1,6 @@
 import fs from "fs";
 import getFilesForSpeakerAndAgent from "./getFilesForSpeakerAndAgent.js";
-import { __dirname } from "./__dirname.js";
+import { __dirname } from "../../__dirname.js";
 
 function makeDirectory(dir){
     // create new directory

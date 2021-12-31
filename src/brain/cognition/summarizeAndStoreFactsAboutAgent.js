@@ -1,7 +1,7 @@
 import fs from "fs";
 import { makeGPTRequest } from "../utilities/makeGPTRequest.js";
 import getFilesForSpeakerAndAgent from "../utilities/getFilesForSpeakerAndAgent.js";
-import { __dirname } from "../utilities/__dirname.js";
+import { __dirname } from "../../__dirname.js";
 
 export async function summarizeAndStoreFactsAboutAgent(speaker, agent, input) {
     const agentFactSummarizationPrompt = fs.readFileSync(__dirname + '/agents/common/agent_fact_summarization.txt').toString().split("\n");

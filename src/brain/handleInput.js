@@ -14,9 +14,8 @@ import { checkThatFilesExist } from "./utilities/checkThatFilesExist.js";
 import getFilesForSpeakerAndAgent from "./utilities/getFilesForSpeakerAndAgent.js";
 import { makeGPTRequest } from "./utilities/makeGPTRequest.js";
 import { evaluateTextAndRespondIfToxic } from "./utilities/profanityFilter.js";
-import { __dirname } from "./utilities/__dirname.js";
+import { __dirname } from "../__dirname.js";
 import { xrEnginePacketHandler } from '../body/xr/xrEnginePacketHandler.js';
-
 
 function respondWithMessage(agent, text, res) {
         if (res) res.status(200).send(JSON.stringify({ result: text }));

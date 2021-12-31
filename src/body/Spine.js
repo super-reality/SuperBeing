@@ -4,8 +4,9 @@ export class Spine {
     static getInstance
     client
 
-    async init(ip, port) {
+    async init() {
         Spine.getInstance = this
+        console.log("Spine inited")
     }
 
     async send(data) {

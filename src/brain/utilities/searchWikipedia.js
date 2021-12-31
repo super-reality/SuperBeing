@@ -7,7 +7,7 @@ import {
 } from "./makeGPTRequest.js";
 import {
   __dirname
-} from "./__dirname.js";
+} from "../../__dirname.js";
 
 const client = weaviate.client({
   scheme: "http",

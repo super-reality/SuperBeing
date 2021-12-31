@@ -1,9 +1,7 @@
-import { handleInput } from "../handleInput.js";
-import { states, prompt, namePrompt } from "./prompt.js";
-import { searchWikipedia } from "./searchWikipedia.js";
-import { __dirname } from "./__dirname.js";
-import { makeGPTRequest } from "./makeGPTRequest.js";
 import fs from "fs";
+import { __dirname } from "../../__dirname.js";
+import { makeGPTRequest } from "./makeGPTRequest.js";
+import { searchWikipedia } from "./searchWikipedia.js";
 
 export async function createAgent(speaker, name, personality, facts) {
 try {

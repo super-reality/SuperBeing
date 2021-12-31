@@ -1,4 +1,4 @@
-import { __dirname } from "./__dirname.js";
+import { __dirname } from "../../__dirname.js";
 import fetch from "node-fetch";
 import { config } from "dotenv";
 config();

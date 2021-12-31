@@ -2,7 +2,7 @@ import fs from "fs";
 import { makeGPTRequest } from "../utilities/makeGPTRequest.js";
 import getFilesForSpeakerAndAgent from "../utilities/getFilesForSpeakerAndAgent.js";
 
-import { __dirname } from "../utilities/__dirname.js";
+import { __dirname } from "../../__dirname.js";
 
 export async function summarizeAndStoreFactsAboutSpeaker(speaker, agent, input) {
     const { summarizationModel } = JSON.parse(fs.readFileSync(__dirname + "/agents/common/config.json").toString());

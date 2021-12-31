@@ -2,7 +2,7 @@ import fs from "fs";
 import { handleInput } from "../handleInput.js";
 import { createAgent } from "./createAgent.js";
 import { namePrompt, prompt, states } from "./prompt.js";
-import { __dirname } from "./__dirname.js";
+import { __dirname } from "../../__dirname.js";
 
 let currentState = states.READY;
 

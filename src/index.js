@@ -1,13 +1,12 @@
 import { Spine } from "./body/Spine.js";
 import { createWebServer } from "./body/webserver.js";
 import initializeBrain from "./brain/index.js";
-
+import { createDiscordClient } from './body/discord/discord-client.js'
 import dotenv from "dotenv";
 dotenv.config();
 initializeBrain();
 
 createWebServer();
-
 
 // new postgres().connect()
 // postgres.getInstance.getBannedUsers(true)
@@ -41,7 +40,7 @@ let enabled_services = (process.env.ENABLED_SERVICES || '').split(',').map(
         await new Spine().init();
         // Discord support
         if (enabled_services.includes('discord')) {
-            await require('./discord/discord-client').createDiscordClient();
+            await createDiscordClient();
         }
         // Reddit support
         if (enabled_services.includes('reddit')) {

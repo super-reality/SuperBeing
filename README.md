@@ -223,7 +223,6 @@ Some values are the api keys, chat history length, editor values, ports used etc
 * `BOT_NAME_HANDLE` - the name that is set for the bot in the chat history in the metaintelligence handler
 * `BOT_NAME_REGEX` - the regex for the bot name, which is used for the bot to understand that someone is starting a conversation with it
 * `ENABLED_SERVICES` - what clients to enable; case-insensitive. Possible options: `Discord`, `Instagram`, `Messenger`, `Reddit`, `Telegram`, `Twilio`, `Twitter`, `Website-reader`, `Whatsapp`, `XR`, `Zoom`.
-* `TCP_PORT` - the TCP port that is used to connect the typescript client with the Python server
 * `EDIT_MESSAGES_MAX_COUNT` - max message to be sent to agent if edited (older messages will be ignored)
 * `CHAT_HISTORY_MESSAGES_COUNT` - the count of chat history fetched in-case the agent needs them
 * `OPENAI_OBSCENITY_DETECTOR` - uses OpenAI for finding obscene messages if set as `1`
@@ -254,7 +253,6 @@ A Discord user can be fetched by enabled the Developer Mode in discord, right cl
 ![alt_text](https://github.com/XRFoundation/DigitalBeing/blob/main/readme_images/Screenshot_284.png)
 
 * `DISCORD_API_TOKEN`
-* `DISCORD_CLIENT_ID`
 * `DISCORD_CLIENT_SECRET`
 * `LOAD_DISCORD_LOGGER` - whether or not to load the external Logger, which sends DMs with logs to a selected user
 * `LOG_DM_USER_ID` - The user that the Logs are sent to

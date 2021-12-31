@@ -2,10 +2,10 @@ import { handleGuildMemberAdd } from './response-events/guildMemberAdd.js'
 import { handleGuildMemberRemove } from './response-events/guildMemberRemove.js'
 import { handleMessageReactionAdd } from './response-events/messageReactionAdd.js'
 import { handleSlashCommand } from './slash_commands/handler.js'
-import { initClient } from './loggingClient.js'
 import { helpFields, _findCommand, _parseWords } from './util.js'
 import { discordPackerHandler } from './discordPackerHandler.js'
 import fs from 'fs'
+import { __dirname } from "../../__dirname.js";
 
 import Discord, {Util, Intents} from 'discord.js'
 // required for message.lineReply
@@ -24,6 +24,7 @@ export let client = undefined
 
 export const createDiscordClient = () => {
     if (!process.env.DISCORD_API_TOKEN) return console.warn('No API token for Discord bot, skipping');
+    console.log("Creating Discord client");
     client = new Discord.Client({
       partials: ['MESSAGE', 'USER', 'REACTION'],
       intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_PRESENCES, Intents.FLAGS.GUILD_MEMBERS, Intents.FLAGS.GUILD_MESSAGES]
@@ -84,5 +85,4 @@ export const createDiscordClient = () => {
 
     client.login(process.env.DISCORD_API_TOKEN);
     new discordPackerHandler(client)
-    initClient('127.0.0.1', 7778)
 };

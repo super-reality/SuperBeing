@@ -1,6 +1,6 @@
 import axios from 'axios';
 import fs from 'fs';
-import { __dirname } from "./__dirname.js";
+import { __dirname } from "../../__dirname.js";
 import { config } from "dotenv";
 import { makeHFRequest } from "./makeHFRequest.js";
 import getFilesForSpeakerAndAgent from "./getFilesForSpeakerAndAgent.js";

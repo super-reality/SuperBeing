@@ -1,5 +1,5 @@
 import fs from "fs";
-import { __dirname } from "./__dirname.js";
+import { __dirname } from "../../__dirname.js";
 
 export default function readRelationshipMatrix(speaker, agent){
     // Check if we have an opinion yet

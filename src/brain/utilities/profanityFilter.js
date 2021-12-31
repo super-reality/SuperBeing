@@ -4,7 +4,7 @@ import grawlixRacism from 'grawlix-racism';
 import getFilesForSpeakerAndAgent from "./getFilesForSpeakerAndAgent.js";
 import { makeGPTRequest } from "./makeGPTRequest.js";
 import fs from 'fs';
-import { __dirname } from "./__dirname.js";
+import { __dirname } from "../../__dirname.js";
 import { makeHFRequest } from "./makeHFRequest.js";
 
 const HF_API_TOKEN = process.env.HF_API_TOKEN;
