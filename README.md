@@ -21,19 +21,6 @@ Digital Being supports:
 
 The Client is using either the API for connecting to the different services like [Discord](https://discord.com/), [Messenger](https://www.messenger.com/), etc, or [Puppeteer](https://github.com/puppeteer/puppeteer) for emulating the browser to connect to the [XR-Engine](https://github.com/XRFoundation/XREngine) and [Zoom]((https://www.zoom.us/)).
 
-Out of the box, the server supports these AI bots:
-
-* [DiaoloGPT](https://huggingface.co/transformers/model_doc/dialogpt.html)
-* [GPTNeo](https://github.com/EleutherAI/gpt-neo)
-* [Wizard of Wikipedia](https://parl.ai/projects/wizard_of_wikipedia/)
-* OpenChat
-* [GPT-j](https://6b.eleuther.ai/)
-* [Droidlet](https://github.com/facebookresearch/fairo)
-* [Rasa](https://rasa.com/)
-* [GPT-3](https://openai.com/blog/openai-api/) by [OpenAI](https://openai.com/)
-* AI agents by Metaintelligence
-* [Thales Agent](https://github.com/DavinciDreams/Thales)
- 
 The server can fetch chat history and transform it to a list.
 
 The `client` is connected with the `server` using `TCP` sockets, sending `JSON`-encoded packets.
@@ -122,7 +109,7 @@ Open `server/agent_params.py` and add / remove the `SELECT_AGENTS` list using th
 
 **Attention**: applies to the installed clients only.
 
-Open `src/initialize.ts` and comment/uncomment the clients you need, if you need a client that uses a web server ([Twilio](https://www.twilio.com/), messenger), go to client/webserver.ts and uncomment line 17 otherwise you can leave it commented.
+Open `src/index.ts` and comment/uncomment the clients you need, if you need a client that uses a web server ([Twilio](https://www.twilio.com/), messenger), go to client/webserver.ts and uncomment line 17 otherwise you can leave it commented.
 
 #### Selecting available agents
 
@@ -132,7 +119,7 @@ Go to `server/agent_params.py` and add the agent name in `SELECTED_AGENTS` array
 
 #### Selecting available clients
 
-Go to the src/initialize.ts and comment/uncomment the needed clients, like this.
+Go to the src/index.ts and comment/uncomment the needed clients, like this.
 
 ![alt_text](https://github.com/XRFoundation/DigitalBeing/blob/main/readme_images/Screenshot_287.png)
 
@@ -372,14 +359,54 @@ The Manager is a web interface to edit variables from the database for the bot.
 * `BOT_MANAGER_SECRET_KEY` - a custom secret key
 * `AVAILABLE_AIS` - Available agents in the bot, separated by the semicolons so spaces can be used, for example: `gpt3;gpt2;test agent`
 
-##### Metaintelligence
-
-* `METAINTELLIGENCE_CONNECTION_STRING` - the connection string for the meta intelligence agent if used
-
-##### Thales
-
-* `THALES_CONNECTION_STRING` - the connection string for the [Thales agent](https://github.com/DavinciDreams/Thales) if used
-
 ##### `GPT-3` agent
 
 * `OPENAI_API_KEY` - OpenAI key that is needed for the `GPT-3` bot to function
+
+
+## Getting Started
+Clone the repo
+
+Then, grab an API key from Open AI.
+https://beta.openai.com/signup
+
+Copy and paste the `.env.default` file, rename to `.env` and put your API key in it.
+
+Now install dependencies and run the project
+```
+npm install
+npm start // start with default agent
+```
+
+## Contibuting
+Contributions welcome
+
+### FOR PROGRAMMERS
+Please look below to TODOs, and contribute what you're interested in. If you have other ideas for features, please give them a try and submit as a PR. Together we can make something really incredible!
+
+### FOR NON PROGRAMMERS
+You can create your own agent entirely by modifying the text prompts, without needing more than to change a few lines of configuration. First, copy the folder in `agents` directory. Then add a command in the package.json -- you can copy one of the existing commands, and change the AGENT environment variable to the name of your personality. Modify the text files -- you can do this while the agent is running -- and explore the responses and history to tune your agent.
+
+Here's a great place to start on your prompt engineering journey: https://www.gwern.net/GPT-3
+## STATES AND STATE MACHINES
+Working on this, stay tuned...
+
+## TODO
+- Interface for adding and editing agents from UI
+- Add new agents through discord / command
+- Switch agent through discord / command
+
+- handle non-sequitors
+
+- Relationship matrix (including gradients)
+- Block repeated inappropriate use + build up enemy
+
+- Identify if question is expert knowledge or not
+- - Neural search for deep knowledge -- if expert knowledge, respond with "good question", "let me think about that..." and do knowledge search
+
+- handle long user input, shorten if it's too long
+- Add up the length of all of the txt files to make sure they aren't super long in debug mode, throw warning if too long or force smaller context / remove memory
+
+- Set creativity, presence and frequency for each prompt type
+
+- Storage adapter to pull all data from either 

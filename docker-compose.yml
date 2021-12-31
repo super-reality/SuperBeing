@@ -8,6 +8,7 @@ services:
       - "db"
     ports:
       - "65535:65535"
+      - "65532:65532"
 
   db:
     restart: always
@@ -21,19 +22,3 @@ services:
       - "5432"
     volumes:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
-  
-  editor:
-    build: .
-    restart: always
-    command: ./editor.sh
-    depends_on:
-      - "db"
-    volumes:
-      - "./:/DigitalBeing"
-    environment:
-      PGHOST: digitalbeing_db
-      PGUSER: digitalbeing
-      PGPASSWORD: digitalbeing_default_pw
-      PGDATABASE: digitalbeing
-    ports:
-      - "7777:7777"
