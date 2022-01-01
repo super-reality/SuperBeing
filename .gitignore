@@ -122,3 +122,4 @@ server/agents/repeat/__pycache__/repeat.cpython-38.pyc
 discordAgents
 conversations
 clips/*
+package-lock.json
