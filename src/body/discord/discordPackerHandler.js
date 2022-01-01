@@ -18,10 +18,10 @@ export class discordPackerHandler {
     async handlePing(message_id, chat_id, responses, addPing) {
         this.client.channels.fetch(chat_id).then(channel => {
             channel.messages.fetch(message_id).then(message => {
-                Object.keys(responses).map(function(key, index) {
-                    console.log('response: ' + responses[key])
-                    if (responses[key] !== undefined && responses[key].length <= 2000 && responses[key].length > 0) {
-                        let text = replacePlaceholders(responses[key])
+                
+                    console.log('response: ' + responses)
+                    if (responses !== undefined && responses.length <= 2000 && responses.length > 0) {
+                        let text = replacePlaceholders(responses)
                         if (addPing) {
                             message.reply(text).then(async function (msg) {
                                 onMessageResponseUpdated(channel.id, message.id, msg.id)
@@ -37,8 +37,8 @@ export class discordPackerHandler {
                             }).catch(console.error)
                         }
                     }
-                    else if (responses[key].length >= 2000) {
-                        let text = replacePlaceholders(responses[key])
+                    else if (responses.length >= 2000) {
+                        let text = replacePlaceholders(responses)
                         if (addPing) {
                             message.reply(text).then(async function (msg) {
                                 onMessageResponseUpdated(channel.id, message.id, msg.id)
@@ -75,7 +75,6 @@ export class discordPackerHandler {
                             }
                         }
                     }
-                });          
                 
             }).catch(err => console.log(err))
         });
@@ -124,9 +123,9 @@ export class discordPackerHandler {
         this.client.channels.fetch(chat_id).then(channel => {
             channel.messages.fetch(message_id).then(message => {
                 Object.keys(responses).map(function(key, index) {
-                    console.log('response: ' + responses[key])
-                    if (responses[key] !== undefined && responses[key].length <= 2000 && responses[key].length > 0) {
-                        let text = replacePlaceholders(responses[key])
+                    console.log('response: ' + responses)
+                    if (responses !== undefined && responses.length <= 2000 && responses.length > 0) {
+                        let text = replacePlaceholders(responses)
                         if (addPing) {
                             message.reply(text).then(async function (msg) {
                                 onMessageResponseUpdated(channel.id, message.id, msg.id)
@@ -142,8 +141,8 @@ export class discordPackerHandler {
                             }).catch(console.error)
                         }
                     }
-                    else if (responses[key].length >= 2000) {
-                        let text = replacePlaceholders(responses[key])
+                    else if (responses.length >= 2000) {
+                        let text = replacePlaceholders(responses)
                         if (addPing) {
                             message.reply(text).then(async function (msg) {
                                 onMessageResponseUpdated(channel.id, message.id, msg.id)
@@ -238,17 +237,17 @@ export class discordPackerHandler {
                             await updateMessage(channel.id, edited.id, edited.content)
 
                             Object.keys(responses).map(async function(key, index) {
-                                console.log('response: ' + responses[key])
-                                if (responses[key] !== undefined && responses[key].length <= 2000 && responses[key].length > 0) {
-                                    let text = replacePlaceholders(responses[key])
+                                console.log('response: ' + responses)
+                                if (responses !== undefined && responses.length <= 2000 && responses.length > 0) {
+                                    let text = replacePlaceholders(responses)
                                     while (text === undefined || text === '' || text.replace(/\s/g, '').length === 0) text = getRandomEmptyResponse()
                                     console.log('response1: ' + text)
                                     msg.edit(text)
                                     onMessageResponseUpdated(channel.id, edited.id, msg.id)
                                     await updateMessage(channel.id, msg.id, msg.content)
                                 }
-                                else if (responses[key].length >= 2000) {
-                                    let text = replacePlaceholders(responses[key])
+                                else if (responses.length >= 2000) {
+                                    let text = replacePlaceholders(responses)
                                     while (text === undefined || text === '' || text.replace(/\s/g, '').length === 0) text = getRandomEmptyResponse()
                                     console.log('response2: ' + text)
                                                 

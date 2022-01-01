@@ -66,18 +66,23 @@ export function getResponse(channel, message) {
 }
 
 export function addMessageToHistory(chatId, messageId, senderName, content) {
+    if(!postgres || !postgres.getInstance) return console.log("Postgres not inited");
     postgres.getInstance.addMessageInHistory('discord', chatId, messageId, senderName, content)
 }
 export async function addMessageInHistoryWithDate(chatId, messageId, senderName, content, timestamp) {
+    if(!postgres || !postgres.getInstance) return console.log("Postgres not inited");
     await postgres.getInstance.addMessageInHistoryWithDate('discord', chatId, messageId, senderName, content, timestamp)
 }
 export async function deleteMessageFromHistory(chatId, messageId) {
+    if(!postgres || !postgres.getInstance) return console.log("Postgres not inited");
     await postgres.getInstance.deleteMessage('discord', chatId, messageId)
 }
 export async function updateMessage(chatId, messageId, newContent) {
+    if(!postgres || !postgres.getInstance) return console.log("Postgres not inited");
     await postgres.getInstance.updateMessage('discord', chatId, messageId, newContent, true)
 }
 export async function wasHandled(chatId, messageId, sender, content, timestamp) {
+    if(!postgres || !postgres.getInstance) return console.log("Postgres not inited");
     return await postgres.getInstance.messageExists('discord', chatId, messageId, sender, content, timestamp)
 }
 

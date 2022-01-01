@@ -6,6 +6,7 @@ import { helpFields, _findCommand, _parseWords } from './util.js'
 import { discordPackerHandler } from './discordPackerHandler.js'
 import fs from 'fs'
 import { __dirname } from "../../__dirname.js";
+import { handleDigitalBeingInput } from "../../brain/handleInput.js"
 
 import Discord, {Util, Intents} from 'discord.js'
 // required for message.lineReply
@@ -16,7 +17,6 @@ const config = {
   "prefixOptionalWhenMentionOrDM": true,
   "bot_name": "Cat"
 }
-
 
 const DISCORD_API_TOKEN = process.env.DISCORD_API_TOKEN 
 
@@ -68,6 +68,11 @@ export const createDiscordClient = () => {
     client.on('messageReactionAdd', async (reaction, user) => {
       handleMessageReactionAdd(reaction, user)
     });
+
+    client.on("message", async message => {
+      console.log(message.content);
+      handleDigitalBeingInput({ message });
+});
 
     client.commands = new Discord.Collection();
 

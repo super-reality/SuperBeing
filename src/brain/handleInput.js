@@ -147,16 +147,17 @@ function generateContext(speaker, agent, conversation) {
 
 // Todo fix me
 export async function handleDigitalBeingInput(data){
-        const responseInput = await handleInput(message, "Speaker", "Agent", res) 
+        console.log("Handling data.message", data);
+        const responseInput = await handleInput(data.message, "Speaker", "Agent") 
     
         console.log(responseInput);
 
-        if (packetId === 0) {
-            const message_id = data.message_id
+        const message_id = data.message.id; // data.message_id
+        const chat_id = data.message.channelId;
             const responses = responseInput
-            const addPing = data.addPing
-            const args = data.args
-    
+            const addPing = true; // data.addPing
+        //     const args = data.args
+    const client_name = "Discord";
             if (client_name === 'Discord') {
                 await discordPackerHandler.getInstance.handlePing(message_id, chat_id, responses, addPing)
             }
@@ -181,64 +182,65 @@ export async function handleDigitalBeingInput(data){
             else if (client_name === 'twitter') {
                 await twitterPacketHandler.getInstance.handleMessage(responses, message_id, chat_id, args)  
             }
-        }
-        else if (packetId === 1) {
-            const response = resp[3]
+
+
+        //     else if (packetId === 1) {
+        //     const response = resp[3]
     
-            if (client_name === 'Discord') {
-                await discordPackerHandler.getInstance.handleSlashCommand(chat_id, response)
-            }
-        }
-        else if (packetId === 2) {
-            const response = resp[3]
+        //     if (client_name === 'Discord') {
+        //         await discordPackerHandler.getInstance.handleSlashCommand(chat_id, response)
+        //     }
+        // }
+        // else if (packetId === 2) {
+        //     const response = resp[3]
     
-            if (client_name === 'Discord') {
-                await discordPackerHandler.getInstance.handleUserUpdateEvent(response)
-            }
-        }
-        else if (packetId === 3) {
-            const response = resp[3]
+        //     if (client_name === 'Discord') {
+        //         await discordPackerHandler.getInstance.handleUserUpdateEvent(response)
+        //     }
+        // }
+        // else if (packetId === 3) {
+        //     const response = resp[3]
     
-            if (client_name === 'Discord') {
-                await discordPackerHandler.getInstance.handleGetAgents(chat_id, response)
-            }
-        } 
-        else if (packetId === 4) {
-            const response = resp[3]
+        //     if (client_name === 'Discord') {
+        //         await discordPackerHandler.getInstance.handleGetAgents(chat_id, response)
+        //     }
+        // } 
+        // else if (packetId === 4) {
+        //     const response = resp[3]
     
-            if (client_name === 'Discord') {
-                await discordPackerHandler.getInstance.handleSetAgentsFields(chat_id, response)
-            }
-        }
-        else if (packetId === 5) {
-            const message_id = resp[3]
-            const response = resp[4]
-            const addPing = resp[5]
+        //     if (client_name === 'Discord') {
+        //         await discordPackerHandler.getInstance.handleSetAgentsFields(chat_id, response)
+        //     }
+        // }
+        // else if (packetId === 5) {
+        //     const message_id = resp[3]
+        //     const response = resp[4]
+        //     const addPing = resp[5]
     
-            if (client_name === 'Discord') {
-                await discordPackerHandler.getInstance.handlePingSoloAgent(chat_id, message_id, response, addPing)
-            }
-        }
-        else if (packetId === 6) {
-            const response = resp[3]
+        //     if (client_name === 'Discord') {
+        //         await discordPackerHandler.getInstance.handlePingSoloAgent(chat_id, message_id, response, addPing)
+        //     }
+        // }
+        // else if (packetId === 6) {
+        //     const response = resp[3]
     
-            if (client_name === 'Discord') {
-                await discordPackerHandler.getInstance.handleMessageReactionAdd(response)
-            }
-        }
-        else if (packetId === 7) {
-            const message_id = resp[3]
-            const responses = resp[4]
-            const addPing = resp[5]
-            const args = resp[6]
+        //     if (client_name === 'Discord') {
+        //         await discordPackerHandler.getInstance.handleMessageReactionAdd(response)
+        //     }
+        // }
+        // else if (packetId === 7) {
+        //     const message_id = resp[3]
+        //     const responses = resp[4]
+        //     const addPing = resp[5]
+        //     const args = resp[6]
     
-            if (client_name === 'Discord') {
-                await discordPackerHandler.getInstance.handleMessageEdit(message_id, chat_id, responses, addPing)
-            }
-            else if (client_name === 'Telegram') {
-                await telegramPacketHandler.getInstance.handleEditMessage(chat_id, message_id, responses, args)
-            }
-        }
+        //     if (client_name === 'Discord') {
+        //         await discordPackerHandler.getInstance.handleMessageEdit(message_id, chat_id, responses, addPing)
+        //     }
+        //     else if (client_name === 'Telegram') {
+        //         await telegramPacketHandler.getInstance.handleEditMessage(chat_id, message_id, responses, args)
+        //     }
+        // }
     }
     
 export async function handleInput(message, speaker, agent, res) {

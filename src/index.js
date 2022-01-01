@@ -38,9 +38,11 @@ let enabled_services = (process.env.ENABLED_SERVICES || '').split(',').map(
 (async function(){  
         // Enable the TCP client
         await new Spine().init();
+        console.log("Initialized spine");
         // Discord support
         if (enabled_services.includes('discord')) {
             await createDiscordClient();
+            console.log("Created Discord client");
         }
         // Reddit support
         if (enabled_services.includes('reddit')) {
