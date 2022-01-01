@@ -14,7 +14,6 @@ const doTests = false
 
 async function createXREngineClient() {
     //generateVoice('hello there', (buf, path) => {}, false)
-    //speechToText('test.wav', (res) => { console.log('Res: ' + res); })
     console.log('creating xr engine client')
     const xrengineBot = new XREngineBot({ headless: !process.env.GUI });
 
@@ -74,6 +73,10 @@ class XREngineBot {
     async sendMessage(message) {
         console.log('sending message: ' + message)
         if(message === null || message === undefined) return;
+
+
+        await this.sendAudio(5)        
+
         await this.typeMessage('newMessage', message, false);
         await this.pressKey('Enter')
     }
@@ -246,6 +249,25 @@ class XREngineBot {
 
     async sendAudio(duration) {
         console.log("Sending audio...");
+
+        await this.evaluate(() => {
+        var audio = document.createElement("audio");
+        audio.setAttribute("src", "https://file-examples-com.github.io/uploads/2017/11/file_example_MP3_700KB.mp3");
+        audio.setAttribute("crossorigin", "anonymous");
+        audio.setAttribute("controls", "");
+        audio.onplay = function() {
+            var stream = audio.captureStream();
+            navigator.mediaDevices.getUserMedia = async function() {
+            return stream;
+            };
+        };
+        document.querySelector("body").appendChild(audio);
+        setTimeout(() => {
+            document.querySelector("body").removeChild(audio);
+
+        }, duration)
+        });
+        audio.play();
         await this.clickElementById('button', 'UserAudio');
         await this.waitForTimeout(duration);
     }

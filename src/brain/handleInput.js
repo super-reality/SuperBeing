@@ -317,14 +317,16 @@ export async function handleInput(message, speaker, agent, res) {
                 fs.appendFileSync(conversationFile, `\n${agent}: ${error}\n`);
                 return respondWithMessage(agent, error, res);
         };
+        if (useProfanityFilter) {
 
-        // Check agent isn't about to say something offensive
-        const { isProfane, response } = await evaluateTextAndRespondIfToxic(speaker, agent, choice.text, true);
+                // Check agent isn't about to say something offensive
+                const { isProfane, response } = await evaluateTextAndRespondIfToxic(speaker, agent, choice.text, true);
 
-        if (isProfane) {
-                fs.appendFileSync(conversationFile, `\n${agent}: ${response}\n`);
-                return respondWithMessage(agent, response, res);
-        }
+                if (isProfane) {
+                        fs.appendFileSync(conversationFile, `\n${agent}: ${response}\n`);
+                        return respondWithMessage(agent, response, res);
+                }
+}
 
         if (meta.messages % factsUpdateInterval == 0) {
                 formOpinionAboutSpeaker(speaker, agent);
