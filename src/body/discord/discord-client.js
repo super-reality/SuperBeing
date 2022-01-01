@@ -46,17 +46,19 @@ export const createDiscordClient = () => {
 
     client.embed = embed;
 
-    fs.readdir(`${__dirname}/events/`, (err, files) => {
+    fs.readdir(`${__dirname}/src/body/discord/events/`, async (err, files) => {
       if (err) return console.error(err);
-      files.forEach(file => {
-        const event = require(`${__dirname}/events/${file}`);
+      files.forEach(async file => {
+        if (!file.endsWith(".js")) return;
+        const eventFunc = await import(`${__dirname}/src/body/discord/events/${file}`);
         let eventName = file.split(".")[0];
-        client.on(eventName, event.bind(null, client));
+        client.on(eventName, eventFunc.default.bind(null, client));
         console.log('registered event: ' + eventName)
       });
     });
 
-    client.ws.on('INTERACTION_CREATE', async interaction => {
+    client.on('interactionCreate', async interaction => {
+      console.log("Handling interaction", interaction);
       handleSlashCommand(client, interaction)
     });
     client.on('guildMemberAdd', async user => {
@@ -76,11 +78,12 @@ export const createDiscordClient = () => {
 
     client.commands = new Discord.Collection();
 
-    fs.readdir(`${__dirname}/commands/`, (err, files) => {
+    fs.readdir(`${__dirname}/src/body/discord/commands/`, (err, files) => {
       if (err) return console.error(err);
-      files.forEach(file => {
-        if (!file.endsWith(".ts")) return;
-        let props = require(`${__dirname}/commands/${file}`);
+      files.forEach(async file => {
+        if (!file.endsWith(".js")) return;
+        const i = await import(`${__dirname}/src/body/discord/commands/${file}`);
+        let props = i;
         let commandName = file.split(".")[0];
         console.log(`Attempting to load command ${commandName}`);
         client.commands.set(commandName, props);

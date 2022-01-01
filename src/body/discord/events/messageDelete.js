@@ -1,6 +1,6 @@
 import { deleteMessageFromHistory, getResponse, onMessageDeleted } from "../chatHistory.js";
 
-module.exports = async (client, message) => {
+export default async (client, message) => {
     const {author, channel, id} = message; 
     await deleteMessageFromHistory(channel.id, id)
     if (author.id === client.user.id) return

@@ -3,7 +3,7 @@ import { userDatabase } from "../../userDatabase.js";
 import { getResponse, updateMessage } from "../chatHistory.js";
 import { channelTypes } from "../util.js";
 
-module.exports = async (client, message) => {
+export default async (client, message) => {
     const {author, channel, id} = message;
     if (author === null || channel === null || id === null) return
     if (userDatabase.getInstance.isUserBanned(author.id, 'discord')) return

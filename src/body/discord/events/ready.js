@@ -2,7 +2,7 @@ import { Spine } from "../../Spine.js";
 import { deleteMessageFromHistory, wasHandled } from "../chatHistory.js";
 import { channelTypes } from "../util.js";
 
-module.exports = async (client) => {
+export default async (client) => {
     await client.users.fetch(process.env.LOG_DM_USER_ID).then((user) => {
         client.log_user = user
     }).catch((error) => { console.log(error) });

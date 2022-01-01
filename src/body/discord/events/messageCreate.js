@@ -6,12 +6,12 @@ import {
     addMessageToHistory, exitConversation, isInConversation,
     moreThanOneInConversation, prevMessage, prevMessageTimers,
     sentMessage
-} from '../chatHistory'
-import { channelTypes } from '../util'
-const emojiRegex = require('emoji-regex')
-const emoji = require('emoji-dictionary')
+} from '../chatHistory.js'
+import { channelTypes } from '../util.js'
+import emojiRegex from 'emoji-regex'
+import emoji from 'emoji-dictionary'
 
-module.exports = async (client, message) => {
+export default async (client, message) => {
     const reg = emojiRegex();
     let match;
     let emojis = []

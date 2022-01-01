@@ -1,6 +1,6 @@
 import { Spine } from "../../Spine.js";
 
-module.exports = async (client, oldMember, newMember) => {
+export default async (client, oldMember, newMember) => {
     if (oldMember.status !== newMember.status) {
         const date = new Date();
         const utc = new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds());

@@ -13,9 +13,11 @@ export class Spine {
         console.log("Attempting to send data");
         console.log(data);
         console.log("Handling message")
-        // if(data.message)
-        const inputResponse = await handleInput(data.message, client_name);
-        console.log("input response is: " + inputResponse);
+        if(data.message){
+            const inputResponse = await handleInput(data.message, data.client_name);
+            console.log("input response is: " + inputResponse);
+
+        }
 
         // if (this.client !== undefined) {
         //     this.client.write(json)
