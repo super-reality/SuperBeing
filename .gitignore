@@ -120,3 +120,4 @@ yarn.lock
 *.scorer
 server/agents/repeat/__pycache__/repeat.cpython-38.pyc
 discordAgents
+conversations
