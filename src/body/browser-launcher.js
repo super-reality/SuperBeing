@@ -23,4 +23,4 @@ class BrowserLauncher {
     }
 }
 
-module.exports = new BrowserLauncher()
+export default new BrowserLauncher()

@@ -1,3 +1,4 @@
+import browserLauncher from '../browser-launcher.js';
 import { PageUtils } from "../pageUtils.js";
 import { Spine } from "../Spine.js";
 import { userDatabase } from "../userDatabase.js";
@@ -6,9 +7,8 @@ import { handleMessages } from "./messageHandler.js";
 import { UsersInHarassmentRange, UsersInIntimateRange, UsersInRange, UsersLookingAt } from "./UsersInRange.js";
 import { xrEnginePacketHandler } from "./xrEnginePacketHandler.js";
 
-const XRENGINE_URL = process.env.XRENGINE_URL || 'https://dev.theoverlay.io/location/test';
+const XRENGINE_URL = process.env.XRENGINE_URL || 'https://localhost:3000/location/test';
 
-const browserLauncher= require('../../src/browser-launcher')
 
 const doTests = false
 
@@ -28,8 +28,8 @@ async function createXREngineClient() {
     await xrengineBot.delay(10000)
     console.log('bot delay done')*/
     
-/*await xrengineBot.sendMessage("Hello World! I have connected.")
-
+await xrengineBot.sendMessage("Hello World! I have connected.")
+/*
     await new Promise((resolve) => {
         setTimeout(() => xrengineBot.enterRoom(XRENGINE_URL, { name: "TestBot" }), 1000);
     });
@@ -150,7 +150,7 @@ class XREngineBot {
     async getScale(player) {
         if (player === undefined || player === '') return
 
-        await this.sendAudio(`/getScale ${player}`)
+        await this.sendMessage(`/getScale ${player}`)
     }
     async getTransform(player) {
         if (player === undefined || player === '') return
@@ -185,24 +185,24 @@ class XREngineBot {
     counter  = 0
     async getInstanceMessages() {
         //#region  Tests
-        if (doTests) {
-            this.counter++
-            if (this.counter === 10) this.playEmote('dance1')
-            if (this.counter === 20) this.requestSceneMetadata()
-            if (this.counter === 25) this.sendMovementCommand(1, 1, 1)
-            //if (this.counter === 35) this.requestWorldMetadata(5)
-            //if (this.counter === 40) this.requestAllWorldMetadata()
-            if (this.counter === 25) this.sendMovementCommand(2, 2, 2)
-            //if (this.counter === 50) this.follow('alex')
-            //if (this.counter === 60) this.follow('stop')
-            //if (this.counter === 70) this.goTo('Window')
-           // if (this.counter === 75) this.getChatHistory()
-            //if (this.counter === 80) this.requestPlayers()
-        }
+        // if (doTests) {
+        //     this.counter++
+        //     if (this.counter === 10) this.playEmote('dance1')
+        //     if (this.counter === 20) this.requestSceneMetadata()
+        //     if (this.counter === 25) this.sendMovementCommand(1, 1, 1)
+        //     //if (this.counter === 35) this.requestWorldMetadata(5)
+        //     //if (this.counter === 40) this.requestAllWorldMetadata()
+        //     if (this.counter === 25) this.sendMovementCommand(2, 2, 2)
+        //     //if (this.counter === 50) this.follow('alex')
+        //     //if (this.counter === 60) this.follow('stop')
+        //     //if (this.counter === 70) this.goTo('Window')
+        //    // if (this.counter === 75) this.getChatHistory()
+        //     //if (this.counter === 80) this.requestPlayers()
+        // }
         //#endregion
 
-        await this.updateChannelState()
-        if(!this.activeChannel) return;
+        await this.updateChannelState();
+        if(!this.activeChannel) return console.log("No active channel");
         const messages = this.activeChannel.messages;
         if (messages === undefined || messages === null) return;
 
@@ -221,7 +221,7 @@ class XREngineBot {
             messages[i].author = ['xr-engine', senderId]
 
             if (this.chatHistory.includes(messageId) || this.userId === senderId || 
-                userDatabase.getInstance.isUserBanned(senderId, 'xr-engine')) {
+                (userDatabase.getInstance && userDatabase.getInstance.isUserBanned(senderId, 'xr-engine'))) {
                 const index  = await this.getMessageIndex(messages, messageId)
                 if (index > -1) messages.splice(index, 1)
             }
@@ -310,9 +310,9 @@ class XREngineBot {
     }
 
     /**
-     * Runs a funciton in the browser context
+     * Runs a function in the browser context
      * @param {Function} fn Function to evaluate in the browser context
-     * @param args The arguments to be passed to fn. These will be serailized when passed through puppeteer
+     * @param args The arguments to be passed to fn. These will be serialized when passed through puppeteer
      */
     async evaluate(fn, ...args) {
         if (!this.browser) {
@@ -517,6 +517,7 @@ class XREngineBot {
 
         await this.getUser()
         await this.updateChannelState()
+
         await this.updateUsername(name)
         await this.delay(10000)
         const index = this.getRandomNumber(0, this.avatars.length - 1)
@@ -541,6 +542,7 @@ class XREngineBot {
             const channelState = chatState.channels;
             const channels = channelState.channels.value;
             const activeChannelMatch = Object.entries(channels).find(([key, channel]) => channels[key].channelType === 'instance');
+            console.log("activeChannelMatch: ", activeChannelMatch);
             if (activeChannelMatch && activeChannelMatch.length > 0) {
                 const res = deepCopy(activeChannelMatch[1]);
 
@@ -650,4 +652,4 @@ class XREngineBot {
     }
 }
 
-module.exports = { createXREngineClient }
+export default createXREngineClient

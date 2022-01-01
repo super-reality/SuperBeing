@@ -11,6 +11,8 @@ export class Spine {
 
     async send(data) {
         console.log("Attempting to send data");
+        console.log("data.message?", data.message);
+        console.log("data is", data);
         if(data.message){
             const inputResponse = await handleInput(data.message, data.client_name);
             console.log("input response is: " + inputResponse);

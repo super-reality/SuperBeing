@@ -1,4 +1,4 @@
-import * as pg from 'pg';
+import pg from 'pg';
 const { Client } = pg;
 import { chatFilter } from './chatFilter.js';
 import { userDatabase } from './userDatabase.js';

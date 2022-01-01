@@ -10,7 +10,8 @@ import {
 import { channelTypes } from '../util.js'
 import emojiRegex from 'emoji-regex'
 import emoji from 'emoji-dictionary'
-import { handleDigitalBeingInput } from "../../../brain/handleInput.js";
+import { handleInput } from "../../../brain/handleInput.js";
+import { discordPackerHandler } from '../discordPackerHandler.js';
 
 export default async (client, message) => {
     const reg = emojiRegex();
@@ -209,45 +210,13 @@ export default async (client, message) => {
     // so if msg does not contain prefix and either of
     //   1. optional flag is not true or 2. bot has not been DMed or mentioned,
     // then skip the message.
-
     if (!containsPrefix && (!prefixOptionalWhenMentionOrDM || (!isMention && !isDM))) return;
 
-    // Our standard argument/command name definition.
-    args['parsed_words'] = (containsPrefix
-        ? messageContent.slice(client.config.prefix.length)
-        : messageContent)
-        .trim().split(/ +/g);
-    const command = args['parsed_words'].shift().toLowerCase();
+    setTimeout(() => {
+        channel.sendTyping();
 
-    // Grab the command data from the client.commands Enmap
-    let cmd = client.commands.get(command);
+    }, message.content.length)
 
-    args['command_info'] = client._findCommand(command);
-    args['grpc_args']['sender'] = author.username;
-    if (args['command_info']) {
-        args['command'] = args['command_info'][0];
-        args['grpc_args']['message'] = messageContent.replace("!" + args['command'], "");  //remove .command from message
-        args['grpc_method'] = args['command_info'][1][0];
-        args['grpc_method_params'] = args['command_info'][2];
-    }
-    if (args['command'] == 'setagent' || args['command'] == 'pingagent') {
-        const splitArgs = args['grpc_args']['message'].trim().split(",");
-        splitArgs.forEach(element => {
-            args['grpc_args'][element.trim().split("=")[0]] = element.trim().split("=")[1];
-        });
-    }
-    if (channel.type === channelTypes['thread']) {
-        args['grpc_args']['isThread'] = true
-        args['grpc_args']['parentId'] = channel.parentId
-    } else {
-        args['grpc_args']['isThread'] = false
-    }
-
-    // If that command doesn't exist, silently exit and do nothing
-    if (!cmd) return;
-
-    channel.sendTyping();
-    handleDigitalBeingInput({ client, message, username: message.author.username, addPing, channelId: channel.id, clientName: "Discord" });
-    // Run the command
-    // cmd.run(client, message, args, author, addPing, channel.id).catch(err => console.log(err))
+    const response = await handleInput(message.content, message.author.username, process.env.AGENT ?? "Agent")
+    await discordPackerHandler.getInstance.handlePing(message.id, channel.id, response, addPing)
 };

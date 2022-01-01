@@ -1,6 +1,7 @@
-import { Spine } from "../Spine.js";
 import { startsWithCapital } from "../utils.js";
 import { addMessageToHistory, exitConversation, isInConversation, moreThanOneInConversation, prevMessage, prevMessageTimers, saveIfHandled, sentMessage, wasHandled } from "./chatHistory.js";
+import { handleInput } from "../../brain/handleInput.js";
+import { xrEnginePacketHandler } from "./xrEnginePacketHandler.js";
 
 export async function handleMessages(messages, bot) {
     for (let i = 0; i < messages.length; i++) {
@@ -37,6 +38,7 @@ export async function handleMessages(messages, bot) {
             let content = messages[i].text
             console.log('handling message: ' + content)
             await addMessageToHistory(messages[i].channelId, messages[i].id, _sender, content)
+            console.log("Message added to history")
             let addPing = false
             let _prev = undefined
             _prev = prevMessage[messages[i].channelId]
@@ -89,7 +91,15 @@ export async function handleMessages(messages, bot) {
             var utc = new Date(dateNow.getUTCFullYear(), dateNow.getUTCMonth(), dateNow.getUTCDate(), dateNow.getUTCHours(), dateNow.getUTCMinutes(), dateNow.getUTCSeconds());
             const utcStr = dateNow.getDate() + '/' + (dateNow.getMonth() + 1) + '/' + dateNow.getFullYear() + ' ' + utc.getHours() + ':' + utc.getMinutes() + ':' + utc.getSeconds()
 
-            Spine.getInstance.sendMessage(content.replace('!ping', ''), messages[i].id, 'xr-engine', messages[i].channelId, utcStr, addPing, _sender, _sender)
+
+            // 
+            console.log("Sending out input");
+            const response = await handleInput(content.replace('!ping', ''), _sender, process.env.AGENT ?? "Agent")
+            console.log("Handling response");
+            await xrEnginePacketHandler.getInstance.handleXREngineResponse(response, addPing, _sender)
+
+            
+            // Spine.getInstance.sendMessage(content.replace('!ping', ''), messages[i].id, 'xr-engine', messages[i].channelId, utcStr, addPing, _sender, _sender)
         })
         
     }

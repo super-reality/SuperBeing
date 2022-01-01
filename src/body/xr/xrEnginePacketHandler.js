@@ -10,20 +10,19 @@ export class xrEnginePacketHandler {
         xrEnginePacketHandler.getInstance = this
     }
 
-    async handleXrEnginePacket(responses, addPing, _sender) {
-        Object.keys(responses).map(function(key, index) {
-            console.log('response: ' + responses[key])
-            if (responses[key] !== undefined && responses[key].length <= 2000 && responses[key].length > 0) {
-                let text = responses[key]
+    async handleXREngineResponse(responses, addPing, _sender) {
+            console.log('response: ' + responses)
+            if (responses !== undefined && responses.length <= 2000 && responses.length > 0) {
+                let text = responses
                 while (text === undefined || text === '' || text.replace(/\s/g, '').length === 0) text = getRandomEmptyResponse()
                 if (addPing) text = _sender + ' ' + text
                 xrEnginePacketHandler.getInstance.bot.sendMessage(text)         
             }
-            else if (responses[key].length > 2000) {
+            else if (responses.length > 2000) {
                 const lines = []
                 let line = ''
-                for(let i = 0; i < responses[key].length; i++) {
-                    line+= responses[key]
+                for(let i = 0; i < responses.length; i++) {
+                    line+= responses
                     if (i >= 1980 && (line[i] === ' ' || line[i] === '')) {
                         lines.push(line)
                         line = ''
@@ -50,6 +49,5 @@ export class xrEnginePacketHandler {
                 if (addPing) emptyResponse = _sender + ' ' + emptyResponse
                 xrEnginePacketHandler.getInstance.bot.sendMessage(emptyResponse)         
             }
-        });   
     }
 }

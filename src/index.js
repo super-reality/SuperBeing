@@ -3,12 +3,13 @@ import { createWebServer } from "./body/webserver.js";
 import initializeBrain from "./brain/index.js";
 import { createDiscordClient } from './body/discord/discord-client.js'
 import dotenv from "dotenv";
+import { postgres } from "./body/postgres.js";
 dotenv.config();
 initializeBrain();
 
 createWebServer();
 
-// new postgres().connect()
+new postgres().connect()
 // postgres.getInstance.getBannedUsers(true)
 // postgres.getInstance.getChatFilterData(true)
 
@@ -78,7 +79,8 @@ let enabled_services = (process.env.ENABLED_SERVICES || '').split(',').map(
         }
         // XREngine support
         if (enabled_services.includes('xrengine')) {
-            await require('./xr/xrengine-client').createXREngineClient();
+            const module = await import('./body/xr/xrengine-client.js');
+            module.default();
         }
         // Zoom support
         if (enabled_services.includes('zoom')) {

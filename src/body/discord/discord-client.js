@@ -6,7 +6,6 @@ import { helpFields, _findCommand, _parseWords } from './util.js'
 import { discordPackerHandler } from './discordPackerHandler.js'
 import fs from 'fs'
 import { __dirname } from "../../__dirname.js";
-import { handleDigitalBeingInput } from "../../brain/handleInput.js"
 
 import agents from "./commands/agents.js"
 import ban from "./commands/ban.js"

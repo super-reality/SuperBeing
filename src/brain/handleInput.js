@@ -167,7 +167,7 @@ export async function handleDigitalBeingInput(data) {
                 await handleTwilio.getInstance.handleTwilioMsg(channelId, response)
         }
         else if (clientName === 'xr-engine') {
-                await xrEnginePacketHandler.getInstance.handleXrEnginePacket(response, addPing, args)
+                await xrEnginePacketHandler.getInstance.handleXREngineResponse(response, addPing, args)
         }
         else if (clientName === 'reddit') {
                 await redditHandler.getInstance.handleMessage(response, message_id, channelId, args);

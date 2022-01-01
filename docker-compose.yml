@@ -1,15 +1,5 @@
-version: "3.9"
+version: "3.3"
 services:
-  bot:
-    build: .
-    volumes:
-      - "./:/DigitalBeing"
-    depends_on:
-      - "db"
-    ports:
-      - "65535:65535"
-      - "65532:65532"
-
   db:
     restart: always
     image: postgres
@@ -19,6 +9,6 @@ services:
       POSTGRES_USER: digitalbeing
       POSTGRES_PASSWORD: digitalbeing_default_pw
     ports:
-      - "5432"
+      - "5432:5432"
     volumes:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
