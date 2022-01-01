@@ -1,6 +1,6 @@
 # About
 
-[SuperBeing](https://github.com/super-reality/SuperBeing) a complete AI agent who can access all of your favorite AI services.
+[SuperBeing](https://github.com/super-reality/SuperBeing) a complete AI agent who you can interact with through most popular services.
 
 [Made in partnership with **XR Foundation** to make free, open agents for the Verse.](https://xrfoundation.io)
 
@@ -14,10 +14,10 @@ SuperBeing supports:
 * [Telegram](https://telegram.org/) (Groupmessages , DMs)
 * [Twilio](https://www.twilio.com/) (SMS)
 * [WhatsAPP](https://www.whatsapp.com/) (untested)
-* [XR-Engine](https://github.com/XRFoundation/XREngine) (chat, also supports commands and events from other users - proximity, emotions, etc.)
+* [XREngine](https://github.com/XRFoundation/XREngine) (chat, also supports commands and events from other users - proximity, emotions, etc.)
 * [Zoom](https://www.zoom.us/) (unfinished, supports video group calls).
 
-The Client is using either the API for connecting to the different services like [Discord](https://discord.com/), [Messenger](https://www.messenger.com/), etc, or [Puppeteer](https://github.com/puppeteer/puppeteer) for emulating the browser to connect to [XR-Engine](https://github.com/XRFoundation/XREngine) and [Zoom]((https://www.zoom.us/)).
+The Client is using either the API for connecting to the different services like [Discord](https://discord.com/), [Messenger](https://www.messenger.com/), etc, or [Puppeteer](https://github.com/puppeteer/puppeteer) for emulating the browser to connect to [XREngine](https://github.com/XRFoundation/XREngine) and [Zoom]((https://www.zoom.us/)).
 
 ## Requirements
 
@@ -120,9 +120,9 @@ wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
 sudo apt -y install ./google-chrome-stable_current_amd64.deb
 ```
 
-#### XR-Engine Support:
+#### XREngine Support:
 
-[DigitalBeing](https://github.com/XRFoundation/DigitalBeing) is able to connect to the [XR-Engine](https://github.com/XRFoundation/XREngine) using [Puppeteer](https://github.com/puppeteer/puppeteer).
+[DigitalBeing](https://github.com/XRFoundation/DigitalBeing) is able to connect to the [XREngine](https://github.com/XRFoundation/XREngine) using [Puppeteer](https://github.com/puppeteer/puppeteer).
 
 DigitalBeing is able to imitate a character in XR-engine and access its functions. It currently selects a random model.
 It works using a virtual headful client (runs like headless, but in headful mode virtual, as puppeteer doesn't support Audio and Video in headless mode) in the engine.
@@ -152,7 +152,7 @@ Available Commands - all commands start with a slash (`/`):
 
 #### Scripts Structure:
 
-The [XR-Engine](https://github.com/XRFoundation/XREngine) engine is one of the DB’s clients, it can handle multiple clients at once though.
+[XREngine](https://github.com/XRFoundation/XREngine) is one of the DB’s clients, it can handle multiple clients at once though.
 
 There are multiple scripts for the xr-engine:
 
@@ -161,7 +161,7 @@ There are multiple scripts for the xr-engine:
 `Stt.js`  - handles the speech to text engine
 `Tts.js` - handles the text to speech engine
 `UsersInRange.js` - holds lists of users around the bot
-`Xrengine-client.js` - is the main script for the XR-Engine, it holds all the functions that use the puppeteer
+`Xrengine-client.js` - is the main script for XREngine, it holds all the functions that use the puppeteer
 `xrEnginePacketHandler.js` - handles the received packets from the python server
 
 #### `.env` config file
@@ -231,7 +231,7 @@ In order to create a bot in telegram, you will need to install the APP in an And
 
 * `TELEGRAM_BOT_TOKEN`
 
-##### XR-Engine
+##### XREngine
 
 In order to use the xr-engine you will need to [install](https://github.com/XRFoundation/XREngine/blob/dev/tutorial/01-installation.md) the engine, then for the URL variable just apply the `URL` for the engine using the location you want the bot to enter, for example [https://localhost:3000/location/test](https://localhost:3000/location/test). This `URL` will make the bot to connect to the `XR-engine` that is setup locally on Port `3000` in the location test.
 
@@ -245,7 +245,7 @@ In order to use the xr-engine you will need to [install](https://github.com/XRFo
 
 ##### Harmony
 
-Harmony runs the same way with the `XR-Engine`, though the url is [https://localhost:3000/harmony](https://localhost:3000/harmony) for a local test.
+Harmony runs the same way with `XREngine`, though the url is [https://localhost:3000/harmony](https://localhost:3000/harmony) for a local test.
 
 * `HARMONY_URL`
 
