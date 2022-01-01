@@ -1,6 +1,6 @@
 # About
 
-[SuperBeing](https://github.com/super-reality/SuperBeing) a complete AI agent who can access all of your favorite AI services.
+[SuperBeing](https://github.com/super-reality/SuperBeing) a complete AI agent who you can interact with through most popular services.
 
 [Made in partnership with **XR Foundation** to make free, open agents for the Verse.](https://xrfoundation.io)
 
