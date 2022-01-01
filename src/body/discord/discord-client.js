@@ -70,8 +70,8 @@ export const createDiscordClient = () => {
     });
 
     client.on("message", async message => {
-      console.log(message.content);
-      handleDigitalBeingInput({ message });
+      if(message.author.username.includes("GPTBot")) return;
+      handleDigitalBeingInput({ message, username: message.author.username, client_name: "Discord" });
 });
 
     client.commands = new Discord.Collection();

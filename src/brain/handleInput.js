@@ -148,16 +148,16 @@ function generateContext(speaker, agent, conversation) {
 // Todo fix me
 export async function handleDigitalBeingInput(data){
         console.log("Handling data.message", data);
-        const responseInput = await handleInput(data.message, "Speaker", "Agent") 
+        const responseInput = await handleInput(data.message.content, data.username, process.env.AGENT ?? "Agent") 
     
         console.log(responseInput);
 
         const message_id = data.message.id; // data.message_id
         const chat_id = data.message.channelId;
             const responses = responseInput
-            const addPing = true; // data.addPing
+            const addPing = false; // data.addPing
         //     const args = data.args
-    const client_name = "Discord";
+    const client_name = data.client_name;
             if (client_name === 'Discord') {
                 await discordPackerHandler.getInstance.handlePing(message_id, chat_id, responses, addPing)
             }
