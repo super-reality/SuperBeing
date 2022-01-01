@@ -1,12 +1,10 @@
 # About
 
-[Digital Being](https://github.com/XRFoundation/DigitalBeing) is a software that connects AI agents with a range of IM and VR software, making their deployment easier. You pick a bot, fill the account data and you're able to converse with a bot using SMS, Twitter or other social media.
+[SuperBeing](https://github.com/super-reality/SuperBeing) a complete AI agent who can access all of your favorite AI services.
 
-[Made in partnership with **SuperReality**, a free open source teaching platform for everyone.](https://superreality.com)
+[Made in partnership with **XR Foundation** to make free, open agents for the Verse.](https://xrfoundation.io)
 
-[Digital Being](https://github.com/XRFoundation/DigitalBeing) is written in [Typescript](https://www.typescriptlang.org/) and [Python](https://www.python.org/). Typescript is used for the clients of most known social networks, as well as [XR-Engine](https://github.com/XRFoundation/XREngine), a 3D metaverse architecture. A layer that connects the AI agents is called the server, and is written in [Python](https://www.python.org/).
-
-Digital Being supports:
+SuperBeing supports:
 
 * [Discord](https://discord.com/) (Servers, Threads, DMs)
 * [Twitter](https://twitter.com/) (Tweets, DMs)
@@ -19,34 +17,12 @@ Digital Being supports:
 * [XR-Engine](https://github.com/XRFoundation/XREngine) (chat, also supports commands and events from other users - proximity, emotions, etc.)
 * [Zoom](https://www.zoom.us/) (unfinished, supports video group calls).
 
-The Client is using either the API for connecting to the different services like [Discord](https://discord.com/), [Messenger](https://www.messenger.com/), etc, or [Puppeteer](https://github.com/puppeteer/puppeteer) for emulating the browser to connect to the [XR-Engine](https://github.com/XRFoundation/XREngine) and [Zoom]((https://www.zoom.us/)).
-
-The server can fetch chat history and transform it to a list.
-
-The `client` is connected with the `server` using `TCP` sockets, sending `JSON`-encoded packets.
-
-Right now these TCP packets may contain:
-
-* `sendMessage` - chat packet message
-* `sendSlashCommand` - Discord slash command - can be implemented to other clients too
-* `sendUserUpdateEvent` - on Discord join server, leave, on online, idle or offline, all events can be fed to agents
-* `sendGetAgents` - returns a list of the active agents
-* `sendSetAgentsFields` - this command can be used to update the context of an agent
-* `sendPingSoloAgent` - this command can be used to ping an agent directly, if many agents are active
-* `sendMessageReaction` - this command is sent when a user reacts to a message, currently implemented in Discord
-* `sendMessageEdit` - this command is sent when a message is edited, in order to update the agent’s response too
-* `sendMetadata` - this command is used to send the metadata of the current server - currently implemented in Discord and the [XR-Engine](https://github.com/XRFoundation/XREngine)
-
-New packets can be implemented easily, the only thing to be noted is that the ID should be different from the old packets, also the packet should be sent as a `JSON` string, like the examples, to avoid any issues with the server.
-More info about [Networking](https://docs.google.com/document/d/1fz4x1pZGGELPKzlTBgtApiY54oqfNdaCIBTFwRqRDvs/edit?usp=sharing)
+The Client is using either the API for connecting to the different services like [Discord](https://discord.com/), [Messenger](https://www.messenger.com/), etc, or [Puppeteer](https://github.com/puppeteer/puppeteer) for emulating the browser to connect to [XR-Engine](https://github.com/XRFoundation/XREngine) and [Zoom]((https://www.zoom.us/)).
 
 ## Requirements
 
-[Digital Being](https://github.com/XRFoundation/DigitalBeing) requires the following to run:
-
 * [Node.JS](https://nodejs.org/en/) - version 16 or more
 * [NPM](https://www.npmjs.com/) - will be installed through `Node.JS`
-* [Python](https://www.python.org/) - version 3.8 or more
 * [Docker](https://www.docker.com/) - makes the setup easy through using the containers
 
 # Setup 
@@ -62,29 +38,20 @@ More info about [Networking](https://docs.google.com/document/d/1fz4x1pZGGELPKzl
 
 ## Windows 10:
 
-* Install the requirements ([Node.js](https://nodejs.org/en/), [NPM]()https://npmjs.com/, [Python](https://python.org))
-* Install [Rust](https://www.rust-lang.org/), which is needed in for the tokenizers library in `requirements.txt`
-* Install `C++ build tools` through [Visual Studio Community](https://visualstudio.microsoft.com/vs/community/)
-* Clone the repository (`git clone git@github.com:XRFoundation/DigitalBeing.git`) and open the `DigitalBeing` directory
+* Install the requirements ([Node.js](https://nodejs.org/en/), [NPM]()https://npmjs.com/
+* Clone the repository (`git clone git@github.com:super-reality/SuperBeing.git`)
 * Run `npm install`
-* Run `pip install -r requirements.txt`
 * Rename the `.env.default` to `.env` (or make a new copy) and update the variables
 * Install PostgreSQL, setup the user and the database according to the parameters starting with `PG*` in an `.env` file and run the `init.sql` (root folder)
 * Run the bot in using `npm run start` in the command line
 
 ## Without Docker (WSL/Linux): 
 
-* Install the requirements (`Node.JS`, [`NPM`](https://www.npmjs.com/) and `Python`)
+* Install the requirements (`Node.JS`, [`NPM`](https://www.npmjs.com/))
 * Run `npm install`
-* Run `pip install -r requirements.txt`
 * Install `Postgres`, setup the user and the database and run the `init.sql` (root folder)
 * Rename the `.env.default` to `.env` (or make a new copy) and update the variables
 * Run the bot in using `npm run` in the command line
-
-### Miscellaneous / Troubleshooting
-
-#### Docker-compose up editor.sh error
-If you get this error `ERROR: for testbot_editor_1  Cannot start service editor: OCI runtime create failed: container_linux.go:380: starting container process caused: exec: "./editor.sh": permission denied: unknown` before running the command `docker-compose up` run: `chmod +x editor.sh` in the root folder
 
 #### How to install Postgres manual - without docker
 * `sudo apt-get install postgresql` - installs the postgresql service on the machine
@@ -99,27 +66,15 @@ If you get this error `ERROR: for testbot_editor_1  Cannot start service editor:
 * finally run the `init.sql` file that can be located in the root folder in order to create the database
 * Here you can find more [detailed instructions](https://harshityadav95.medium.com/postgresql-in-windows-subsystem-for-linux-wsl-6dc751ac1ff3)
 
-#### Changing active agents
-
-**Attention**: applies to installed agent code.
-
-Open `server/agent_params.py` and add / remove the `SELECT_AGENTS` list using the agent name string.
-
 #### Selecting active clients
 
 **Attention**: applies to the installed clients only.
 
-Open `src/index.ts` and comment/uncomment the clients you need, if you need a client that uses a web server ([Twilio](https://www.twilio.com/), messenger), go to client/webserver.ts and uncomment line 17 otherwise you can leave it commented.
-
-#### Selecting available agents
-
-Go to `server/agent_params.py` and add the agent name in `SELECTED_AGENTS` array, or `delete` / `comment` unwanted agents, like this.
-
-![alt_text](https://github.com/XRFoundation/DigitalBeing/blob/main/readme_images/Screenshot_286.png)
+Open `src/index.js` and comment/uncomment the clients you need, if you need a client that uses a web server ([Twilio](https://www.twilio.com/), messenger), go to src/webserver.js and uncomment line 17, otherwise you can leave it commented.
 
 #### Selecting available clients
 
-Go to the src/index.ts and comment/uncomment the needed clients, like this.
+Go to the src/index.js and comment/uncomment the needed clients, like this.
 
 ![alt_text](https://github.com/XRFoundation/DigitalBeing/blob/main/readme_images/Screenshot_287.png)
 
@@ -193,7 +148,7 @@ Available Commands - all commands start with a slash (`/`):
 * `/getChatHistory` get the recent chat history as client log
 * `/getLocalUserId` get the local user id as client log
 
-**Note**: the `xrengine-client.ts` has all the functions needed to send commands or generally a chat message.
+**Note**: the `xrengine-client.js` has all the functions needed to send commands or generally a chat message.
 
 #### Scripts Structure:
 
@@ -201,13 +156,13 @@ The [XR-Engine](https://github.com/XRFoundation/XREngine) engine is one of the D
 
 There are multiple scripts for the xr-engine:
 
-`chatHistory.ts` - has functions to handle the chat history
-`messageHandler.ts` - handles the chat messages and sends to the server side the needed messages
-`Stt.ts`  - handles the speech to text engine
-`Tts.ts` - handles the text to speech engine
-`UsersInRange.ts` - holds lists of users around the bot
-`Xrengine-client.ts` - is the main script for the XR-Engine, it holds all the functions that use the puppeteer
-`xrEnginePacketHandler.ts` - handles the received packets from the python server
+`chatHistory.js` - has functions to handle the chat history
+`messageHandler.js` - handles the chat messages and sends to the server side the needed messages
+`Stt.js`  - handles the speech to text engine
+`Tts.js` - handles the text to speech engine
+`UsersInRange.js` - holds lists of users around the bot
+`Xrengine-client.js` - is the main script for the XR-Engine, it holds all the functions that use the puppeteer
+`xrEnginePacketHandler.js` - handles the received packets from the python server
 
 #### `.env` config file
 
@@ -386,8 +341,6 @@ Please look below to TODOs, and contribute what you're interested in. If you hav
 You can create your own agent entirely by modifying the text prompts, without needing more than to change a few lines of configuration. First, copy the folder in `agents` directory. Then add a command in the package.json -- you can copy one of the existing commands, and change the AGENT environment variable to the name of your personality. Modify the text files -- you can do this while the agent is running -- and explore the responses and history to tune your agent.
 
 Here's a great place to start on your prompt engineering journey: https://www.gwern.net/GPT-3
-## STATES AND STATE MACHINES
-Working on this, stay tuned...
 
 ## TODO
 - Interface for adding and editing agents from UI
