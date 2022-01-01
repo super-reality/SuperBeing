@@ -146,103 +146,99 @@ function generateContext(speaker, agent, conversation) {
 }
 
 // Todo fix me
-export async function handleDigitalBeingInput(data){
+export async function handleDigitalBeingInput(data) {
         console.log("Handling data.message", data);
-        const responseInput = await handleInput(data.message.content, data.username, process.env.AGENT ?? "Agent") 
-    
-        console.log(responseInput);
-
+        const response = await handleInput(data.message.content, data.username, process.env.AGENT ?? "Agent")
         const message_id = data.message.id; // data.message_id
-        const chat_id = data.message.channelId;
-            const responses = responseInput
-            const addPing = false; // data.addPing
+        const channelId = data.message.channelId;
+        const addPing = data.addPing; // data.addPing
         //     const args = data.args
-    const client_name = data.client_name;
-            if (client_name === 'Discord') {
-                await discordPackerHandler.getInstance.handlePing(message_id, chat_id, responses, addPing)
-            }
-            else if (client_name === 'Messenger') {
-                await handlePacketSend(chat_id, responses)
-            }
-            else if (client_name === 'Telegram') {
-                await telegramPacketHandler.getInstance.handleMessage(chat_id, responses, message_id, addPing, args)
-            }
-            else if (client_name === 'Twilio') {
-                await handleTwilio.getInstance.handleTwilioMsg(chat_id, responses)
-            }
-            else if (client_name === 'xr-engine') {
-                await xrEnginePacketHandler.getInstance.handleXrEnginePacket(responses, addPing, args)
-            }
-            else if (client_name === 'reddit') {
-                await redditHandler.getInstance.handleMessage(responses, message_id, chat_id, args);
-            }
-            else if (client_name === 'instagram') {
-                await instagramPacketHandler.getInstance.handle(chat_id, responses)
-            }
-            else if (client_name === 'twitter') {
-                await twitterPacketHandler.getInstance.handleMessage(responses, message_id, chat_id, args)  
-            }
+        const clientName = data.clientName;
+        if (clientName === 'Discord') {
+                await discordPackerHandler.getInstance.handlePing(message_id, channelId, response, addPing)
+        }
+        else if (clientName === 'Messenger') {
+                await handlePacketSend(channelId, response)
+        }
+        else if (clientName === 'Telegram') {
+                await telegramPacketHandler.getInstance.handleMessage(channelId, response, message_id, addPing, args)
+        }
+        else if (clientName === 'Twilio') {
+                await handleTwilio.getInstance.handleTwilioMsg(channelId, response)
+        }
+        else if (clientName === 'xr-engine') {
+                await xrEnginePacketHandler.getInstance.handleXrEnginePacket(response, addPing, args)
+        }
+        else if (clientName === 'reddit') {
+                await redditHandler.getInstance.handleMessage(response, message_id, channelId, args);
+        }
+        else if (clientName === 'instagram') {
+                await instagramPacketHandler.getInstance.handle(channelId, response)
+        }
+        else if (clientName === 'twitter') {
+                await twitterPacketHandler.getInstance.handleMessage(response, message_id, channelId, args)
+        }
 
 
         //     else if (packetId === 1) {
         //     const response = resp[3]
-    
-        //     if (client_name === 'Discord') {
-        //         await discordPackerHandler.getInstance.handleSlashCommand(chat_id, response)
+
+        //     if (clientName === 'Discord') {
+        //         await discordPackerHandler.getInstance.handleSlashCommand(channelId, response)
         //     }
         // }
         // else if (packetId === 2) {
         //     const response = resp[3]
-    
-        //     if (client_name === 'Discord') {
+
+        //     if (clientName === 'Discord') {
         //         await discordPackerHandler.getInstance.handleUserUpdateEvent(response)
         //     }
         // }
         // else if (packetId === 3) {
         //     const response = resp[3]
-    
-        //     if (client_name === 'Discord') {
-        //         await discordPackerHandler.getInstance.handleGetAgents(chat_id, response)
+
+        //     if (clientName === 'Discord') {
+        //         await discordPackerHandler.getInstance.handleGetAgents(channelId, response)
         //     }
         // } 
         // else if (packetId === 4) {
         //     const response = resp[3]
-    
-        //     if (client_name === 'Discord') {
-        //         await discordPackerHandler.getInstance.handleSetAgentsFields(chat_id, response)
+
+        //     if (clientName === 'Discord') {
+        //         await discordPackerHandler.getInstance.handleSetAgentsFields(channelId, response)
         //     }
         // }
         // else if (packetId === 5) {
         //     const message_id = resp[3]
         //     const response = resp[4]
         //     const addPing = resp[5]
-    
-        //     if (client_name === 'Discord') {
-        //         await discordPackerHandler.getInstance.handlePingSoloAgent(chat_id, message_id, response, addPing)
+
+        //     if (clientName === 'Discord') {
+        //         await discordPackerHandler.getInstance.handlePingSoloAgent(channelId, message_id, response, addPing)
         //     }
         // }
         // else if (packetId === 6) {
         //     const response = resp[3]
-    
-        //     if (client_name === 'Discord') {
+
+        //     if (clientName === 'Discord') {
         //         await discordPackerHandler.getInstance.handleMessageReactionAdd(response)
         //     }
         // }
         // else if (packetId === 7) {
         //     const message_id = resp[3]
-        //     const responses = resp[4]
+        //     const response = resp[4]
         //     const addPing = resp[5]
         //     const args = resp[6]
-    
-        //     if (client_name === 'Discord') {
-        //         await discordPackerHandler.getInstance.handleMessageEdit(message_id, chat_id, responses, addPing)
+
+        //     if (clientName === 'Discord') {
+        //         await discordPackerHandler.getInstance.handleMessageEdit(message_id, channelId, response, addPing)
         //     }
-        //     else if (client_name === 'Telegram') {
-        //         await telegramPacketHandler.getInstance.handleEditMessage(chat_id, message_id, responses, args)
+        //     else if (clientName === 'Telegram') {
+        //         await telegramPacketHandler.getInstance.handleEditMessage(channelId, message_id, response, args)
         //     }
         // }
-    }
-    
+}
+
 export async function handleInput(message, speaker, agent, res) {
         console.log("Handling input: " + message);
         if (evaluateTerminalCommands(message, speaker, agent, res)) return;
@@ -257,7 +253,7 @@ export async function handleInput(message, speaker, agent, res) {
         // If the profanity filter is enabled in the agent's config...
         if (useProfanityFilter) {
                 // Evaluate if the speaker's message is toxic
-                const { isProfane, isSensitive, response } = await evaluateTextAndRespondIfToxic(speaker, agent, message);      
+                const { isProfane, isSensitive, response } = await evaluateTextAndRespondIfToxic(speaker, agent, message);
                 if ((isProfane || isSensitive) && response) {
                         console.log(agent + ">>> " + response);
                         if (res) res.status(200).send(JSON.stringify({ result: response }));

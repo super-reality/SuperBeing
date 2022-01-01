@@ -11,17 +11,11 @@ export class Spine {
 
     async send(data) {
         console.log("Attempting to send data");
-        console.log(data);
-        console.log("Handling message")
         if(data.message){
             const inputResponse = await handleInput(data.message, data.client_name);
             console.log("input response is: " + inputResponse);
-
+            
         }
-
-        // if (this.client !== undefined) {
-        //     this.client.write(json)
-        // }
     }
 
     async sendMessage(message, message_id, client_name, chat_id, createdAt, addPing, author, args = 'none') {

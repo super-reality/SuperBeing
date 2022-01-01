@@ -6,7 +6,7 @@ const config = {
     "bot_name": "Cat"
   }  
 
-export async function run (client, message, args, author, addPing, channel) {
+export default async function run (client, message, args, author, addPing, channel) {
     if (args.parsed_words === undefined || args.parsed_words.length !== 1) {
         message.channel.send('Invalid format, !setname name')
         message.channel.stopTyping()

@@ -1,6 +1,6 @@
 import { Spine } from "../../Spine.js";
 
-export async function run (client, message, args, author, addPing, channel) {
+export default async function run (client, message, args, author, addPing, channel) {
     if (args.grpc_args.message === undefined || args.grpc_args.message === '') {
         client.embed.description = 'Wrong format, !setagent agent=agent context=value'
         message.channel.send(client.embed)

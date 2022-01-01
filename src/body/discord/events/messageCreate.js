@@ -10,6 +10,7 @@ import {
 import { channelTypes } from '../util.js'
 import emojiRegex from 'emoji-regex'
 import emoji from 'emoji-dictionary'
+import { handleDigitalBeingInput } from "../../../brain/handleInput.js";
 
 export default async (client, message) => {
     const reg = emojiRegex();
@@ -23,11 +24,7 @@ export default async (client, message) => {
     args['grpc_args'] = {};
 
     let {author, channel, content, mentions, id} = message;
-    if (process.env.DIGITAL_BEINGS_ONLY === 'True' && !channel.topic.toLowerCase().includes('digital being')) {
-        console.log('db only')
-        return
-    }
-    if (userDatabase.getInstance.isUserBanned(author.id, 'discord')) {
+    if (userDatabase && userDatabase.getInstance && userDatabase.getInstance.isUserBanned(author.id, 'discord')) {
         return
     }
 
@@ -62,7 +59,8 @@ export default async (client, message) => {
         author.send(`You've been blocked!`)
     }
     // Collect obscene words for further actions / rating
-    const obscenities = chatFilter.getInstance.collectObscenities(content, author.id)
+    // TODO: shouldn't need to instance check here
+    const obscenities = chatFilter.getInstance ? chatFilter.getInstance.collectObscenities(content, author.id) : []
     // OpenAI obscenity detector
     let obscenity_count = obscenities.length
     if (parseInt(process.env.OPENAI_OBSCENITY_DETECTOR, 10) && !obscenity_count) {
@@ -249,6 +247,7 @@ export default async (client, message) => {
     if (!cmd) return;
 
     channel.sendTyping();
+    handleDigitalBeingInput({ client, message, username: message.author.username, addPing, channelId: channel.id, clientName: "Discord" });
     // Run the command
-    cmd.run(client, message, args, author, addPing, channel.id).catch(err => console.log(err))
+    // cmd.run(client, message, args, author, addPing, channel.id).catch(err => console.log(err))
 };

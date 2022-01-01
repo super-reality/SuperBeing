@@ -1,6 +1,9 @@
 import { Spine } from "../../Spine.js";
 
 export default async (client, oldMember, newMember) => {
+    if(!oldMember || !newMember){
+        console.log("Cannot update presence, oldMember or newMember is null")
+    } else
     if (oldMember.status !== newMember.status) {
         const date = new Date();
         const utc = new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds());

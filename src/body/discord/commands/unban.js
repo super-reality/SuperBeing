@@ -1,6 +1,6 @@
 import { userDatabase } from "../../userDatabase.js";
 
-export async function run (client, message, args, author, addPing, channel) {
+export default async function run (client, message, args, author, addPing, channel) {
     const pw = args.parsed_words
     if (pw === undefined || pw.length !== 1) {  
         message.channel.send('invalid command structure!')
