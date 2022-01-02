@@ -8,7 +8,6 @@ export const UsersInHarassmentRange = {}
 export const UsersInIntimateRange = {}
 export const UsersLookingAt = {}
 
-
 export const prevMessage = {}
 export const prevMessageTimers = {}
 export const messageResponses = {}
@@ -34,7 +33,7 @@ export function isInConversation(user) {
 }
 
 export function sentMessage(user) {
-    for(let c in conversation) {
+    for (let c in conversation) {
         if (c === user) continue
         if (conversation[c] !== undefined && conversation[c].timeOutFinished === true) {
             exitConversation(c)
@@ -45,7 +44,7 @@ export function sentMessage(user) {
         conversation[user] = { timeoutId: undefined, timeOutFinished: true, isInConversation: true }
         if (conversation[user].timeoutId !== undefined) clearTimeout(conversation[user].timeoutId)
         conversation[user].timeoutId = setTimeout(() => {
-            console.log('conversaion for ' + user + ' ended')
+            console.log('conversation for ' + user + ' ended')
             if (conversation[user] !== undefined) {
                 conversation[user].timeoutId = undefined
                 conversation[user].timeOutFinished = true
@@ -53,7 +52,7 @@ export function sentMessage(user) {
         }, 720000)
     } else {
         conversation[user].timeoutId = setTimeout(() => {
-            console.log('conversaion for ' + user + ' ended')
+            console.log('conversation for ' + user + ' ended')
             if (conversation[user] !== undefined) {
                 conversation[user].timeoutId = undefined
                 conversation[user].timeOutFinished = true
@@ -74,7 +73,7 @@ export function exitConversation(user) {
 
 export function moreThanOneInConversation() {
     let count = 0
-    for(let c in conversation) {
+    for (let c in conversation) {
         if (conversation[c] === undefined) continue
         if (conversation[c].isInConversation !== undefined && conversation[c].isInConversation === true && conversation[c].timeOutFinished === false) count++
     }
@@ -120,8 +119,8 @@ export async function handleMessages(messages, bot) {
         else if (messages[i].text.includes('looking at')) continue
         else if (messages[i].text.includes('in intimate range')) continue
         else if (messages[i].text.startsWith('/') || messages[i].text.startsWith(' /')) continue
-        else if (messages[i].senderName === bot.name || 
-            (messages[i].sender !== undefined && messages[i].sender.id === bot.userId) || 
+        else if (messages[i].senderName === bot.name ||
+            (messages[i].sender !== undefined && messages[i].sender.id === bot.userId) ||
             (messages[i].author !== undefined && messages[i].author[1] === bot.userId)) {
             addMessageToHistory(messages[i].channelId, messages[i].id, process.env.BOT_NAME, messages[i].text)
             continue
@@ -132,8 +131,8 @@ export async function handleMessages(messages, bot) {
             const date = Date.now() / 1000
             const msgDate = messages[i].updatedAt
             const diff = date - msgDate
-            const hours_diff = Math.ceil(diff/3600)
-            const mins_diff = Math.ceil((diff-hours_diff)/60)
+            const hours_diff = Math.ceil(diff / 3600)
+            const mins_diff = Math.ceil((diff - hours_diff) / 60)
             if (mins_diff > 12 || (mins_diff <= 5 && hours_diff > 1)) {
                 const date = new Date(msgDate);
                 const utc = new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds());
@@ -153,7 +152,7 @@ export async function handleMessages(messages, bot) {
             prevMessage[messages[i].channelId] = _sender
             if (prevMessageTimers[messages[i].channelId] !== undefined) clearTimeout(prevMessageTimers[messages[i].channelId])
             prevMessageTimers[messages[i].channelId] = setTimeout(() => prevMessage[messages[i].channelId] = '', 120000)
-            
+
             addPing = (_prev !== undefined && _prev !== '' && _prev !== _sender) || moreThanOneInConversation()
 
             let startConv = false
@@ -173,10 +172,10 @@ export async function handleMessages(messages, bot) {
                 else {
                     if (trimmed.toLowerCase() === 'hi') {
                         startConv = true
-                    } 
+                    }
                 }
             }
-            
+
             if (!startConv) {
                 if (startConvName.length > 0) {
                     exitConversation(_sender)
@@ -187,14 +186,14 @@ export async function handleMessages(messages, bot) {
             const isUserNameMention = content.toLowerCase().replace(',', '').replace('.', '').replace('?', '').replace('!', '').match(bot.username_regex)
             const isInDiscussion = isInConversation(_sender)
             if (!content.startsWith('!')) {
-                if (isUserNameMention) { console.log('is user mention'); content = '!ping ' + content.replace(bot.username_regex, '').trim()  }
+                if (isUserNameMention) { console.log('is user mention'); content = '!ping ' + content.replace(bot.username_regex, '').trim() }
                 else if (isInDiscussion || startConv) content = '!ping ' + content
             }
 
             if (content.startsWith('!ping')) sentMessage(_sender)
             else return
             console.log('content: ' + content + ' sender: ' + _sender)
-            
+
             const dateNow = new Date();
             var utc = new Date(dateNow.getUTCFullYear(), dateNow.getUTCMonth(), dateNow.getUTCDate(), dateNow.getUTCHours(), dateNow.getUTCMinutes(), dateNow.getUTCSeconds());
             const utcStr = dateNow.getDate() + '/' + (dateNow.getMonth() + 1) + '/' + dateNow.getFullYear() + ' ' + utc.getHours() + ':' + utc.getMinutes() + ':' + utc.getSeconds()
@@ -207,8 +206,8 @@ export async function handleMessages(messages, bot) {
             console.log("Handling response");
             await xrEnginePacketHandler.instance.handleXREngineResponse(response, addPing, _sender)
 
-            })
-        
+        })
+
     }
 }
 
@@ -223,44 +222,44 @@ export class xrEnginePacketHandler {
     }
 
     async handleXREngineResponse(responses, addPing, _sender) {
-            console.log('response: ' + responses)
-            if (responses !== undefined && responses.length <= 2000 && responses.length > 0) {
-                let text = responses
-                while (text === undefined || text === '' || text.replace(/\s/g, '').length === 0) text = getRandomEmptyResponse()
-                if (addPing) text = _sender + ' ' + text
-                xrEnginePacketHandler.instance.bot.sendMessage(text)         
-            }
-            else if (responses.length > 2000) {
-                const lines = []
-                let line = ''
-                for(let i = 0; i < responses.length; i++) {
-                    line+= responses
-                    if (i >= 1980 && (line[i] === ' ' || line[i] === '')) {
-                        lines.push(line)
-                        line = ''
-                    }
+        console.log('response: ' + responses)
+        if (responses !== undefined && responses.length <= 2000 && responses.length > 0) {
+            let text = responses
+            while (text === undefined || text === '' || text.replace(/\s/g, '').length === 0) text = getRandomEmptyResponse()
+            if (addPing) text = _sender + ' ' + text
+            xrEnginePacketHandler.instance.bot.sendMessage(text)
+        }
+        else if (responses.length > 2000) {
+            const lines = []
+            let line = ''
+            for (let i = 0; i < responses.length; i++) {
+                line += responses
+                if (i >= 1980 && (line[i] === ' ' || line[i] === '')) {
+                    lines.push(line)
+                    line = ''
                 }
-    
-                for (let i = 0; i< lines.length; i++) {
-                    if (lines[i] !== undefined && lines[i] !== '' && lines[i].replace(/\s/g, '').length !== 0) {
-                        if (i === 0) {
-                            let text = lines[1]
-                            while (text === undefined || text === '' || text.replace(/\s/g, '').length === 0) text = getRandomEmptyResponse()
-                            if (addPing) { 
-                                text = _sender + ' ' + text
-                                addPing = false
-                            }
-                            xrEnginePacketHandler.instance.bot.sendMessage(text)                  
+            }
+
+            for (let i = 0; i < lines.length; i++) {
+                if (lines[i] !== undefined && lines[i] !== '' && lines[i].replace(/\s/g, '').length !== 0) {
+                    if (i === 0) {
+                        let text = lines[1]
+                        while (text === undefined || text === '' || text.replace(/\s/g, '').length === 0) text = getRandomEmptyResponse()
+                        if (addPing) {
+                            text = _sender + ' ' + text
+                            addPing = false
                         }
+                        xrEnginePacketHandler.instance.bot.sendMessage(text)
                     }
                 }
             }
-            else {
-                let emptyResponse = getRandomEmptyResponse()
-                while (emptyResponse === undefined || emptyResponse === '' || emptyResponse.replace(/\s/g, '').length === 0) emptyResponse = getRandomEmptyResponse()
-                if (addPing) emptyResponse = _sender + ' ' + emptyResponse
-                xrEnginePacketHandler.instance.bot.sendMessage(emptyResponse)         
-            }
+        }
+        else {
+            let emptyResponse = getRandomEmptyResponse()
+            while (emptyResponse === undefined || emptyResponse === '' || emptyResponse.replace(/\s/g, '').length === 0) emptyResponse = getRandomEmptyResponse()
+            if (addPing) emptyResponse = _sender + ' ' + emptyResponse
+            xrEnginePacketHandler.instance.bot.sendMessage(emptyResponse)
+        }
     }
 }
 
@@ -283,18 +282,18 @@ async function createXREngineClient() {
     /*console.log('delay bot')
     await xrengineBot.delay(10000)
     console.log('bot delay done')*/
-    
-await xrengineBot.sendMessage("Hello World! I have connected.")
-/*
-    await new Promise((resolve) => {
-        setTimeout(() => xrengineBot.enterRoom(XRENGINE_URL, { name: "TestBot" }), 1000);
-    });
 
-console.log('bot loaded')
-    await new Promise((resolve) => {
-        setTimeout(() => xrengineBot.sendMessage("Hello World! I have connected."), 5000);
-    });*/
-console.log('bot fully loaded')
+    await xrengineBot.sendMessage("Hello World! I have connected.")
+    /*
+        await new Promise((resolve) => {
+            setTimeout(() => xrengineBot.enterRoom(XRENGINE_URL, { name: "TestBot" }), 1000);
+        });
+    
+    console.log('bot loaded')
+        await new Promise((resolve) => {
+            setTimeout(() => xrengineBot.sendMessage("Hello World! I have connected."), 5000);
+        });*/
+    console.log('bot fully loaded')
 }
 
 /**
@@ -311,7 +310,7 @@ class XREngineBot {
     pu;
     userId
     chatHistory = [];
-    avatars = [ 'Alissa', 'Cornelius', 'James_ReadyPlayerMe', 'Jamie', 'Mogrid', 'Warrior' ]
+    avatars = ['Alissa', 'Cornelius', 'James_ReadyPlayerMe', 'Jamie', 'Mogrid', 'Warrior']
     username_regex
     constructor({
         name = "Bot",
@@ -329,7 +328,7 @@ class XREngineBot {
 
     async sendMessage(message) {
         console.log('sending message: ' + message)
-        if(message === null || message === undefined) return;
+        if (message === null || message === undefined) return;
 
         // TODO:
         // Send message to google cloud speech
@@ -344,24 +343,24 @@ class XREngineBot {
 
     }
 
-    async sendMovementCommand(x , y, z ) {
+    async sendMovementCommand(x, y, z) {
         if (x === undefined || y === undefined || z == undefined) {
             console.log(`Invalid parameters! (${x},${y},${z})`)
             return
         }
 
-        var _x  = parseFloat(x)
-        var _y  = parseFloat(y)
-        var _z  = parseFloat(z)
+        var _x = parseFloat(x)
+        var _y = parseFloat(y)
+        var _z = parseFloat(z)
         await this._sendMovementCommand(_x, _y, _z)
     }
-    async _sendMovementCommand(x , y , z ) {
+    async _sendMovementCommand(x, y, z) {
         if (x === undefined || y === undefined || z === undefined) {
             console.log(`Invalid parameters! (${x},${y},${z})`)
             return
         }
 
-        var message  = '/move ' + x + ',' + y + ',' + z
+        var message = '/move ' + x + ',' + y + ',' + z
         await this.sendMessage(message)
     }
     async requestSceneMetadata() {
@@ -374,7 +373,7 @@ class XREngineBot {
     }
     async requestAllWorldMetadata() {
         await this.requestWorldMetadata(Number.MAX_SAFE_INTEGER)
-    }  
+    }
     async requestPlayers() {
         await this.sendMessage('/listAllusers ')
     }
@@ -382,7 +381,7 @@ class XREngineBot {
     removeSystemFromChatMessage(text) {
         return text.substring(text.indexOf(']', 0) + 1)
     }
-    async goTo(landmark) { 
+    async goTo(landmark) {
         if (landmark === undefined || landmark === '') return
 
         await this.sendMessage(`/goTo ${landmark}`)
@@ -397,7 +396,7 @@ class XREngineBot {
         if (types.length !== perc.length) return
 
         var message = '/face '
-        for(var i = 0; i < types.length; i++) 
+        for (var i = 0; i < types.length; i++)
             message += types[i] + ' ' + perc[i] + ' '
         message += time
 
@@ -448,7 +447,7 @@ class XREngineBot {
         await this.sendMessage('/getLocalUserId')
     }
 
-    counter  = 0
+    counter = 0
     async instanceMessages() {
         //#region  Tests
         // if (doTests) {
@@ -468,11 +467,11 @@ class XREngineBot {
         //#endregion
 
         await this.updateChannelState();
-        if(!this.activeChannel) return console.log("No active channel");
+        if (!this.activeChannel) return console.log("No active channel");
         const messages = this.activeChannel.messages;
         if (messages === undefined || messages === null) return;
 
-        for(var i = 0; i < messages.length; i++ ){
+        for (var i = 0; i < messages.length; i++) {
             //messages[i].text = this.removeSystemFromChatMessage(messages[i].text)
             const messageId = messages[i].id
             const senderId = messages[i].sender.id
@@ -486,12 +485,12 @@ class XREngineBot {
             messages[i].createdAt = new Date(messages[i].createdAt).getTime() / 1000
             messages[i].author = ['xr-engine', senderId]
 
-            if (this.chatHistory.includes(messageId) || this.userId === senderId || 
+            if (this.chatHistory.includes(messageId) || this.userId === senderId ||
                 (database.instance && database.instance.isUserBanned(senderId, 'xr-engine'))) {
-                const index  = await this.getMessageIndex(messages, messageId)
+                const index = await this.getMessageIndex(messages, messageId)
                 if (index > -1) messages.splice(index, 1)
             }
-            
+
             this.chatHistory.push(messageId)
         }
 
@@ -500,9 +499,9 @@ class XREngineBot {
     }
 
     async getMessageIndex(messages, messageId) {
-        for(var i = 0; i < messages.length; i++) {
+        for (var i = 0; i < messages.length; i++) {
             if (messages[i].id === messageId)
-               return i
+                return i
         }
 
         return -1
@@ -513,22 +512,22 @@ class XREngineBot {
         console.log("Sending audio...");
 
         await this.evaluate((duration) => {
-        var audio = document.createElement("audio");
-        audio.setAttribute("src", "https://file-examples-com.github.io/uploads/2017/11/file_example_MP3_700KB.mp3");
-        audio.setAttribute("crossorigin", "anonymous");
-        audio.setAttribute("controls", "");
-        audio.onplay = function() {
-            var stream = audio.captureStream();
-            navigator.mediaDevices.getUserMedia = async function() {
-            return stream;
+            var audio = document.createElement("audio");
+            audio.setAttribute("src", "https://file-examples-com.github.io/uploads/2017/11/file_example_MP3_700KB.mp3");
+            audio.setAttribute("crossorigin", "anonymous");
+            audio.setAttribute("controls", "");
+            audio.onplay = function () {
+                var stream = audio.captureStream();
+                navigator.mediaDevices.getUserMedia = async function () {
+                    return stream;
+                };
             };
-        };
-        document.querySelector("body").appendChild(audio);
-        // setTimeout(() => {
-        //     document.querySelector("body").removeChild(audio);
+            document.querySelector("body").appendChild(audio);
+            // setTimeout(() => {
+            //     document.querySelector("body").removeChild(audio);
 
-        // }, duration)
-        audio.play();
+            // }, duration)
+            audio.play();
 
         });
         await this.clickElementById('button', 'UserAudio');
@@ -574,7 +573,7 @@ class XREngineBot {
  * @param {Function} fn Function to execut _in the node context._
  */
     async screenshot() {
-            return await this.page.screenshot();
+        return await this.page.screenshot();
     }
 
 
@@ -714,10 +713,10 @@ class XREngineBot {
                 if (data !== undefined && data !== '') {
                     this.userId = data
                 }
-            } 
+            }
             else if (message.text().startsWith('emotions|')) {
             }
-                
+
             //if (this.autoLog)
             //    console.log(">> ", message.text())
         })
@@ -766,10 +765,10 @@ class XREngineBot {
         console.log(`Going to ${parsedUrl}`);
         await this.page.goto(parsedUrl, { waitUntil: 'domcontentloaded' });
 
-       /* const granted = await this.page.evaluate(async () => {
-            return (await navigator.permissions.query({ name: 'camera' })).state;
-        });
-        console.log('Granted:', granted);*/
+        /* const granted = await this.page.evaluate(async () => {
+             return (await navigator.permissions.query({ name: 'camera' })).state;
+         });
+         console.log('Granted:', granted);*/
     }
 
     /** Enters the room specified, enabling the first microphone and speaker found
@@ -834,15 +833,15 @@ class XREngineBot {
 
                 function deepCopy(obj) {
                     var copy;
-                
+
                     if (null == obj || "object" != typeof obj) return obj;
-                
+
                     if (obj instanceof Date) {
                         copy = new Date();
                         copy.setTime(obj.getTime());
                         return copy;
                     }
-                
+
                     if (obj instanceof Array) {
                         copy = [];
                         for (var i = 0, len = obj.length; i < len; i++) {
@@ -850,7 +849,7 @@ class XREngineBot {
                         }
                         return copy;
                     }
-                
+
                     if (obj instanceof Object) {
                         copy = {};
                         for (var attr in obj) {
@@ -858,7 +857,7 @@ class XREngineBot {
                         }
                         return copy;
                     }
-                
+
                     throw new Error("Unable to copy obj! Its type isn't supported.");
                 }
 
@@ -870,11 +869,11 @@ class XREngineBot {
         })
     }
 
-    
+
 
     async updateUsername(name) {
         if (name === undefined || name === '') return
-        
+
         await this.clickElementById('SPAN', 'Profile_0')
         await this.typeMessage('username', name, true)
         await this.pressKey('Enter')
@@ -883,7 +882,7 @@ class XREngineBot {
 
     async updateAvatar(avatar) {
         console.log(`updating avatar to: ${avatar}`)
-       
+
         await this.clickElementById('SPAN', 'Profile_0')
         await this.clickElementById('button', 'CreateIcon')
         await this.clickSelectorByAlt('img', avatar)
