@@ -1,17 +1,14 @@
-import { Spine } from "./body/Spine.js";
-import { createWebServer } from "./body/webserver.js";
-import initializeBrain from "./brain/index.js";
-import { createDiscordClient } from './body/discord/discord-client.js'
+import express, { urlencoded, json } from 'express';
 import dotenv from "dotenv";
-import { postgres } from "./body/postgres.js";
+import { database } from "./database/database.js";
+import { createServer } from "http";
+import { Server } from "socket.io";
+import { initTerminal } from "./connectors/terminal.js"
+import cors from "cors";
+
 dotenv.config();
-initializeBrain();
 
-createWebServer();
-
-new postgres().connect()
-// postgres.getInstance.getBannedUsers(true)
-// postgres.getInstance.getChatFilterData(true)
+new database().connect()
 
 const expectedServerDelta = 1000 / 60;
 let lastTime = 0;
@@ -37,50 +34,140 @@ let enabled_services = (process.env.ENABLED_SERVICES || '').split(',').map(
 );
 
 (async function(){  
-        // Enable the TCP client
-        await new Spine().init();
-        console.log("Initialized spine");
+    const app = express();
+    const router = express.Router();
+    
+    const server = createServer(app);
+    const io = new Server(server);
+    
+    app.use(json())
+   
+    app.get('/facebook', (req, res) => {
+        res.send('Hello World I am running locally');
+    });
+
+    server.listen(process.env.SOCKETIO_PORT, () => {
+            console.log()
+    })
+    
+    io.on("connection", (socket) => {
+            console.log("Connected", socket.id);
+            socket.emit("message", `hello ${socket.id}`);
+    })
+        
+    app.use(function(req, res, next) {
+            res.header("Access-Control-Allow-Origin", "*");
+            res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
+            res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+            next();
+    });
+    
+    const allowedOrigins = ['http://localhost:3000', 'https://supermind-client.vercel.app', 'https://superreality.com', 'http://localhost:65535']
+    const corsOptions = {
+            origin: function (origin, callback) {
+                    console.log("Origin is", origin);
+                    if (allowedOrigins.indexOf(origin) !== -1) {
+                            callback(null, true)
+                    } else {
+                            callback(new Error('Not allowed by CORS'))
+                    }
+            }
+    }
+    
+    app.use(cors(corsOptions));
+    router.use(urlencoded({ extended: false }));
+    
+    
+    const agent = process.env.AGENT?.replace('_', ' ');
+    
+    app.get("/health", async function (req, res) {
+            res.send(`Server is alive and running! ${new Date()}`);
+    });
+    
+    app.post("/msg", async function (req, res) {
+            const message = req.body.command
+            const speaker = req.body.sender
+            await handleInput(message, speaker, agent, res)
+    });
+    
+    
+    app.post("/execute", async function (req, res) {
+            const message = req.body.command
+            const speaker = req.body.sender
+            const agent = req.body.agent
+            console.log("executing for ", req.body)
+            if (message.includes("/become")) {
+                    const out = await createWikipediaAgent("Speaker", agent, "", "");
+                    return res.send(out);
+            }
+            await handleInput(message, speaker, agent, res)
+    });
+    
+    app.listen(process.env.PORT, () => { console.log(`Server listening on http://localhost:${process.env.PORT}`); })
+    
+    if (process.env.TERMINAL) {
+            initTerminal(agent);
+    }
+    
+    if(process.env.BATTLEBOTS){
+            const speaker = process.env.SPEAKER?.replace('_', ' ');
+            const agent = process.env.AGENT?.replace('_', ' ');
+            const message = "Hello, " + agent;
+            console.log(speaker + " >>> " + message);
+            let ignoreContentFilter = true;
+            // Make a function that self-invokes with the opposites
+            runBattleBot(speaker, agent, message, ignoreContentFilter);
+    }
+    
+    
+    async function runBattleBot(speaker, agent, message, ignoreContentFilter) {
+            console.log(speaker, agent, message, ignoreContentFilter)
+            const m = await handleInput(message, speaker, agent, null, ignoreContentFilter);
+            setTimeout(() => runBattleBot(agent, speaker, m, ignoreContentFilter), 10000);
+    }
+
+
         // Discord support
         if (enabled_services.includes('discord')) {
-            await createDiscordClient();
+            import('./connectors/discord.js').then(module => module.default());
             console.log("Created Discord client");
         }
         // Reddit support
         if (enabled_services.includes('reddit')) {
-            await require('./reddit/reddit-client').createRedditClient();
+            import('./connectors/reddit.js').then(module => module.default());
         }
         // TODO: MSN? Facebook? Messenger support
         if (enabled_services.includes('messenger')) {
-            await require('./messenger/messenger-client').createMessengerClient();
+            import('./connectors/messenger.js').then(module => module.default());
         }
         // Instagram support
         if (enabled_services.includes('instagram')) {
-            await require('./instagram/instagram-client').createInstagramClient();
+            import('./connectors/instagram.js').then(module => module.default());
         }
         // Telegram support
         if (enabled_services.includes('telegram')) {
-            await require('./telegram/telegram-client').createTelegramClient();
+            import('./connectors/telegram.js').then(module => module.default());
         }
         // Twilio support for SMS
         if (enabled_services.includes('twilio')) {
-            await require('./twilio/twilio-client').createTwilioClient();
+            import('./connectors/twilio.js').then(module => module.default(app, router));
+
         }
         // Whatsapp support
         if (enabled_services.includes('whatsapp')) {
-            await require('./whatsapp/whatsapp-client').createWhatsappClient();
+            import('./connectors/whatsapp.js').then(module => module.default());
         }
         // Twitter support
         if (enabled_services.includes('twitter')) {
-            await require('./twitter/twitter-client').createTwitterClient();
+            import('./connectors/twitter.js').then(module => module.default());
         }
         // Harmony support
         if (enabled_services.includes('harmony')) {
-            await require('./harmony/harmony-client').createHarmonyClient();
+            import('./connectors/harmony.js').then(module => module.default());
         }
         // XREngine support
         if (enabled_services.includes('xrengine')) {
-            const module = await import('./body/xr/xrengine-client.js');
-            module.default();
+            import('./connectors/xrengine.js').then(module => module.default());
         }
         // Zoom support
         if (enabled_services.includes('zoom')) {

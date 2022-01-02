@@ -1,0 +1,1025 @@
+// required for message.lineReply
+import 'discord-inline-reply'
+import 'discord-reply'
+import Discord, { Intents } from 'discord.js'
+import emoji from "emoji-dictionary"
+import { database } from "../database/database.js"
+import { getRandomEmptyResponse } from "./utils.js"
+
+// TODO: Remove this
+const config = {
+    "prefix": "!",
+    "prefixOptionalWhenMentionOrDM": true,
+    "bot_name": "Cat"
+  }  
+
+  export async function handleGuildMemberAdd(user) {
+    const userId = user.user.id
+    const username = user.user.username
+
+    const dateNow = new Date();
+    var utc = new Date(dateNow.getUTCFullYear(), dateNow.getUTCMonth(), dateNow.getUTCDate(), dateNow.getUTCHours(), dateNow.getUTCMinutes(), dateNow.getUTCSeconds());
+    const utcStr = dateNow.getDate() + '/' + (dateNow.getMonth() + 1) + '/' + dateNow.getFullYear() + ' ' + utc.getHours() + ':' + utc.getMinutes() + ':' + utc.getSeconds()
+    
+    Spine.instance.sendUserUpdateEvent('Discord', 'join', username, utcStr)
+};
+
+export async function handleGuildMemberRemove(user) {
+    const userId = user.user.id
+    const username = user.user.username
+
+    const dateNow = new Date();
+    var utc = new Date(dateNow.getUTCFullYear(), dateNow.getUTCMonth(), dateNow.getUTCDate(), dateNow.getUTCHours(), dateNow.getUTCMinutes(), dateNow.getUTCSeconds());
+    const utcStr = dateNow.getDate() + '/' + (dateNow.getMonth() + 1) + '/' + dateNow.getFullYear() + ' ' + utc.getHours() + ':' + utc.getMinutes() + ':' + utc.getSeconds()
+    
+    Spine.instance.sendUserUpdateEvent('Discord', 'leave', username, utcStr)
+};
+
+
+export async function handleMessageReactionAdd(reaction, user) {
+    const { message } = reaction
+    const emojiName = emoji.getName(reaction.emoji)    
+
+    const dateNow = new Date();
+    var utc = new Date(dateNow.getUTCFullYear(), dateNow.getUTCMonth(), dateNow.getUTCDate(), dateNow.getUTCHours(), dateNow.getUTCMinutes(), dateNow.getUTCSeconds());
+    const utcStr = dateNow.getDate() + '/' + (dateNow.getMonth() + 1) + '/' + dateNow.getFullYear() + ' ' + utc.getHours() + ':' + utc.getMinutes() + ':' + utc.getSeconds()
+    
+    Spine.instance.sendMessageReactionAdd('Discord', message.channel.id, message.id, message.content, user.username, emojiName, utcStr)
+};
+
+export async function agents (client, message, args, author, addPing, channel) {
+    Spine.instance.sendGetAgents('Discord', message.channel.id)
+}
+
+export async function ban (client, message, args, author, addPing, channel) {
+    const pw = args.parsed_words
+    if (pw === undefined || pw.length !== 1) {
+        message.channel.send('invalid command structure!')
+        message.channel.stopTyping();
+        return
+    }
+    
+    const { mentions } = message
+    console.log(JSON.stringify(mentions))
+    if (mentions === undefined || mentions.users === undefined || mentions.users.size !== 1) {
+        message.channel.send('invalid command structure!')
+        message.channel.stopTyping();
+        return
+    }
+    const user = mentions.users.first().id
+    await database.instance.banUser(user, 'discord')
+    message.channel.send('banned user: ' + `<@!${user}>`)
+    message.channel.stopTyping();
+}
+
+export async function commands (client, message, args, author, addPing, channel) {
+    let str = ''
+    client.helpFields[0].commands.forEach(function (item, index) {
+        if (item[3].length <= 2000 && item[3].length > 0) {
+            str += '!' + item[0] + ' - ' + item[3] + '\n'
+        }
+    });       
+    if (str.length === 0) client.embed.description = 'empty response'
+    message.channel.send(str);
+    message.channel.stopTyping();
+}
+
+export async function ping(client, message, args, author, addPing, channel) {
+    if ( args.grpc_args.message === undefined ||  args.grpc_args.message === '' || args.grpc_args.message.replace(/\s/g, '').length === 0) {
+        client.embed.description = 'Wrong format, !ping message'
+        message.channel.send(client.embed)
+        client.embed.desscription = ''
+        message.channel.stopTyping();
+        return
+    }
+
+    args.grpc_args['client_name'] = 'discord'
+    args.grpc_args['chat_id'] = channel
+    
+    const date = new Date();
+    const utc = new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds());
+    const utcStr = date.getDate() + '/' + (date.getMonth() + 1) + '/' + date.getFullYear() + ' ' + utc.getHours() + ':' + utc.getMinutes() + ':' + utc.getSeconds()
+    args.grpc_args['createdAt'] = utcStr
+
+    let parentId = ''
+    if (args.grpc_args['isThread'] === true) {
+        parentId = args.grpc_args['parentId']
+    }
+
+    Spine.instance.sendMessage(args.grpc_args['message'], message.id, 'Discord', args.grpc_args['chat_id'], utcStr, addPing, author.username, 'parentId:' + parentId)
+}
+
+export async function pingagent (client, message, args, author, addPing, channel) {
+    if (args.grpc_args.message === undefined || args.grpc_args.message === '' || args.grpc_args.message.replace(/\s/g, '').length === 0 
+    || args.grpc_args.message.includes('agent=') || args.grpc_args.agent === undefined || args.grpc_args.agent === '' || args.grpc_args.agent.replace(/\s/g, '').length === 0) {
+        client.embed.description = 'Wrong format, !pingagent agent=agent message=value'
+        message.channel.send(client.embed)
+        client.embed.desscription = ''
+        message.channel.stopTyping();
+        return
+    }
+    Spine.instance.sendPingSoloAgent('Discord', message.channel.id, message.id, args.grpc_args['message'], args.grpc_args['agent'], addPing, author.username)
+}
+
+export async function setagent (client, message, args, author, addPing, channel) {
+    if (args.grpc_args.message === undefined || args.grpc_args.message === '') {
+        client.embed.description = 'Wrong format, !setagent agent=agent context=value'
+        message.channel.send(client.embed)
+        client.embed.desscription = ''
+        message.channel.stopTyping();
+        return
+    }
+    if (args.grpc_args['name'] === undefined || args.grpc_args['name'] === '' || args.grpc_args['context'] === undefined || args.grpc_args['context'] === '') {
+        client.embed.description = 'Wrong format, !setagent agent=agent context=value'
+        message.channel.send(client.embed)
+        client.embed.desscription = ''
+        message.channel.stopTyping();
+        return
+    }
+    Spine.instance.sendSetAgentsFields('Discord', message.channel.id, args.grpc_args['name'], args.grpc_args['context'])
+}
+
+export async function setname (client, message, args, author, addPing, channel) {
+    if (args.parsed_words === undefined || args.parsed_words.length !== 1) {
+        message.channel.send('Invalid format, !setname name')
+        message.channel.stopTyping()
+        return
+    }
+
+    const name = args.parsed_words[0]
+    process.env.BOT_NAME = 'test'
+    client.bot_name = name
+    client.name_regex = new RegExp(name, 'ig')
+    config.bot_name = name
+    console.log(client.bot_name + ' - ' + client.name_regex)
+    message.channel.send('Updated bot name to: ' + name)
+    message.channel.stopTyping()
+}
+
+export async function unban (client, message, args, author, addPing, channel) {
+    const pw = args.parsed_words
+    if (pw === undefined || pw.length !== 1) {  
+        message.channel.send('invalid command structure!')
+        message.channel.stopTyping();
+        return
+    }
+    
+    const { mentions } = message
+    console.log(JSON.stringify(mentions))
+    if (mentions === undefined || mentions.users === undefined || mentions.users.size !== 1) {
+        message.channel.send('invalid command structure!')
+        message.channel.stopTyping();
+        return
+    }
+    const user = mentions.users.first().id
+    await database.instance.unbanUser(user, 'discord')
+    message.channel.send('unbanned user: ' + `<@!${user}>`)
+    message.channel.stopTyping();
+}
+
+export const channelTypes = {
+    'text': 'GUILD_TEXT',
+    'dm': 'DM',
+    'voice': 'GUILD_VOICE',
+    'thread': 'GUILD_PUBLIC_THREAD'
+}
+
+export const messageCreate = async (client, message) => {
+    const reg = emojiRegex();
+    let match;
+    let emojis = []
+    while ((match = reg.exec(message.content)) !== null) {
+        emojis.push({ name: emoji.getName(match[0]), emoji: match[0] });
+        message.content = message.content.replace(match[0], match[0] + ' :' + emoji.getName(match[0]) + ':');
+    }
+    const args = {}
+    args['grpc_args'] = {};
+
+    let { author, channel, content, mentions, id } = message;
+    if (database && database.instance && database.instance.isUserBanned(author.id, 'discord')) {
+        return
+    }
+
+    if (mentions !== null && mentions.members !== null && mentions.members.size > 0) {
+        console.log('has mentions')
+        const data = content.split(' ')
+        for (let i = 0; i < data.length; i++) {
+            if (data[i].startsWith('<@!') && data[i].charAt(data[i].length - 1) === '>') {
+                try {
+                    const x = data[i].replace('<@!', '').replace('>', '')
+                    const user = await client.users.cache.find(user => user.id == x)
+                    if (user !== undefined) {
+                        //const u = '@' + user.username + '#' + user.discriminator
+                        const u = user.id == client.user ? process.env.BOT_NAME : user.username
+                        content = content.replace(data[i], u)
+                    }
+                } catch (err) { console.log(err) }
+            }
+        }
+    }
+
+    if (content === '') return
+    let _prev = undefined
+    if (!author.bot) {
+        _prev = prevMessage[channel.id]
+        prevMessage[channel.id] = author
+        if (prevMessageTimers[channel.id] !== undefined) clearTimeout(prevMessageTimers[channel.id])
+        prevMessageTimers[channel.id] = setTimeout(() => prevMessage[channel.id] = '', 120000)
+    }
+    const addPing = (_prev !== undefined && _prev !== '' && _prev !== author) || moreThanOneInConversation()
+    // Ignore all bots
+    if (author.bot) return
+    addMessageToHistory(channel.id, id, author.username, content)
+
+    const botMention = `<@!${client.user}>`;
+    const isDM = channel.type === channelTypes['dm']
+    const isMention = (channel.type === channelTypes['text'] && (mentions.has(client.user))) || isDM
+    const otherMention = !isMention && mentions.members !== null && mentions.members.size > 0
+    // TODO someone should document this section. I guess it's about detecting a conversation start,
+    // but it ignores all the other starting words and I have no idea how it's used.
+    // As usual with DigitalBeing code.
+    let startConv = false
+    let startConvName = ''
+    if (!isMention && !otherMention) {
+        const trimmed = content.trimStart()
+        if (trimmed.toLowerCase().startsWith('hi')) {
+            const parts = trimmed.split(' ')
+            if (parts.length > 1) {
+                if (!startsWithCapital(parts[1])) {
+                    startConv = true
+                }
+                else {
+                    startConv = false
+                    startConvName = parts[1]
+                }
+            }
+            else {
+                if (trimmed.toLowerCase() === 'hi') {
+                    startConv = true
+                }
+            }
+        }
+    }
+    if (otherMention) {
+        exitConversation(author.id)
+        mentions.members.forEach(pinged => exitConversation(pinged.id))
+    }
+    if (!startConv && !isMention) {
+        if (startConvName.length > 0) {
+            exitConversation(author.id)
+            exitConversation(startConvName)
+        }
+    }
+    const isDirectMethion = !content.startsWith('!') && content.toLowerCase().includes(client.bot_name.toLowerCase())
+    const isUserNameMention = (channel.type === channelTypes['text'] || isDM) &&
+        content.toLowerCase().replace(',', '')
+            .replace('.', '').replace('?', '').replace('!', '')
+            .match(client.username_regex)
+    const isInDiscussion = isInConversation(author.id)
+    if (!content.startsWith('!') && !otherMention) {
+        if (isMention) content = '!ping ' + content.replace(botMention, '').trim()
+        else if (isDirectMethion) content = '!ping ' + content.replace(client.name_regex, '').trim()
+        else if (isUserNameMention) {
+            content = '!ping ' + content.replace(client.username_regex, '').trim()
+        }
+        else if (isInDiscussion || startConv) content = '!ping ' + content
+    }
+
+    if (content.startsWith('!ping')) {
+        sentMessage(author.id)
+        const mention = `<@!${client.user.id}>`;
+        if (content.startsWith('!ping join') || content.startsWith('!ping ' + mention + ' join')) {
+            const d = content.split(' ')
+            const index = d.indexOf('join') + 1
+            if (d.length > index) {
+                const channelName = d[index]
+                await message.guild.channels.cache.forEach(async (channel) => {
+                    if (channel.type === channelTypes['voice'] && channel.name === channelName) {
+                        const connection = await channel.join()
+                        const receiver = connection.receiver
+                        const userStream = receiver.createStream(author, { mode: 'pcm', end: 'silence' })
+                        const writeStream = fs.createWriteStream('recording.pcm', {})
+
+                        const buffer = []
+                        userStream.on('data', (chunk) => {
+                            buffer.push(chunk)
+                            console.log(chunk)
+                            userStream.pipe(writeStream)
+                        });
+                        writeStream.on('pipe', console.log)
+                        userStream.on('finish', () => {
+                            channel.leave()
+                            /*const cmd = 'ffmpeg -i recording.pcm recording.wav';
+                            exec(cmd, (error, stdout, stderr) => {
+                                if (error) {
+                                    console.log(`error: ${error.message}`);
+                                    return;
+                                }
+                                if (stderr) {
+                                    console.log(`stderr: ${stderr}`);
+                                    return;
+                                }
+                                console.log(`stdout: ${stdout}`);
+                            });*/
+                        });
+                        return false
+                    }
+                })
+                return
+            }
+        }
+    }
+
+    // Set flag to true to skip using prefix if mentioning or DMing us
+    const prefixOptionalWhenMentionOrDM = client.config.prefixOptionalWhenMentionOrDM
+
+    const msgStartsWithMention = content.startsWith(botMention);
+
+    const messageContent = (isMention && msgStartsWithMention) ? content.replace(botMention, '').trim() : content;
+
+    const containsPrefix = messageContent.indexOf(client.config.prefix) === 0;
+
+    // If we are not being messaged and the prefix is not present (or bypassed via config flag), ignore message,
+    // so if msg does not contain prefix and either of
+    //   1. optional flag is not true or 2. bot has not been DMed or mentioned,
+    // then skip the message.
+    if (!containsPrefix && (!prefixOptionalWhenMentionOrDM || (!isMention && !isDM))) return;
+
+    setTimeout(() => {
+        channel.sendTyping();
+
+    }, message.content.length)
+
+    const response = await handleInput(message.content, message.author.username, process.env.AGENT ?? "Agent")
+    await discordPackerHandler.instance.handlePing(message.id, channel.id, response, addPing)
+};
+
+export const messageDelete = async (client, message) => {
+    const { author, channel, id } = message;
+    await deleteMessageFromHistory(channel.id, id)
+    if (author.id === client.user.id) return
+
+    const oldResponse = getResponse(channel.id, id)
+    if (oldResponse === undefined) return
+    await deleteMessageFromHistory(channel.id, oldResponse)
+
+    await channel.messages.fetch({ limit: client.edit_messages_max_count }).then(async messages => {
+        messages.forEach(function (resp) {
+            if (resp.id === oldResponse) {
+                resp.delete()
+            }
+        })
+    }).catch(err => console.log(err))
+
+    onMessageDeleted(channel.id, id)
+};
+
+export const messageUpdate = async (client, message) => {
+    const { author, channel, id } = message;
+    if (author === null || channel === null || id === null) return
+    if (database.instance.isUserBanned(author.id, 'discord')) return
+    if (author.id === client.user.id) {
+        await channel.messages.fetch(id).then(async msg => {
+            console.log('updating local msg to db')
+            await updateMessage(channel.id, id, msg.content)
+        });
+        console.log('same author')
+        return
+    }
+
+    const oldResponse = getResponse(channel.id, id)
+    if (oldResponse === undefined) {
+        await channel.messages.fetch(id).then(async msg => {
+            await updateMessage(channel.id, id, msg.content)
+        });
+        console.log('message not found')
+        return
+    }
+
+    channel.messages.fetch(oldResponse).then(async msg => {
+        channel.messages.fetch({ limit: client.edit_messages_max_count }).then(async messages => {
+            messages.forEach(async function (edited) {
+                if (edited.id === id) {
+                    const date = new Date();
+                    const utc = new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds());
+                    const utcStr = date.getDate() + '/' + (date.getMonth() + 1) + '/' + date.getFullYear() + ' ' + utc.getHours() + ':' + utc.getMinutes() + ':' + utc.getSeconds()
+
+                    let parentId = ''
+                    if (channel.type === channelTypes['thread']) {
+                        parentId = channel.prefixOptionalWhenMentionOrDM
+                    }
+
+                    Spine.instance.sendMessageEdit(edited.content, edited.id, 'Discord', edited.channel.id, utcStr, false, 'parentId:' + parentId)
+                }
+            })
+        })
+    }).catch(err => console.log(err + ' - ' + err.stack))
+};
+
+export const presenceUpdate = async (client, oldMember, newMember) => {
+    if (!oldMember || !newMember) {
+        console.log("Cannot update presence, oldMember or newMember is null")
+    } else
+        if (oldMember.status !== newMember.status) {
+            const date = new Date();
+            const utc = new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds());
+            const utcStr = date.getDate() + '/' + (date.getMonth() + 1) + '/' + date.getFullYear() + ' ' + utc.getHours() + ':' + utc.getMinutes() + ':' + utc.getSeconds()
+
+            client.users.fetch(newMember.userId).then(user => {
+                Spine.instance.sendUserUpdateEvent('Discord', newMember.status, user.username, utcStr)
+            })
+        }
+};
+
+export const ready = async (client) => {
+    await client.users.fetch(process.env.LOG_DM_USER_ID).then((user) => {
+        client.log_user = user
+    }).catch((error) => { console.log(error) });
+
+    await client.guilds.cache.forEach((server) => {
+        if (!server.deleted) {
+            console.log('fetching messages from server: ' + server.name)
+            client.api.applications(client.user.id).guilds(server.id).commands.post({
+                data: {
+                    name: "continue",
+                    description: "makes the agent continue"
+                }
+            });
+            client.api.applications(client.user.id).guilds(server.id).commands.post({
+                data: {
+                    name: "single_continue",
+                    description: "test"
+                }
+            });
+            client.api.applications(client.user.id).guilds(server.id).commands.post({
+                data: {
+                    name: "say",
+                    description: "makes the agent say something",
+                    options: [{
+                        name: 'text',
+                        description: 'text',
+                        type: 3,
+                        required: true
+                    }]
+                }
+            });
+
+            server.channels.cache.forEach(async (channel) => {
+                if (channel.type === channelTypes['text'] && channel.deleted === false && channel.permissionsFor(client.user.id).has(['SEND_MESSAGES', 'VIEW_CHANNEL'])) {
+                    Spine.instance.sendMetadata(channel.name, 'Discord', channel.id, channel.topic || 'none')
+                    channel.messages.fetch({ limit: 100 }).then(async messages => {
+                        messages.forEach(async function (msg) {
+                            let _author = msg.author.username
+                            if (msg.author.isBot || msg.author.username.toLowerCase().includes('digital being')) _author = process.env.BOT_NAME
+
+                            if (msg.deleted === true) { await deleteMessageFromHistory(channel.id, msg.id); console.log('deleted message: ' + msg.content) }
+                            else await wasHandled(channel.id, msg.id, _author, msg.content, msg.createdTimestamp)
+                        })
+                    })
+                }
+            })
+        }
+    });
+
+    console.log('client is ready')
+}
+
+export const embedColor = '#000000';
+export const _commandToValue = ([name, args, description]) =>
+    ['.' + name, args.join(' '), '-', description].join(' ');
+export const _commandToDescription = ([name, args, description]) =>
+    '```css\n' +
+    ['.' + name, args.join(' '), '-', description].join(' ') +
+    '```';
+export const _commandsToValue = commands =>
+    '```css\n' +
+    commands.map(command => _commandToValue(command)).join('\n') +
+    '```';
+
+
+export const helpFields = [
+    {
+        name: 'Tweak',
+        shortname: 'tweak',
+        commands: [
+            ['ping', ['HandleMessage'], ['sender', 'message', 'client_name', 'chat_id'], 'ping all agents'],
+            ['slash_command', ['HandleSlashCommand'], ['sender', 'command', 'args', 'client_name', 'chat_id', 'createdAt'], 'handle slash command'],
+            ['user_update', ['HandleUserUpdate'], ['username', 'event', 'createdAt'], 'handle user update'],
+            ['message_reaction', ['HandleMessageReaction'], ['client_name', 'chat_id', 'message_id', 'content', 'user', 'reaction', 'createdAt'], 'handle message reaction'],
+            ['pingagent', ['InvokeSoloAgent'], ['sender', 'message', 'agent', 'createdAt'], 'ping a single agent'],
+            ['agents', ['GetAgents'], [''], 'show all selected agents'],
+            ['setagent', ['SetAgentFields'], ['name', 'context'], 'update agents parameters'],
+            ['commands', [''], [''], 'Shows all available commands'],
+        ],
+        value: ''
+    },
+].map(o => {
+    o.value = _commandsToValue(o.commands);
+    return o;
+});
+
+export const _findCommand = commandName => {
+    let command = null;
+    for (const helpField of helpFields) {
+        for (const c of helpField.commands) {
+            const [name, args, description] = c;
+            if (name === commandName) {
+                command = c;
+                break;
+            }
+        }
+        if (command !== null) {
+            break;
+        }
+    }
+    return command;
+};
+
+export const _parseWords = s => {
+    const words = [];
+    const r = /\S+/g;
+    let match;
+    while (match = r.exec(s)) {
+        words.push(match);
+    }
+    return words;
+};
+
+export function replacePlaceholders(text) {
+    if (text === undefined || text === '') return ''
+
+    if (text.includes('{time_now}')) {
+        const now = new Date()
+        const time = now.getHours() + ':' + now.getMinutes() + ':' + now.getSeconds()
+        text = text.replace('{time_now}', time)
+    }
+    if (text.includes('{date_now}')) {
+        const today = new Date()
+        const date = today.getDay() + '/' + today.getMonth() + '/' + today.getFullYear()
+        text = text.replace('{date_now}', date)
+    }
+    if (text.includes('{year_now}')) {
+        text = text.replace('{year_now', new Date().getFullYear().toString())
+    }
+    if (text.includes('{month_now}')) {
+        text = text.replace('{month_now}', new Date().getMonth().toString())
+    }
+    if (text.includes('{day_now}')) {
+        text = text.replace('{day_now}', new Date().getDay().toString())
+    }
+    if (text.includes('{name}')) {
+        text = text.replace('{name}', client.bot_name)
+    }
+
+    return text
+}
+
+export async function sendSlashCommandResponse(client, interaction, chat_id, text) {
+    client.api.interactions(interaction.id, interaction.token).callback.post({
+        data: {
+            type: 4,
+            data: {
+                content: text
+            }
+        }
+    }).then(() => {
+        addMessageToHistory(chat_id, interaction.id, process.env.BOT_NAME, text)
+    }).catch(console.error)
+}
+
+export async function handleSlashCommand(client, interaction) {
+    const messageResponseHandler = undefined
+    const command = interaction.data.name.toLowerCase();
+    const sender = interaction.member.user.username + ''
+    const chatId = interaction.channel_id + ''
+
+    const dateNow = new Date();
+    var utc = new Date(dateNow.getUTCFullYear(), dateNow.getUTCMonth(), dateNow.getUTCDate(), dateNow.getUTCHours(), dateNow.getUTCMinutes(), dateNow.getUTCSeconds());
+    const utcStr = dateNow.getDate() + '/' + (dateNow.getMonth() + 1) + '/' + dateNow.getFullYear() + ' ' + utc.getHours() + ':' + utc.getMinutes() + ':' + utc.getSeconds()
+
+    Spine.instance.sendSlashCommand(sender, command, command === 'say' ? interaction.data.options[0].value : 'none', 'Discord', chatId, utcStr)
+}
+
+export class discordPackerHandler {
+    static instance
+    client
+
+    constructor(client) {
+        discordPackerHandler.instance = this
+        this.client = client
+    }
+
+    async handlePing(message_id, chat_id, responses, addPing) {
+        this.client.channels.fetch(chat_id).then(channel => {
+            channel.messages.fetch(message_id).then(message => {
+
+                console.log('response: ' + responses)
+                if (responses !== undefined && responses.length <= 2000 && responses.length > 0) {
+                    let text = replacePlaceholders(responses)
+                    if (addPing) {
+                        message.reply(text).then(async function (msg) {
+                            onMessageResponseUpdated(channel.id, message.id, msg.id)
+                            addMessageToHistory(channel.id, msg.id, process.env.BOT_NAME, text,)
+                        }).catch(console.error)
+
+                    } else {
+                        while (text === undefined || text === '' || text.replace(/\s/g, '').length === 0) text = getRandomEmptyResponse()
+                        console.log('response1: ' + text)
+                        message.channel.send(text).then(async function (msg) {
+                            onMessageResponseUpdated(channel.id, message.id, msg.id)
+                            addMessageToHistory(channel.id, msg.id, process.env.BOT_NAME, text,)
+                        }).catch(console.error)
+                    }
+                }
+                else if (responses.length >= 2000) {
+                    let text = replacePlaceholders(responses)
+                    if (addPing) {
+                        message.reply(text).then(async function (msg) {
+                            onMessageResponseUpdated(channel.id, message.id, msg.id)
+                            addMessageToHistory(channel.id, msg.id, process.env.BOT_NAME, text,)
+                        })
+                    } else {
+                        while (text === undefined || text === '' || text.replace(/\s/g, '').length === 0) text = getRandomEmptyResponse()
+                        console.log('response2: ' + text)
+                    }
+                    if (text.length > 0) {
+                        message.channel.send(text, { split: true }).then(async function (msg) {
+                            onMessageResponseUpdated(channel.id, message.id, msg.id)
+                            addMessageToHistory(channel.id, msg.id, process.env.BOT_NAME, text,)
+                        })
+                    }
+                }
+                else {
+                    const emptyResponse = getRandomEmptyResponse()
+                    console.log('sending empty response: ' + emptyResponse)
+                    if (emptyResponse !== undefined && emptyResponse !== '' && emptyResponse.replace(/\s/g, '').length !== 0) {
+                        let text = emptyResponse
+                        if (addPing) {
+                            message.reply(text).then(async function (msg) {
+                                onMessageResponseUpdated(channel.id, message.id, msg.id)
+                                addMessageToHistory(channel.id, msg.id, process.env.BOT_NAME, text,)
+                            }).catch(console.error)
+                        } else {
+                            while (text === undefined || text === '' || text.replace(/\s/g, '').length === 0) text = getRandomEmptyResponse()
+                            console.log('response4: ' + text)
+                            message.channel.send(text).then(async function (msg) {
+                                onMessageResponseUpdated(channel.id, message.id, msg.id)
+                                addMessageToHistory(channel.id, msg.id, process.env.BOT_NAME, text,)
+                            }).catch(console.error)
+                        }
+                    }
+                }
+
+            }).catch(err => console.log(err))
+        });
+    }
+
+    async handleSlashCommand(chat_id, response) {
+        this.client.channels.fetch(chat_id).then(channel => {
+            channel.send(response)
+            channel.stopTyping();
+
+            /*Object.keys(response.response).map(function(key, index) {
+                console.log('response: ' + response.response[key])
+                if (response.response[key] !== undefined && response.response[key].length > 0) {
+                    let text = response.response[key]
+                    while (text === undefined || text === '' || text.replace(/\s/g, '').length === 0) text = getRandomEmptyResponse()
+                    sendSlashCommandResponse(client, interaction, chatId, text)  
+               }
+                else {
+                    let emptyResponse = getRandomEmptyResponse()
+                    while (emptyResponse === undefined || emptyResponse === '' || emptyResponse.replace(/\s/g, '').length === 0) emptyResponse = getRandomEmptyResponse()
+                    sendSlashCommandResponse(client, interaction, chatId, emptyResponse)
+                }
+            });      */
+        }).catch(err => console.log(err))
+    }
+
+    async handleUserUpdateEvent(response) {
+        console.log('handleUserUpdateEvent: ' + response)
+    }
+
+    async handleGetAgents(chat_id, response) {
+        this.client.channels.fetch(chat_id).then(channel => {
+            channel.send(response)
+            channel.stopTyping();
+        }).catch(err => console.log(err))
+    }
+
+    async handleSetAgentsFields(chat_id, response) {
+        this.client.channels.fetch(chat_id).then(channel => {
+            channel.send(response)
+            channel.stopTyping();
+        }).catch(err => console.log(err))
+    }
+
+    async handlePingSoloAgent(chat_id, message_id, responses, addPing) {
+        this.client.channels.fetch(chat_id).then(channel => {
+            channel.messages.fetch(message_id).then(message => {
+                Object.keys(responses).map(function (key, index) {
+                    console.log('response: ' + responses)
+                    if (responses !== undefined && responses.length <= 2000 && responses.length > 0) {
+                        let text = replacePlaceholders(responses)
+                        if (addPing) {
+                            message.reply(text).then(async function (msg) {
+                                onMessageResponseUpdated(channel.id, message.id, msg.id)
+                                addMessageToHistory(channel.id, msg.id, process.env.BOT_NAME, text,)
+                            }).catch(console.error)
+
+                        } else {
+                            while (text === undefined || text === '' || text.replace(/\s/g, '').length === 0) text = getRandomEmptyResponse()
+                            console.log('response1: ' + text)
+                            message.channel.send(text).then(async function (msg) {
+                                onMessageResponseUpdated(channel.id, message.id, msg.id)
+                                addMessageToHistory(channel.id, msg.id, process.env.BOT_NAME, text,)
+                            }).catch(console.error)
+                        }
+                    }
+                    else if (responses.length >= 2000) {
+                        let text = replacePlaceholders(responses)
+                        if (addPing) {
+                            message.reply(text).then(async function (msg) {
+                                onMessageResponseUpdated(channel.id, message.id, msg.id)
+                                addMessageToHistory(channel.id, msg.id, process.env.BOT_NAME, text,)
+                            })
+                        } else {
+                            while (text === undefined || text === '' || text.replace(/\s/g, '').length === 0) text = getRandomEmptyResponse()
+                            console.log('response2: ' + text)
+                        }
+                        if (text.length > 0) {
+                            message.channel.send(text, { split: true }).then(async function (msg) {
+                                onMessageResponseUpdated(channel.id, message.id, msg.id)
+                                addMessageToHistory(channel.id, msg.id, process.env.BOT_NAME, text,)
+                            })
+                        }
+                    }
+                    else {
+                        const emptyResponse = getRandomEmptyResponse()
+                        console.log('sending empty response: ' + emptyResponse)
+                        if (emptyResponse !== undefined && emptyResponse !== '' && emptyResponse.replace(/\s/g, '').length !== 0) {
+                            let text = emptyResponse
+                            if (addPing) {
+                                message.reply(text).then(async function (msg) {
+                                    onMessageResponseUpdated(channel.id, message.id, msg.id)
+                                    addMessageToHistory(channel.id, msg.id, process.env.BOT_NAME, text,)
+                                }).catch(console.error)
+                            } else {
+                                while (text === undefined || text === '' || text.replace(/\s/g, '').length === 0) text = getRandomEmptyResponse()
+                                console.log('response4: ' + text)
+                                message.channel.send(text).then(async function (msg) {
+                                    onMessageResponseUpdated(channel.id, message.id, msg.id)
+                                    addMessageToHistory(channel.id, msg.id, process.env.BOT_NAME, text,)
+                                }).catch(console.error)
+                            }
+                        }
+                    }
+                });
+
+            })
+        }).catch(err => console.log(err))
+    }
+
+    async handleMessageReactionAdd(response) {
+        console.log('handleMessageReactionAdd: ' + response)
+    }
+
+    async handleMessageEdit(message_id, chat_id, responses, addPing) {
+
+        this.client.channels.fetch(chat_id).then(async channel => {
+            const oldResponse = getResponse(channel.id, message_id)
+            if (oldResponse === undefined) {
+                return
+            }
+
+            channel.messages.fetch(oldResponse).then(async msg => {
+                channel.messages.fetch({ limit: this.client.edit_messages_max_count }).then(async messages => {
+                    messages.forEach(async function (edited) {
+                        if (edited.id === message_id) {
+                            // Warn an offending user about their actions
+                            let warn_offender = function (_user, ratings) {
+                                edited.author.send(`You've got ${ratings} warnings and you will get blocked at 10!`)
+                            }
+                            // Ban an offending user
+                            let ban_offender = function (message, _user) {
+                                database.instance.banUser(edited.author.id, 'discord')
+                                // TODO doesn't work with both discord-inline-reply and discord-reply
+                                // message.lineReply('blocked')
+                                edited.author.send(`You've been blocked!`)
+                            }
+
+                            await updateMessage(channel.id, edited.id, edited.content)
+
+                            Object.keys(responses).map(async function (key, index) {
+                                console.log('response: ' + responses)
+                                if (responses !== undefined && responses.length <= 2000 && responses.length > 0) {
+                                    let text = replacePlaceholders(responses)
+                                    while (text === undefined || text === '' || text.replace(/\s/g, '').length === 0) text = getRandomEmptyResponse()
+                                    console.log('response1: ' + text)
+                                    msg.edit(text)
+                                    onMessageResponseUpdated(channel.id, edited.id, msg.id)
+                                    await updateMessage(channel.id, msg.id, msg.content)
+                                }
+                                else if (responses.length >= 2000) {
+                                    let text = replacePlaceholders(responses)
+                                    while (text === undefined || text === '' || text.replace(/\s/g, '').length === 0) text = getRandomEmptyResponse()
+                                    console.log('response2: ' + text)
+
+                                    if (text.length > 0) {
+                                        edited.channel.send(text, { split: true }).then(async function (msg) {
+                                            onMessageResponseUpdated(channel.id, edited.id, msg.id)
+                                            addMessageToHistory(channel.id, msg.id, process.env.BOT_NAME, text,)
+                                        })
+                                    }
+                                }
+                                else {
+                                    const emptyResponse = getRandomEmptyResponse()
+                                    console.log('sending empty response: ' + emptyResponse)
+                                    if (emptyResponse !== undefined && emptyResponse !== '' && emptyResponse.replace(/\s/g, '').length !== 0) {
+                                        let text = emptyResponse
+                                        while (text === undefined || text === '' || text.replace(/\s/g, '').length === 0) text = getRandomEmptyResponse()
+                                        console.log('response4: ' + text)
+                                        msg.edit(text)
+                                        onMessageResponseUpdated(channel.id, edited.id, msg.id)
+                                        await updateMessage(channel.id, msg.id, msg.content)
+                                    }
+                                }
+                            });
+                            edited.channel.stopTyping();
+                        }
+                    })
+                }).catch(err => console.log(err))
+            })
+        })
+    }
+}
+
+const DISCORD_API_TOKEN = process.env.DISCORD_API_TOKEN
+
+export const prevMessage = {}
+export const prevMessageTimers = {}
+export const messageResponses = {}
+export const conversation = {}
+
+export function onMessageDeleted(channel, messageId) {
+    if (messageResponses[channel] !== undefined && messageResponses[channel][messageId] !== undefined) {
+        delete messageResponses[channel][messageId]
+    }
+}
+export function onMessageResponseUpdated(channel, messageId, newResponse) {
+    if (messageResponses[channel] === undefined) messageResponses[channel] = {}
+    messageResponses[channel][messageId] = newResponse
+}
+
+export function getMessage(channel, messageId) {
+    return channel.messages.fetchMessage(messageId)
+}
+
+export function isInConversation(user) {
+    return conversation[user] !== undefined && conversation[user].isInConversation === true
+}
+
+export function sentMessage(user) {
+    for (let c in conversation) {
+        if (c === user) continue
+        if (conversation[c] !== undefined && conversation[c].timeOutFinished === true) {
+            exitConversation(c)
+        }
+    }
+
+    if (conversation[user] === undefined) {
+        conversation[user] = { timeoutId: undefined, timeOutFinished: true, isInConversation: true }
+        if (conversation[user].timeoutId !== undefined) clearTimeout(conversation[user].timeoutId)
+        conversation[user].timeoutId = setTimeout(() => {
+            if (conversation[user] !== undefined) {
+                conversation[user].timeoutId = undefined
+                conversation[user].timeOutFinished = true
+            }
+        }, 480000)
+    } else {
+        conversation[user].timeoutId = setTimeout(() => {
+            if (conversation[user] !== undefined) {
+                conversation[user].timeoutId = undefined
+                conversation[user].timeOutFinished = true
+            }
+        }, 480000)
+    }
+}
+
+export function exitConversation(user) {
+    if (conversation[user] !== undefined) {
+        if (conversation[user].timeoutId !== undefined) clearTimeout(conversation[user].timeoutId)
+        conversation[user].timeoutId = undefined
+        conversation[user].timeOutFinished = true
+        conversation[user].isInConversation = false
+        delete conversation[user]
+    }
+}
+
+export function getResponse(channel, message) {
+    if (messageResponses[channel] === undefined) return undefined
+    return messageResponses[channel][message]
+}
+
+export function addMessageToHistory(chatId, messageId, senderName, content) {
+    if (!database || !database.instance) return // console.log("Postgres not inited");
+    database.instance.addMessageInHistory('discord', chatId, messageId, senderName, content)
+}
+
+export async function addMessageInHistoryWithDate(chatId, messageId, senderName, content, timestamp) {
+    if (!database || !database.instance) return // console.log("Postgres not inited");
+    await database.instance.addMessageInHistoryWithDate('discord', chatId, messageId, senderName, content, timestamp)
+}
+
+export async function deleteMessageFromHistory(chatId, messageId) {
+    if (!database || !database.instance) return // console.log("Postgres not inited");
+    await database.instance.deleteMessage('discord', chatId, messageId)
+}
+
+export async function updateMessage(chatId, messageId, newContent) {
+    if (!database || !database.instance) return // console.log("Postgres not inited");
+    await database.instance.updateMessage('discord', chatId, messageId, newContent, true)
+}
+
+export async function wasHandled(chatId, messageId, sender, content, timestamp) {
+    if (!database || !database.instance) return // console.log("Postgres not inited");
+    return await database.instance.messageExists('discord', chatId, messageId, sender, content, timestamp)
+}
+
+export function moreThanOneInConversation() {
+    let count = 0
+    for (let c in conversation) {
+        if (conversation[c] === undefined) continue
+        if (conversation[c].isInConversation !== undefined && conversation[c].isInConversation === true && conversation[c].timeOutFinished === false) count++
+    }
+
+    return count > 1
+}
+
+export let client = undefined
+
+export const createDiscordClient = () => {
+    if (!process.env.DISCORD_API_TOKEN) return console.warn('No API token for Discord bot, skipping');
+    console.log("Creating Discord client");
+    client = new Discord.Client({
+        partials: ['MESSAGE', 'USER', 'REACTION'],
+        intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_PRESENCES, Intents.FLAGS.GUILD_MEMBERS, Intents.FLAGS.GUILD_MESSAGES]
+    })
+    //{ intents: [ Intents.GUILDS, Intents.GUILD_MEMBERS, Intents.GUILD_VOICE_STATES, Intents.GUILD_PRESENCES, Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.DIRECT_MESSAGES] });
+    // We also need to make sure we're attaching the config to the CLIENT so it's accessible everywhere!
+    client.config = config;
+    client.helpFields = helpFields;
+    client._findCommand = _findCommand;
+    client._parseWords = _parseWords;
+    client.bot_name = config.bot_name
+    client.name_regex = new RegExp(config.bot_name, 'ig')
+    client.username_regex = new RegExp(process.env.BOT_NAME_REGEX, 'ig')
+    client.edit_messages_max_count = process.env.EDIT_MESSAGES_MAX_COUNT
+
+    const embed = new Discord.MessageEmbed()
+        .setColor(0x00AE86)
+
+    client.embed = embed;
+
+    client.on("messageCreate", messageCreate.bind(null, client));
+    client.on("messageDelete", messageDelete.bind(null, client));
+    client.on("messageUpdate", messageUpdate.bind(null, client));
+    client.on("presenceUpdate", presenceUpdate.bind(null, client));
+
+    client.on('interactionCreate', async interaction => {
+        console.log("Handling interaction", interaction);
+        handleSlashCommand(client, interaction)
+    });
+    client.on('guildMemberAdd', async user => {
+        handleGuildMemberAdd(user);
+    });
+    client.on('guildMemberRemove', async user => {
+        handleGuildMemberRemove(user)
+    });
+    client.on('messageReactionAdd', async (reaction, user) => {
+        handleMessageReactionAdd(reaction, user)
+    });
+
+    // TODO: Move to the message create handler now that it's loading
+
+    //     client.on("message", async message => {
+    //       if(message.author.username.includes("GPTBot")) return;
+    //       handleDigitalBeingInput({ message, username: message.author.username, client_name: "Discord" });
+    // });
+
+    client.commands = new Discord.Collection();
+
+    client.commands.set("agents", agents);
+    client.commands.set("ban", ban);
+    client.commands.set("commands", commands);
+    client.commands.set("ping", ping);
+    client.commands.set("pingagent", pingagent);
+    client.commands.set("setagent", setagent);
+    client.commands.set("setname", setname);
+    client.commands.set("unban", unban);
+
+    client.login(process.env.DISCORD_API_TOKEN);
+    console.log("Creating new discord packer handler");
+    new discordPackerHandler(client)
+};
+
+export default createDiscordClient;
