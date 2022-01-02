@@ -51,7 +51,7 @@ export async function formOpinionAboutSpeaker(speaker, agent, input) {
 
     // const { opinionModel } = JSON.parse(fs.readFileSync(rootDir + "/agents/common/config.json").toString());
 
-    // const { success, choice } = await makeGPTRequest(data, speaker, agent, "opinion", opinionModel);
+    // const { success, choice } = await makeCompletionRequest(data, speaker, agent, "opinion", opinionModel);
     // if (success && choice.text != "" && !choice.text.includes("no facts")) {
     //     fs.appendFileSync(agentFactsFile, (agent + ": " + choice.text + "\n").replace("\n\n", "\n"));
     // }

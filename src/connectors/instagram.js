@@ -82,7 +82,7 @@ export const createInstagramClient = async () => {
                         console.log('got new message: ' + pending.last_permanent_item.text)
 
                         // TODO: Handle me to the response handler
-                        // Spine.instance.sendMessage(pending.last_permanent_item.text,
+                        // MessageClient.instance.sendMessage(pending.last_permanent_item.text,
                         //     pending.last_permanent_item.item_id + '', 
                         //     'instagram',
                         //     pending.thread_id, 

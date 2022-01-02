@@ -1,5 +1,5 @@
 import fs from "fs";
-import { makeGPTRequest } from "../utilities/makeGPTRequest.js";
+import { makeCompletionRequest } from "../utilities/makeCompletionRequest.js";
 import getFilesForSpeakerAndAgent from "../database/getFilesForSpeakerAndAgent.js";
 
 import { rootDir } from "../utilities/rootDir.js";
@@ -22,7 +22,7 @@ export async function summarizeAndStoreFactsAboutSpeaker(speaker, agent, input) 
         "stop": ["\"\"\"", "\n"]
     };
 
-    let { success, choice } = await makeGPTRequest(data, speaker, agent, "speaker_facts", summarizationModel);
+    let { success, choice } = await makeCompletionRequest(data, speaker, agent, "speaker_facts", summarizationModel);
     if (success && choice.text != "" && !choice.text.includes("no facts")) {
         fs.appendFileSync(speakerFactsFile, (speaker + ": " + choice.text + "\n").replace("\n\n", "\n"));
     }

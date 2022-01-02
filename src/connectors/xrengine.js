@@ -651,7 +651,7 @@ class XREngineBot {
                     const _data = data[1]
                     console.log(`Scene Metadata: Data:${_data}`)
                     // TODO: Replace me with metadata handler
-                    // Spine.instance.sendMetadata('xr-engine', 'xr-engine', 'xr-engine', data || 'none')
+                    // MessageClient.instance.sendMetadata('xr-engine', 'xr-engine', 'xr-engine', data || 'none')
                 }
                 else
                     console.log(`invalid scene metadata length (${data.length}): ${data}`)

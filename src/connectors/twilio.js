@@ -37,7 +37,7 @@ export async function message(req, res) {
         const utcStr = dateNow.getDate() + '/' + (dateNow.getMonth() + 1) + '/' + dateNow.getFullYear() + ' ' + utc.getHours() + ':' + utc.getMinutes() + ':' + utc.getSeconds()
         
         // TODO: Replace me with direct message handler
-        // Spine.instance.sendMessage(req.body.Body, msgId + '' || '1', 'Twilio', req.body.From, utcStr, false, req.body.From)
+        // MessageClient.instance.sendMessage(req.body.Body, msgId + '' || '1', 'Twilio', req.body.From, utcStr, false, req.body.From)
     })
 }
 

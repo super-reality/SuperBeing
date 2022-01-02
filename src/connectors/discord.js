@@ -21,7 +21,9 @@ const config = {
     var utc = new Date(dateNow.getUTCFullYear(), dateNow.getUTCMonth(), dateNow.getUTCDate(), dateNow.getUTCHours(), dateNow.getUTCMinutes(), dateNow.getUTCSeconds());
     const utcStr = dateNow.getDate() + '/' + (dateNow.getMonth() + 1) + '/' + dateNow.getFullYear() + ' ' + utc.getHours() + ':' + utc.getMinutes() + ':' + utc.getSeconds()
     
-    Spine.instance.sendUserUpdateEvent('Discord', 'join', username, utcStr)
+    // TODO: Replace me with direct message handler
+    console.log('Discord', 'join', username, utcStr);
+    // MessageClient.instance.sendUserUpdateEvent('Discord', 'join', username, utcStr)
 };
 
 export async function handleGuildMemberRemove(user) {
@@ -31,8 +33,9 @@ export async function handleGuildMemberRemove(user) {
     const dateNow = new Date();
     var utc = new Date(dateNow.getUTCFullYear(), dateNow.getUTCMonth(), dateNow.getUTCDate(), dateNow.getUTCHours(), dateNow.getUTCMinutes(), dateNow.getUTCSeconds());
     const utcStr = dateNow.getDate() + '/' + (dateNow.getMonth() + 1) + '/' + dateNow.getFullYear() + ' ' + utc.getHours() + ':' + utc.getMinutes() + ':' + utc.getSeconds()
-    
-    Spine.instance.sendUserUpdateEvent('Discord', 'leave', username, utcStr)
+    // TODO: Replace me with direct message handler
+    console.log('Discord', 'leave', username, utcStr);
+    // MessageClient.instance.sendUserUpdateEvent('Discord', 'leave', username, utcStr)
 };
 
 
@@ -44,11 +47,15 @@ export async function handleMessageReactionAdd(reaction, user) {
     var utc = new Date(dateNow.getUTCFullYear(), dateNow.getUTCMonth(), dateNow.getUTCDate(), dateNow.getUTCHours(), dateNow.getUTCMinutes(), dateNow.getUTCSeconds());
     const utcStr = dateNow.getDate() + '/' + (dateNow.getMonth() + 1) + '/' + dateNow.getFullYear() + ' ' + utc.getHours() + ':' + utc.getMinutes() + ':' + utc.getSeconds()
     
-    Spine.instance.sendMessageReactionAdd('Discord', message.channel.id, message.id, message.content, user.username, emojiName, utcStr)
+    // TODO: Replace me with direct message handler
+    console.log('Discord', message.channel.id, message.id, message.content, user.username, emojiName, utcStr);
+    // MessageClient.instance.sendMessageReactionAdd('Discord', message.channel.id, message.id, message.content, user.username, emojiName, utcStr)
 };
 
 export async function agents (client, message, args, author, addPing, channel) {
-    Spine.instance.sendGetAgents('Discord', message.channel.id)
+    console.log('Discord', message.channel.id)
+        // TODO: Replace me with direct message handler
+    // MessageClient.instance.sendGetAgents('Discord', message.channel.id)
 }
 
 export async function ban (client, message, args, author, addPing, channel) {
@@ -106,7 +113,9 @@ export async function ping(client, message, args, author, addPing, channel) {
         parentId = args.grpc_args['parentId']
     }
 
-    Spine.instance.sendMessage(args.grpc_args['message'], message.id, 'Discord', args.grpc_args['chat_id'], utcStr, addPing, author.username, 'parentId:' + parentId)
+    // TODO: Replace me with direct message handler
+    // MessageClient.instance.sendMessage(args.grpc_args['message'], message.id, 'Discord', args.grpc_args['chat_id'], utcStr, addPing, author.username, 'parentId:' + parentId)
+    console.log(args.grpc_args['message'], message.id, 'Discord', args.grpc_args['chat_id'], utcStr, addPing, author.username, 'parentId:' + parentId)
 }
 
 export async function pingagent (client, message, args, author, addPing, channel) {
@@ -118,7 +127,10 @@ export async function pingagent (client, message, args, author, addPing, channel
         message.channel.stopTyping();
         return
     }
-    Spine.instance.sendPingSoloAgent('Discord', message.channel.id, message.id, args.grpc_args['message'], args.grpc_args['agent'], addPing, author.username)
+
+        // TODO: Replace me with direct message handler
+        console.log('Discord', message.channel.id, message.id, args.grpc_args['message'], args.grpc_args['agent'], addPing, author.username);
+    // MessageClient.instance.sendPingSoloAgent('Discord', message.channel.id, message.id, args.grpc_args['message'], args.grpc_args['agent'], addPing, author.username)
 }
 
 export async function setagent (client, message, args, author, addPing, channel) {
@@ -136,7 +148,10 @@ export async function setagent (client, message, args, author, addPing, channel)
         message.channel.stopTyping();
         return
     }
-    Spine.instance.sendSetAgentsFields('Discord', message.channel.id, args.grpc_args['name'], args.grpc_args['context'])
+
+    // TODO: Replace me with direct message handler
+    console.log('Discord', message.channel.id, args.grpc_args['name'], args.grpc_args['context']);
+    // MessageClient.instance.sendSetAgentsFields('Discord', message.channel.id, args.grpc_args['name'], args.grpc_args['context'])
 }
 
 export async function setname (client, message, args, author, addPing, channel) {
@@ -409,7 +424,9 @@ export const messageUpdate = async (client, message) => {
                         parentId = channel.prefixOptionalWhenMentionOrDM
                     }
 
-                    Spine.instance.sendMessageEdit(edited.content, edited.id, 'Discord', edited.channel.id, utcStr, false, 'parentId:' + parentId)
+                    // TODO: Replace message with direct message handler
+                    console.log (edited.content, edited.id, 'Discord', edited.channel.id, utcStr, false, 'parentId:' + parentId)
+                    // MessageClient.instance.sendMessageEdit(edited.content, edited.id, 'Discord', edited.channel.id, utcStr, false, 'parentId:' + parentId)
                 }
             })
         })
@@ -426,7 +443,9 @@ export const presenceUpdate = async (client, oldMember, newMember) => {
             const utcStr = date.getDate() + '/' + (date.getMonth() + 1) + '/' + date.getFullYear() + ' ' + utc.getHours() + ':' + utc.getMinutes() + ':' + utc.getSeconds()
 
             client.users.fetch(newMember.userId).then(user => {
-                Spine.instance.sendUserUpdateEvent('Discord', newMember.status, user.username, utcStr)
+                // TODO: Replace message with direct message handler
+                console.log('Discord', newMember.status, user.username, utcStr)
+                // MessageClient.instance.sendUserUpdateEvent('Discord', newMember.status, user.username, utcStr)
             })
         }
 };
@@ -466,7 +485,9 @@ export const ready = async (client) => {
 
             server.channels.cache.forEach(async (channel) => {
                 if (channel.type === channelTypes['text'] && channel.deleted === false && channel.permissionsFor(client.user.id).has(['SEND_MESSAGES', 'VIEW_CHANNEL'])) {
-                    Spine.instance.sendMetadata(channel.name, 'Discord', channel.id, channel.topic || 'none')
+                    // TODO: Replace message with direct message handler
+                    console.log(channel.name, 'Discord', channel.id, channel.topic || 'none');
+                    // MessageClient.instance.sendMetadata(channel.name, 'Discord', channel.id, channel.topic || 'none')
                     channel.messages.fetch({ limit: 100 }).then(async messages => {
                         messages.forEach(async function (msg) {
                             let _author = msg.author.username
@@ -596,8 +617,9 @@ export async function handleSlashCommand(client, interaction) {
     const dateNow = new Date();
     var utc = new Date(dateNow.getUTCFullYear(), dateNow.getUTCMonth(), dateNow.getUTCDate(), dateNow.getUTCHours(), dateNow.getUTCMinutes(), dateNow.getUTCSeconds());
     const utcStr = dateNow.getDate() + '/' + (dateNow.getMonth() + 1) + '/' + dateNow.getFullYear() + ' ' + utc.getHours() + ':' + utc.getMinutes() + ':' + utc.getSeconds()
-
-    Spine.instance.sendSlashCommand(sender, command, command === 'say' ? interaction.data.options[0].value : 'none', 'Discord', chatId, utcStr)
+    // TODO: Replace message with direct message handler
+    console.log(sender, command, command === 'say' ? interaction.data.options[0].value : 'none', 'Discord', chatId, utcStr)
+    // MessageClient.instance.sendSlashCommand(sender, command, command === 'say' ? interaction.data.options[0].value : 'none', 'Discord', chatId, utcStr)
 }
 
 export class discordPackerHandler {

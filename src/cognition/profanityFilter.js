@@ -2,10 +2,10 @@ import { profanity } from '@2toad/profanity';
 import grawlix from 'grawlix';
 import grawlixRacism from 'grawlix-racism';
 import getFilesForSpeakerAndAgent from "../database/getFilesForSpeakerAndAgent.js";
-import { makeGPTRequest } from "../utilities/makeGPTRequest.js";
+import { makeCompletionRequest } from "../utilities/makeCompletionRequest.js";
 import fs from 'fs';
 import { rootDir } from "../utilities/rootDir.js";
-import { makeHFRequest } from "../utilities/makeHFRequest.js";
+import { makeModelRequest } from "../utilities/makeModelRequest.js";
 
 const HF_API_TOKEN = process.env.HF_API_TOKEN;
 
@@ -53,7 +53,7 @@ function getWordCount(text) {
 
 async function testIfIsToxic(text, threshold) {
     if (HF_API_TOKEN) {
-        const result = await makeHFRequest(text, "unitary/toxic-bert");
+        const result = await makeModelRequest(text, "unitary/toxic-bert");
         console.log(result);
         result[0].forEach((sentence) => {
             if (sentence.score > threshold) {
@@ -155,7 +155,7 @@ async function filterWithOpenAI(speaker, agent, text) {
     let shouldFilter = false;
 
     // Make the request
-    const { success, choice } = await makeGPTRequest(data, speaker, agent, "filter", "content-filter-alpha");
+    const { success, choice } = await makeCompletionRequest(data, speaker, agent, "filter", "content-filter-alpha");
 
     // If request failed, return
     if (!success) {
@@ -197,7 +197,7 @@ async function filterByRating(speaker, agent, text) {
     };
 
     // Make the request
-    const { success, choice } = await makeGPTRequest(data, speaker, agent, "rating");
+    const { success, choice } = await makeCompletionRequest(data, speaker, agent, "rating");
 
     // If it's for everyone, just allow it
     const isForEveryone = validateESRB(speaker, agent, text, true);

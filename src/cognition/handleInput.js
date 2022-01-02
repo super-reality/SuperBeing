@@ -11,7 +11,7 @@ import { handleTwilio } from '../connectors/twilio.js';
 import { twitterPacketHandler } from '../connectors/twitter.js';
 import { checkThatFilesExist } from "../database/checkThatFilesExist.js";
 import getFilesForSpeakerAndAgent from "../database/getFilesForSpeakerAndAgent.js";
-import { makeGPTRequest } from "../utilities/makeGPTRequest.js";
+import { makeCompletionRequest } from "../utilities/makeCompletionRequest.js";
 import { evaluateTextAndRespondIfToxic } from "./profanityFilter.js";
 import { rootDir } from "../utilities/rootDir.js";
 import { xrEnginePacketHandler } from '../connectors/xrengine.js';
@@ -308,7 +308,7 @@ export async function handleInput(message, speaker, agent, res) {
         };
 
         // Call the transformer API
-        const { success, choice } = await makeGPTRequest(data, speaker, agent, "conversation");
+        const { success, choice } = await makeCompletionRequest(data, speaker, agent, "conversation");
 
         // If it fails, tell speaker they had an error
         if (!success) {

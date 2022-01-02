@@ -4,7 +4,7 @@ config();
 
 const HF_API_TOKEN = process.env.HF_API_TOKEN;
 
-export async function makeHFRequest(inputs, model, parameters = {}, options = {use_cache: false, wait_for_model: true}) {
+export async function makeModelRequest(inputs, model, parameters = {}, options = {use_cache: false, wait_for_model: true}) {
         try {
                 const response = await fetch(`https://api-inference.huggingface.co/models/${model}`, {
                         headers: { "Authorization": `Bearer ${HF_API_TOKEN}` },

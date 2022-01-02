@@ -1,15 +1,15 @@
 import axios from 'axios';
 import fs from 'fs';
-import { rootDir } from "../utilities/rootDir.js";
+import { rootDir } from "./rootDir.js";
 import { config } from "dotenv";
-import { makeHFRequest } from "./makeHFRequest.js";
+import { makeModelRequest } from "./makeModelRequest.js";
 import getFilesForSpeakerAndAgent from "../database/getFilesForSpeakerAndAgent.js";
 import { checkThatFilesExist } from "../database/checkThatFilesExist.js";
 config();
 
 const useGPTJ = process.env.USE_GPTJ == "true";
 
-export async function makeGPTRequest(data, speaker, agent, type, engine, log = true) {
+export async function makeCompletionRequest(data, speaker, agent, type, engine, log = true) {
         if (agent && speaker) checkThatFilesExist(speaker, agent);
         if (useGPTJ) {
                 const params = {
@@ -22,7 +22,7 @@ export async function makeGPTRequest(data, speaker, agent, type, engine, log = t
                 const options = {
                         wait_for_model: true
                 }
-                const response = await makeHFRequest(data.prompt, "EleutherAI/gpt-j-6B", params, options);
+                const response = await makeModelRequest(data.prompt, "EleutherAI/gpt-j-6B", params, options);
 
                 if (log && speaker && agent) {
                         const conversationDirectory = getFilesForSpeakerAndAgent(speaker, agent).conversationDirectory;

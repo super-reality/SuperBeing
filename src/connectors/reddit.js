@@ -152,7 +152,7 @@ export const createRedditClient = async () => {
             const body = post.body
             const timestamp = post.created_utc
             // TODO: Replace me with input handler
-            // Spine.instance.sendMessage(body, id, 'reddit', chat_id, timestamp, false, author, 'isPost') 
+            // MessageClient.instance.sendMessage(body, id, 'reddit', chat_id, timestamp, false, author, 'isPost') 
             const date = new Date(post.created)
             const utc = new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds());
             const utcStr = date.getDate() + '/' + (date.getMonth() + 1) + '/' + date.getFullYear() + ' ' + utc.getHours() + ':' + utc.getMinutes() + ':' + utc.getSeconds()
@@ -167,7 +167,9 @@ export const createRedditClient = async () => {
                 const author = post.author
                 const body = post.body
                 const timestamp = post.created_utc
-                Spine.instance.sendMessage(body, id, 'reddit', chat_id, timestamp, false, author, 'isPost') 
+                // TODO: Replace with direct message handler
+                console.log(body, id, 'reddit', chat_id, timestamp, false, author, 'isPost');
+                // MessageClient.instance.sendMessage(body, id, 'reddit', chat_id, timestamp, false, author, 'isPost') 
                 const date = new Date(post.created)
                 const utc = new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds());
                 const utcStr = date.getDate() + '/' + (date.getMonth() + 1) + '/' + date.getFullYear() + ' ' + utc.getHours() + ':' + utc.getMinutes() + ':' + utc.getSeconds()
@@ -193,7 +195,9 @@ export const createRedditClient = async () => {
             const author = post.author.name
             const body = post.selftext
             const timestamp = post.created_utc
-            Spine.instance.sendMessage(body, id, 'reddit', id, timestamp, false, author, 'isPost') 
+            // TODO: Replace with direct message handler
+            console.log(body, id, 'reddit', id, timestamp, false, author, 'isPost');
+            // MessageClient.instance.sendMessage(body, id, 'reddit', id, timestamp, false, author, 'isPost') 
             const date = new Date(post.created)
             const utc = new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds());
             const utcStr = date.getDate() + '/' + (date.getMonth() + 1) + '/' + date.getFullYear() + ' ' + utc.getHours() + ':' + utc.getMinutes() + ':' + utc.getSeconds()
@@ -208,7 +212,9 @@ export const createRedditClient = async () => {
                 const author = post.author
                 const body = post.selftext
                 const timestamp = post.created_utc
-                Spine.instance.sendMessage(body, id, 'reddit', id, timestamp, false, author, 'isPost') 
+                // TODO: Replace with direct message handler
+                console.log(body, id, 'reddit', id, timestamp, false, author, 'isPost');
+                // MessageClient.instance.sendMessage(body, id, 'reddit', id, timestamp, false, author, 'isPost') 
                 const date = new Date(post.created)
                 const utc = new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds());
                 const utcStr = date.getDate() + '/' + (date.getMonth() + 1) + '/' + date.getFullYear() + ' ' + utc.getHours() + ':' + utc.getMinutes() + ':' + utc.getSeconds()
@@ -229,7 +235,9 @@ export const createRedditClient = async () => {
                 //console.log('current message: ' + body)
                 await database.instance.messageExistsAsyncWitHCallback('reddit', senderId, id, author, body, timestamp, () => {
                     console.log('got new message: ' + body)
-                    Spine.instance.sendMessage(body, id, 'reddit', senderId, timestamp, false, author, 'isChat')
+                    // TODO: Replace with direct message handler
+                    console.log(body, id, 'reddit', senderId, timestamp, false, author, 'isChat');
+                    // MessageClient.instance.sendMessage(body, id, 'reddit', senderId, timestamp, false, author, 'isChat')
                     const date = new Date(timestamp)
                     const utc = new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds());
                     const utcStr = date.getDate() + '/' + (date.getMonth() + 1) + '/' + date.getFullYear() + ' ' + utc.getHours() + ':' + utc.getMinutes() + ':' + utc.getSeconds()

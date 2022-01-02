@@ -126,7 +126,7 @@ export async function onMessageEdit(bot, msg, botName) {
     const utcStr = dateNow.getDate() + '/' + (dateNow.getMonth() + 1) + '/' + dateNow.getFullYear() + ' ' + utc.getHours() + ':' + utc.getMinutes() + ':' + utc.getSeconds()
 
     // TODO: Replace with the direct message handler
-    // Spine.instance.sendMessageEdit(msg.text, msg.message_id + '', 'Telegram', msg.chat.id + '', utcStr, true, '[ \''+ msg.from.id + '\', \'' + msg.from.first_name + '\' ]')
+    // MessageClient.instance.sendMessageEdit(msg.text, msg.message_id + '', 'Telegram', msg.chat.id + '', utcStr, true, '[ \''+ msg.from.id + '\', \'' + msg.from.first_name + '\' ]')
 }
 
 export async function onMessage(bot, msg, botName, username_regex) {
@@ -226,7 +226,7 @@ export async function onMessage(bot, msg, botName, username_regex) {
     const utcStr = dateNow.getDate() + '/' + (dateNow.getMonth() + 1) + '/' + dateNow.getFullYear() + ' ' + utc.getHours() + ':' + utc.getMinutes() + ':' + utc.getSeconds()
 
     // TODO: Replace with direct message handler
-    // Spine.instance.sendMessage(content.replace("!ping", ""), msg.message_id + '', 'Telegram', msg.chat.id + '', utcStr, addPing, _sender, addPing ? '[ \''+ msg.from.id + '\', \'' + msg.from.first_name + '\' ]' : 'none')
+    // MessageClient.instance.sendMessage(content.replace("!ping", ""), msg.message_id + '', 'Telegram', msg.chat.id + '', utcStr, addPing, _sender, addPing ? '[ \''+ msg.from.id + '\', \'' + msg.from.first_name + '\' ]' : 'none')
 }
 
 export const prevMessage = {}

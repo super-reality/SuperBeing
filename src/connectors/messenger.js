@@ -27,7 +27,7 @@ export async function handleMessage(senderPsid, receivedMessage) {
       const utc = new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds());
       const utcStr = date.getDate() + '/' + (date.getMonth() + 1) + '/' + date.getFullYear() + ' ' + utc.getHours() + ':' + utc.getMinutes() + ':' + utc.getSeconds()
       // TODO: Replace me with direct message handler      
-      // Spine.instance.sendMessage(message, senderPsid, 'Messenger', senderPsid, utcStr, false, senderPsid)
+      // MessageClient.instance.sendMessage(message, senderPsid, 'Messenger', senderPsid, utcStr, false, senderPsid)
     })
   }
 }

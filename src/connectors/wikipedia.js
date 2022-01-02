@@ -3,8 +3,8 @@ import glob from "glob";
 import weaviate from "weaviate-client";
 import wiki from 'wikipedia';
 import {
-  makeGPTRequest
-} from "../utilities/makeGPTRequest.js";
+  makeCompletionRequest
+} from "../utilities/makeCompletionRequest.js";
 import {
   rootDir
 } from "../utilities/rootDir.js";
@@ -52,7 +52,7 @@ export async function createWikipediaAgent(speaker, name, personality, facts) {
                   "stop": ["\"\"\"", `${speaker}:`, '\n']
           };
   
-          let res = await makeGPTRequest(data, speaker, name, "personality_generation", "davinci", false);
+          let res = await makeCompletionRequest(data, speaker, name, "personality_generation", "davinci", false);
   
           if (!res.success) {
                   return console.log("Error: Failed to generate personality, check GPT3 keys");
@@ -75,7 +75,7 @@ export async function createWikipediaAgent(speaker, name, personality, facts) {
                   "stop": ["\"\"\"", `${speaker}:`, '\n']
           };
   
-          res = await makeGPTRequest(data, speaker, name, "dialog_generation", "davinci", false);
+          res = await makeCompletionRequest(data, speaker, name, "dialog_generation", "davinci", false);
           console.log("res.choice.text (2)")
           console.log(res);
   
@@ -112,7 +112,7 @@ export const searchWikipedia = async (keyword) => {
     const {
       success,
       choice
-    } = await makeGPTRequest(data, null, null, "conversation");
+    } = await makeCompletionRequest(data, null, null, "conversation");
     if (success) {
       keyword = choice.text;
     }
