@@ -105,7 +105,7 @@ export class telegramPacketHandler {
 }
 
 export async function onMessageEdit(bot, msg, botName) {
-    if (database.instance.isUserBanned(msg.from.id + '', 'telegram')) return
+    if (await database.instance.isUserBanned(msg.from.id + '', 'telegram')) return
     console.log('edited_message: ' + JSON.stringify(msg))
     const date = Date.now() / 1000
     const msgDate = msg.date
@@ -139,7 +139,7 @@ export async function onMessage(bot, msg, botName, username_regex) {
     const mins_diff = Math.ceil((diff-hours_diff)/60)
     if (mins_diff > 12 || (mins_diff <= 12 && hours_diff > 1)) return
 
-    if (database.instance.isUserBanned(msg.from.id + '', 'telegram')) return    
+    if (await database.instance.isUserBanned(msg.from.id + '', 'telegram')) return    
     let content = msg.text
     const _sender = msg.from.username === undefined ? msg.from.first_name : msg.from.username
     addMessageToHistory(msg.chat.id, msg.message_id, _sender, content)

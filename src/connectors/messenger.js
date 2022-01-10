@@ -14,7 +14,7 @@ export async function addMessageToHistory(chatId, senderName, content, messageId
 }
 
 export async function handleMessage(senderPsid, receivedMessage) {
-  if (database.instance.isUserBanned(senderPsid, 'messenger')) return
+  if (await database.instance.isUserBanned(senderPsid, 'messenger')) return
   
   console.log('receivedMessage: ' + receivedMessage.text + ' from: ' + senderPsid)
 

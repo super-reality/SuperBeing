@@ -486,7 +486,7 @@ class XREngineBot {
             messages[i].author = ['xr-engine', senderId]
 
             if (this.chatHistory.includes(messageId) || this.userId === senderId ||
-                (database.instance && database.instance.isUserBanned(senderId, 'xr-engine'))) {
+                (database.instance && await database.instance.isUserBanned(senderId, 'xr-engine'))) {
                 const index = await this.getMessageIndex(messages, messageId)
                 if (index > -1) messages.splice(index, 1)
             }

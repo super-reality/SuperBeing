@@ -3,7 +3,7 @@ import { database } from '../database/database.js';
 import { getRandomEmptyResponse } from './utils.js';
 
 export async function message(req, res) {
-    if (database.instance.isUserBanned(req.body.From, 'twilio')) return
+    if (await database.instance.isUserBanned(req.body.From, 'twilio')) return
     console.log('received message: ' + req.body.Body)
     await database.instance.getNewMessageId('twilio', req.body.From, async (msgId) => {
         addMessageToHistory(req.body.From, req.body.From, req.body.Body, msgId)   

@@ -394,7 +394,7 @@ export const messageDelete = async (client, message) => {
 export const messageUpdate = async (client, message) => {
     const { author, channel, id } = message;
     if (author === null || channel === null || id === null) return
-    if (database.instance.isUserBanned(author.id, 'discord')) return
+    if (await database.instance.isUserBanned(author.id, 'discord')) return
     if (author.id === client.user.id) {
         await channel.messages.fetch(id).then(async msg => {
             console.log('updating local msg to db')
