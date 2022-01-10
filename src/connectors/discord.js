@@ -3,6 +3,7 @@ import 'discord-inline-reply'
 import 'discord-reply'
 import Discord, { Intents } from 'discord.js'
 import emoji from "emoji-dictionary"
+import emojiRegex from 'emoji-regex'
 import { database } from "../database/database.js"
 import { getRandomEmptyResponse } from "./utils.js"
 
