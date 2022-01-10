@@ -201,6 +201,7 @@ export const channelTypes = {
 }
 
 export const messageCreate = async (client, message) => {
+    console.log('received message');
     const reg = emojiRegex();
     let match;
     let emojis = []
@@ -212,12 +213,12 @@ export const messageCreate = async (client, message) => {
     args['grpc_args'] = {};
 
     let { author, channel, content, mentions, id } = message;
-    if (database && database.instance && database.instance.isUserBanned(author.id, 'discord')) {
+
+    if (database && database.instance && await database.instance.isUserBanned(author.id, 'discord')) {
         return
     }
 
     if (mentions !== null && mentions.members !== null && mentions.members.size > 0) {
-        console.log('has mentions')
         const data = content.split(' ')
         for (let i = 0; i < data.length; i++) {
             if (data[i].startsWith('<@!') && data[i].charAt(data[i].length - 1) === '>') {
@@ -234,7 +235,7 @@ export const messageCreate = async (client, message) => {
         }
     }
 
-    if (content === '') return
+    if (content === '') return 
     let _prev = undefined
     if (!author.bot) {
         _prev = prevMessage[channel.id]
@@ -244,7 +245,7 @@ export const messageCreate = async (client, message) => {
     }
     const addPing = (_prev !== undefined && _prev !== '' && _prev !== author) || moreThanOneInConversation()
     // Ignore all bots
-    if (author.bot) return
+    if (author.bot) return;
     addMessageToHistory(channel.id, id, author.username, content)
 
     const botMention = `<@!${client.user}>`;
