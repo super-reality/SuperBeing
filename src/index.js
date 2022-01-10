@@ -5,6 +5,7 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import { initTerminal } from "./connectors/terminal.js"
 import cors from "cors";
+import { handleInput } from './cognition/handleInput.js';
 
 dotenv.config();
 
