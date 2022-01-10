@@ -15,6 +15,7 @@ import { makeCompletionRequest } from "../utilities/makeCompletionRequest.js";
 import { evaluateTextAndRespondIfToxic } from "./profanityFilter.js";
 import { rootDir } from "../utilities/rootDir.js";
 import { xrEnginePacketHandler } from '../connectors/xrengine.js';
+import keywordExtractor from '../utilities/keywordExtractor.js';
 
 function respondWithMessage(agent, text, res) {
         if (res) res.status(200).send(JSON.stringify({ result: text }));
@@ -113,7 +114,7 @@ function archiveFacts(speaker, agent) {
         }
 }
 
-function generateContext(speaker, agent, conversation) {
+function generateContext(speaker, agent, conversation, keywords) {
         const {
                 speakerFactsFile,
                 agentFactsFile,
@@ -125,6 +126,13 @@ function generateContext(speaker, agent, conversation) {
         // Store paths to main directories for agent
         const rootAgent = rootDir + '/agents/' + agent + '/';
         const rootCommon = rootDir + '/agents/common/';
+        let kdata = '';
+        if (keywords.length > 0) {
+                kdata = "The following are information about the speaker's message:\n";
+                for(let k in keywords) {
+                        kdata += keywords[k].word + ': ' + keywords[k].info + '\n';
+                }
+        }
 
         // Return a complex context (this will be passed to the transformer for completion)
         return fs.readFileSync(rootCommon + 'context.txt').toString()
@@ -139,6 +147,7 @@ function generateContext(speaker, agent, conversation) {
                 // .replaceAll("$actions", fs.readFileSync(rootAgent + 'actions.txt').toString())
                 .replaceAll("$speakerFacts", speakerFacts)
                 .replaceAll("$agentFacts", agentFacts)
+                .replaceAll('$keywords', kdata)
                 .replaceAll("$agent", agent)
                 .replaceAll("$speaker", speaker)
                 .replaceAll("$conversation", conversation);
@@ -283,7 +292,8 @@ export async function handleInput(message, speaker, agent, res) {
         archiveConversation(speaker, agent, conversation);
         archiveFacts(speaker, agent, conversation);
 
-        const context = generateContext(speaker, agent, conversation);
+        const keywords = await keywordExtractor(message);
+        const context = generateContext(speaker, agent, conversation, keywords);
 
         // TODO: Wikipedia?
 

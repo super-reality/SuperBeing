@@ -5,6 +5,7 @@ import wiki from 'wikipedia';
 import {
   makeCompletionRequest
 } from "../utilities/makeCompletionRequest.js";
+import { namedEntityRecognition } from '../utilities/namedEntityRecognition.js';
 import {
   rootDir
 } from "../utilities/rootDir.js";
@@ -16,7 +17,16 @@ const client = weaviate.client({
 
 export async function createWikipediaAgent(speaker, name, personality, facts) {
   try {
-          const out = await searchWikipedia(name);
+          let out = null;
+          try {
+            out = await searchWikipedia(name);
+          } catch (e) {
+            console.log(e);
+            return null;
+          }
+
+          const type = await namedEntityRecognition(out.result.title);
+
           // create a constant called name which uses the value of nameRaw but removes all punctuation
           // const name = nameRaw.replace(/[^\w\s]/gi, '');
           console.log("out is ", out);

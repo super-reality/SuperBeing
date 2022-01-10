@@ -9,6 +9,8 @@ import { handleInput } from './cognition/handleInput.js';
 
 dotenv.config();
 
+export let defaultAgent = '';
+
 new database().connect()
 
 const expectedServerDelta = 1000 / 60;
@@ -80,6 +82,7 @@ let enabled_services = (process.env.ENABLED_SERVICES || '').split(',').map(
     
     
     const agent = process.env.AGENT?.replace('_', ' ');
+    defaultAgent = agent;
     
     app.get("/health", async function (req, res) {
             res.send(`Server is alive and running! ${new Date()}`);
@@ -99,6 +102,9 @@ let enabled_services = (process.env.ENABLED_SERVICES || '').split(',').map(
             console.log("executing for ", req.body)
             if (message.includes("/become")) {
                     const out = await createWikipediaAgent("Speaker", agent, "", "");
+                    while (out === null) {
+                        out = await createWikipediaAgent('Speaker', defaultAgent, "", "");
+                    }
                     return res.send(out);
             }
             await handleInput(message, speaker, agent, res)

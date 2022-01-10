@@ -3,6 +3,7 @@ import inquirer from 'inquirer';
 import { rootDir } from "../utilities/rootDir.js";
 import { handleInput } from "../cognition/handleInput.js";
 import { createWikipediaAgent } from "../connectors/wikipedia.js";
+import { defaultAgent } from "../index.js";
 
 export var prompt = inquirer.createPromptModule();
 
@@ -67,7 +68,15 @@ export function initTerminal(agent) {
                                         prompt(creationQuestions).then(async (text) => {
                                                 //if not, create it
                                                 await createWikipediaAgent(speaker, newAgent, text.Personality, text.Facts);
-                                                currentAgent = newAgent
+                                                let set = false;
+                                                while (out === null) {
+                                                    out = await createWikipediaAgent('Speaker', defaultAgent, "", "");
+                                                    currentAgent = defaultAgent;
+                                                    set = true;
+                                                }
+                                                if (!set) {
+                                                        currentAgent = newAgent
+                                                }
                                                 currentState = states.READY;
                                         });
                                 });

@@ -54,6 +54,7 @@
     "inquirer": "^8.2.0",
     "instagram-private-api": "1.45.2",
     "is-english": "^1.3.0",
+    "keyword-extractor": "^0.0.20",
     "lodash": "^4.17.21",
     "mustache": "^4.2.0",
     "node-fetch": "^2.6.6",
