@@ -1,11 +1,9 @@
 import { profanity } from '@2toad/profanity';
 import grawlix from 'grawlix';
 import grawlixRacism from 'grawlix-racism';
-import getFilesForSpeakerAndAgent from "../database/getFilesForSpeakerAndAgent.js";
 import { makeCompletionRequest } from "../utilities/makeCompletionRequest.js";
-import fs from 'fs';
-import { rootDir } from "../utilities/rootDir.js";
 import { makeModelRequest } from "../utilities/makeModelRequest.js";
+import { database } from '../database/database.js';
 
 const HF_API_TOKEN = process.env.HF_API_TOKEN;
 
@@ -23,14 +21,20 @@ const wordSensitivity = 0.1; // percentage of text that is sensitive
 const toxicityThreshold = 0.4;
 const leadingToxicityThreshold = 0.2;
 
-// TODO: remove punctuation from phrases and words before testing
+let badWords;
+let sensitiveWords;
+let sensitivePhrases;
+let leadingStatements;
 
-const badWords = fs.readFileSync(rootDir + "/filters/bad_words.txt").toString().split("\n");
-const sensitiveWords = fs.readFileSync(rootDir + "/filters/sensitive_words.txt").toString().trim().split("\r\n");
-const sensitivePhrases = fs.readFileSync(rootDir + "/filters/sensitive_phrases.txt").toString().split("\n");
-const leadingStatements = fs.readFileSync(rootDir + "/filters/leading_statements.txt").toString().split("\n");
+export async function initProfanityFilter() {
+    // TODO: remove punctuation from phrases and words before testing
+    badWords = (await database.instance.getBadWords()).toString().split("\n");
+    sensitiveWords = (await database.instance.getSensitiveWords()).toString().trim().split("\r\n");
+    sensitivePhrases = (await database.instance.getSensitivePhrases()).toString().split("\n");
+    leadingStatements = (await database.instance.getLeadingStatements()).toString().split("\n");
 
-profanity.addWords(badWords);
+    profanity.addWords(badWords);
+}
 
 function testIfContainsSensitiveWords(text) {
     // return true if text contains any of the filter words
@@ -68,14 +72,9 @@ grawlix.setDefaults({
 });
 
 export async function evaluateTextAndRespondIfToxic(speaker, agent, textIn, evaluateAllFilters) {
-    // Get the files we need
-    const {
-        speakerProfaneResponsesFile,
-        sensitiveResponsesFile
-    } = getFilesForSpeakerAndAgent(speaker, agent);
     const text = textIn?.trim().replace('\'', '');
-    const profaneResponses = fs.readFileSync(speakerProfaneResponsesFile).toString().replaceAll('\n\n', '\n').replace('\'', '').split('\n');
-    const sensitiveResponses = fs.readFileSync(sensitiveResponsesFile).toString().replaceAll('\n\n', '\n').replace('\'', '').split('\n');
+    const profaneResponses = (await database.instance.getSpeakerProfaneResponses(agent)).toString().replaceAll('\n\n', '\n').replace('\'', '').split('\n');
+    const sensitiveResponses = (await database.instance.getSensitiveResponses(agent)).toString().replaceAll('\n\n', '\n').replace('\'', '').split('\n');
 
     // If it's profane or blatantly offensive, shortcut to a response
     const isProfane = profanity.exists(text) || !text.includes(grawlix(text));
@@ -138,7 +137,7 @@ export async function evaluateTextAndRespondIfToxic(speaker, agent, textIn, eval
 async function filterWithOpenAI(speaker, agent, text) {
     // Should we filter sensitive information?
     // TODO: Should be agent specific, default to common
-    const { filterSensitive } = JSON.parse(fs.readFileSync(rootDir + "/agents/common/config.json").toString());
+    const { filterSensitive } = JSON.parse((await database.instance.getAgentsConfig(agent)).toString());
 
     // Create API object for OpenAI
     const data = {
@@ -177,12 +176,8 @@ async function filterWithOpenAI(speaker, agent, text) {
 }
 
 async function filterByRating(speaker, agent, text) {
-    const {
-        ratingFile
-    } = getFilesForSpeakerAndAgent(speaker, agent);
-
     // get ESRB rating for agent
-    const ratingPrompt = fs.readFileSync(ratingFile).toString();
+    const ratingPrompt = (await database.instance.getRating(agent)).toString();
     const textToEvaluate = ratingPrompt.replace('$text', speaker + ": " + text + `\n${agent}: ${text}`).replaceAll('$speaker', speaker).replaceAll('$agent', agent);
 
     // Create API object for OpenAI
@@ -200,17 +195,16 @@ async function filterByRating(speaker, agent, text) {
     const { success, choice } = await makeCompletionRequest(data, speaker, agent, "rating");
 
     // If it's for everyone, just allow it
-    const isForEveryone = validateESRB(speaker, agent, text, true);
+    const isForEveryone = await validateESRB(speaker, agent, text, true);
 
     // Otherwise, check if it meets the agent maximum rating
-    let shouldFilter = !isForEveryone && validateESRB(speaker, agent, text);
+    let shouldFilter = !isForEveryone && await validateESRB(speaker, agent, text);
 
     return { success, choice, shouldFilter };
 }
 
-function validateESRB(speaker, agent, text, checkIfForEveryone) {
-    // TODO: make this configurable for each agent
-    const { contentRating } = JSON.parse(fs.readFileSync(rootDir + "/agents/common/config.json").toString());
+async function validateESRB(speaker, agent, text, checkIfForEveryone) {
+    const { contentRating } = JSON.parse((await database.instance.getAgentsConfig(agent)).toString());
 
     const ratings =
     {

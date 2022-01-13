@@ -31,7 +31,7 @@ const SendMessage = (id, twitterUserId, messageType, text) => {
 }
 
 const HandleResponse = async (id, name, receivedMessage, messageType, event) => {
-  let reply = await handleInput(receivedMessage, name, currentAgent, null, false);
+  let reply = await handleInput(receivedMessage, name, currentAgent, null, 'twitter', id);
 
   // if prompt is more than 280 characters, remove the last sentence
   while (reply.length > 280) {
@@ -118,7 +118,7 @@ export const createTwitterClient = async (twitterId = process.env.twitterId) => 
   setInterval(async () => {
     let prompt = "Could you please write a short, optimistic tweet on web 3.0 culture, the metaverse, internet technology or the state of the world? Must be in less than three sentences.\n" + currentAgent + ":";
   
-    let reply = await handleInput(prompt, "Friend", currentAgent, null, false);
+    let reply = await handleInput(prompt, "Friend", currentAgent, null, false, 'twitter', 'prompt');
 
         // if prompt is more than 280 characters, remove the last sentence
         while (reply.length > 280) {

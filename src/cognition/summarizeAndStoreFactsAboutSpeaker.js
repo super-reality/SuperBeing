@@ -1,14 +1,14 @@
 import fs from "fs";
+import { database } from "../database/database.js";
 import { makeCompletionRequest } from "../utilities/makeCompletionRequest.js";
-import getFilesForSpeakerAndAgent from "../database/getFilesForSpeakerAndAgent.js";
 
 import { rootDir } from "../utilities/rootDir.js";
 
 export async function summarizeAndStoreFactsAboutSpeaker(speaker, agent, input) {
-    const { summarizationModel } = JSON.parse(fs.readFileSync(rootDir + "/agents/common/config.json").toString());
+    const { summarizationModel } = JSON.parse((await database.instance.getAgentsConfig('common')).toString());
 
-    const speakerFactSummarizationPrompt = fs.readFileSync(rootDir + '/agents/common/speaker_fact_summarization.txt').toString().replace("\n\n", "\n");
-    const { speakerFactsFile } = getFilesForSpeakerAndAgent(speaker, agent);
+    const speakerFactSummarizationPrompt = fs.readFileSync((await database.instance.getSpeakerFactSummarization('common'))).toString().replace("\n\n", "\n");
+    const { speakerFactsFile } = (await database.instance.getSpeakersFacts(agent, speaker)).toString();
     // Take the input and send out a summary request
     let prompt = speakerFactSummarizationPrompt.replaceAll( "$speaker", speaker).replaceAll( "$agent", agent).replaceAll( "$example", input);
 

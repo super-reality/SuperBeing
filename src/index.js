@@ -91,7 +91,7 @@ let enabled_services = (process.env.ENABLED_SERVICES || '').split(',').map(
     app.post("/msg", async function (req, res) {
             const message = req.body.command
             const speaker = req.body.sender
-            await handleInput(message, speaker, agent, res)
+            await handleInput(message, speaker, agent, res, 'web', '0');
     });
     
     
@@ -107,7 +107,7 @@ let enabled_services = (process.env.ENABLED_SERVICES || '').split(',').map(
                     }
                     return res.send(out);
             }
-            await handleInput(message, speaker, agent, res)
+            await handleInput(message, speaker, agent, res, 'web', '0')
     });
     
     app.listen(process.env.PORT, () => { console.log(`Server listening on http://localhost:${process.env.PORT}`); })
@@ -129,7 +129,7 @@ let enabled_services = (process.env.ENABLED_SERVICES || '').split(',').map(
     
     async function runBattleBot(speaker, agent, message, ignoreContentFilter) {
             console.log(speaker, agent, message, ignoreContentFilter)
-            const m = await handleInput(message, speaker, agent, null, ignoreContentFilter);
+            const m = await handleInput(message, speaker, agent, ignoreContentFilter, 'battlebots', '0');
             setTimeout(() => runBattleBot(agent, speaker, m, ignoreContentFilter), 10000);
     }
 

@@ -368,7 +368,7 @@ export const messageCreate = async (client, message) => {
 
     }, message.content.length)
 
-    const response = await handleInput(message.content, message.author.username, process.env.AGENT ?? "Agent")
+    const response = await handleInput(message.content, message.author.username, process.env.AGENT ?? "Agent", null, 'discord', channel.id);
     await discordPackerHandler.instance.handlePing(message.id, channel.id, response, addPing)
 };
 

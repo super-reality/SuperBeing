@@ -1,11 +1,10 @@
-import fs from "fs";
-import { rootDir } from "../utilities/rootDir.js";
+import { database } from "./database.js";
 
-export default function readRelationshipMatrix(speaker, agent){
+export default async function readRelationshipMatrix(agent){
     // Check if we have an opinion yet
     // If not, form one and save the file
     // Read personality
-    const relationshipMatrixLines = fs.readFileSync(rootDir + `/agents/${agent}/relationship_matrix.txt`).toString().split("\n");
+    const relationshipMatrixLines = (await database.instance.getRelationshipMatrix(agent)).toString().split("\n");
 
     // Making a 3x2 array
     const relationshipMatrix = [];

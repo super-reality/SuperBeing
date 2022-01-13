@@ -202,7 +202,7 @@ export async function handleMessages(messages, bot) {
             // 
             console.log("Sending out input");
 
-            const response = await handleInput(content.replace('!ping', ''), _sender, process.env.AGENT ?? "Agent")
+            const response = await handleInput(content.replace('!ping', ''), _sender, process.env.AGENT ?? "Agent", null, 'xr-engine', messages[i].channelId);
             console.log("Handling response");
             await xrEnginePacketHandler.instance.handleXREngineResponse(response, addPing, _sender)
 
