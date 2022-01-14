@@ -333,7 +333,6 @@ export class database {
 
     async setConversation(agent, client, channel, sender, text, archive) {
         if (!text || text.length <= 0) return;
-        console.log('agent: ' + agent + ' sender: ' + sender + ' text: ' + text);
         const query = 'INSERT INTO conversation(agent, client, channel, sender, text, archive, date) VALUES($1, $2, $3, $4, $5, $6, $7)'
         const values = [ agent, client, channel, sender, text, archive, (new Date()).toUTCString() ]
 
