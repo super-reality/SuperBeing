@@ -1,4 +1,5 @@
 import keyword_extractor from "keyword-extractor";
+import { getStartingMessageKeywords } from "../connectors/utils.js";
 import { makeWeaviateRequest } from "../connectors/wikipedia.js";
 import { makeModelRequest } from "./makeModelRequest.js";
 
@@ -28,7 +29,6 @@ export async function keywordExtractor(input) {
     
     let totalLength = 0;
     const respp = [];
-    console.log('got keywords: ' + keywords);
     for(let i = 0; i < keywords.length; i++) {
         const weaviateResponse = await makeWeaviateRequest(keywords[i]);
 

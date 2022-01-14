@@ -1,4 +1,5 @@
 import { existsSync } from "fs";
+import { simpleExtractor } from "../utilities/keywordExtractor.js";
 
 export function getRandomNumber(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -67,4 +68,20 @@ export function detectOsOption() {
 
 export function convertLocalToUtcTimezone(date) {
   return new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds());
+}
+
+export function getStartingMessageKeywords() {
+  const res = [];
+  const data = process.env.STARTING_MESSAGES.split('|');
+  for (let i = 0; i < data.length; i++) {
+      const kw = simpleExtractor(data[i]);
+      for (let j = 0; j < kw.length; j++) {
+          res.push(kw[j]);
+      }
+  }
+  return res;
+}
+
+export function capitalizeFirstLetter(word) {
+  return word.charAt(0).toUpperCase() + word.slice(1);
 }

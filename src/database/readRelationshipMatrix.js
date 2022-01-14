@@ -4,7 +4,11 @@ export default async function readRelationshipMatrix(agent){
     // Check if we have an opinion yet
     // If not, form one and save the file
     // Read personality
-    const relationshipMatrixLines = (await database.instance.getRelationshipMatrix(agent)).toString().split("\n");
+    let relationshipMatrixLines = (await database.instance.getRelationshipMatrix(agent)).toString().replaceAll('\n\n', '\n').split("\n");
+    for (let i = 0; i < relationshipMatrixLines.length; i++) {
+        relationshipMatrixLines[i] = relationshipMatrixLines[i].trim();
+    }
+    relationshipMatrixLines = relationshipMatrixLines.filter(line => line != "");
 
     // Making a 3x2 array
     const relationshipMatrix = [];

@@ -14,6 +14,7 @@ import { evaluateTextAndRespondIfToxic } from "./profanityFilter.js";
 import { xrEnginePacketHandler } from '../connectors/xrengine.js';
 import keywordExtractor from '../utilities/keywordExtractor.js';
 import { database } from '../database/database.js';
+import { capitalizeFirstLetter } from "../connectors/utils.js";
 
 function respondWithMessage(agent, text, res) {
         if (res) res.status(200).send(JSON.stringify({ result: text }));
@@ -40,7 +41,7 @@ async function evaluateTerminalCommands(message, speaker, agent, res, client, ch
 
         else if (message === "/dump") { // If a user types dump, show them logs of convo
                 // Read conversation history
-                const conversation = database.instance.getConversation(agent, client, channel, speaker);
+                const conversation = database.instance.getConversation(agent, speaker, client, channel, false);
                 // If there is a response (i.e. this came from a web client, not local terminal)
                 const result = { result: conversation };
                 if (res) {
@@ -62,11 +63,11 @@ async function evaluateTerminalCommands(message, speaker, agent, res, client, ch
 }
 
 async function getConfigurationSettingsForAgent(agent) {
-        return await database.instance.getAgentsConfig(agent);
+        return JSON.parse((await database.instance.getAgentsConfig(agent)).toString());
 }
 
 // Slice the conversation and store any more than the window size in the archive
-async function archiveConversation(speaker, agent) {
+async function archiveConversation(speaker, agent, _conversation, client, channel) {
         // Get configuration settings for agent
         const { conversationWindowSize } = await getConfigurationSettingsForAgent(agent);
 
@@ -78,9 +79,9 @@ async function archiveConversation(speaker, agent) {
                 for(let i = 0; i < oldConversationLines.length; i++) {
                         await database.instance.setConversation(agent, client, channel, speaker, oldConversationLines[i], true);
                 }
-                for(let i = 0; i < newConversationLines.length; i++) {
+                /*for(let i = 0; i < newConversationLines.length; i++) {
                         await database.instance.setConversation(agent, client, channel, speaker, newConversationLines[i], false);
-                }
+                }*/
         }
 }
 
@@ -125,7 +126,7 @@ async function generateContext(speaker, agent, conversation, keywords) {
                 .replaceAll("$ethics", await database.instance.getEthics(agent))
                 .replaceAll("$personality", await database.instance.getPersonality(agent))
                 .replaceAll("$needsAndMotivations", await database.instance.getNeedsAndMotivations(agent))
-                .replaceAll("$exampleDialog", await database.instance.getDialog(agent))
+                .replaceAll("$exampleDialog", await database.instance.getDialogue(agent))
                 .replaceAll("$monologue", await database.instance.getMonologue(agent))
                 .replaceAll("$facts", await database.instance.getFacts(agent))
                 // .replaceAll("$actions", fs.readFileSync(rootAgent + 'actions.txt').toString())
@@ -140,7 +141,7 @@ async function generateContext(speaker, agent, conversation, keywords) {
 // Todo fix me
 export async function handleDigitalBeingInput(data) {
         console.log("Handling data.message", data);
-        const response = await handleInput(data.message.content, data.username, process.env.AGENT ?? "Agent")
+        const response = await handleInput(data.message.content, data.username, process.env.AGENT ?? "Agent", null, data.clientName, data.channelId)
         const message_id = data.message.id; // data.message_id
         const channelId = data.message.channelId;
         const addPing = data.addPing; // data.addPing
@@ -234,7 +235,7 @@ export async function handleDigitalBeingInput(data) {
 export async function handleInput(message, speaker, agent, res, clientName, channelId) {
         console.log("Handling input: " + message);
         if (await evaluateTerminalCommands(message, speaker, agent, res, clientName, channelId)) return;
-        checkThatFilesExist(speaker, agent);
+        await checkThatFilesExist(speaker, agent);
 
         // Get configuration settings for agent
         const { dialogFrequencyPenality,
@@ -253,22 +254,19 @@ export async function handleInput(message, speaker, agent, res, clientName, chan
                 }
         }
 
-        // Append speaker's name to the message to appear as chat history
-        const userInput = speaker + ": " + message;
-
         // Append the speaker's message to the conversation
-        await database.instance.setConversation(agent, client, channel, speaker, userInput, false);
+        await database.instance.setConversation(agent, clientName, channelId, speaker, message, false);
 
         // Parse files into objects
-        const meta = (await database.instance.getMeta(agent, speaker)).toString();
-        const conversation = (await database.instance.getConversation(agent, speaker, client, channel, false)).toString().replaceAll('\n\n', '\n');
+        const meta = JSON.parse((await database.instance.getMeta(agent, speaker)).toString());
+        const conversation = (await database.instance.getConversation(agent, speaker, clientName, channelId, false)).toString().replaceAll('\n\n', '\n');
 
         // Increment the agent's conversation count for this speaker
         meta.messages = meta.messages + 1;
 
         // Archive previous conversation and facts to keep context window small
-        await archiveConversation(speaker, agent, conversation);
-        await  archiveFacts(speaker, agent, conversation);
+        await archiveConversation(speaker, agent, conversation, clientName, channelId);
+        await archiveFacts(speaker, agent, conversation);
 
         const keywords = await keywordExtractor(message);
         const context = await generateContext(speaker, agent, conversation, keywords);
@@ -301,7 +299,7 @@ export async function handleInput(message, speaker, agent, res, clientName, chan
         // If it fails, tell speaker they had an error
         if (!success) {
                 const error = "Sorry, I had an error";
-                await database.instance.setConversation(agent, client, channel, speaker, `\n${agent}: ${error}\n`, false);
+                await database.instance.setConversation(agent, clientName, channelId, agent, error, false);
                 return respondWithMessage(agent, error, res);
         };
         if (useProfanityFilter) {
@@ -310,7 +308,7 @@ export async function handleInput(message, speaker, agent, res, clientName, chan
                 const { isProfane, response } = await evaluateTextAndRespondIfToxic(speaker, agent, choice.text, true);
 
                 if (isProfane) {
-                        await database.instance.setConversation(agent, client, channel, speaker, `\n${agent}: ${response}\n`, false);
+                        await database.instance.setConversation(agent, clientName, channelId, agent, response, false);
                         return respondWithMessage(agent, response, res);
                 }
 }
@@ -318,7 +316,7 @@ export async function handleInput(message, speaker, agent, res, clientName, chan
         if (meta.messages % factsUpdateInterval == 0) {
                 formOpinionAboutSpeaker(speaker, agent);
 
-                const conversation = (await database.instance.getConversation(agent, speaker, client, channel, false)).toString().trim();
+                const conversation = (await database.instance.getConversation(agent, speaker, clientName, channelId, false)).toString().trim();
                 const conversationLines = conversation.split('\n');
 
                 const speakerConversationLines = conversationLines.filter(line => line != "" && line != "\n").slice(conversationLines.length - (factsUpdateInterval * 2)).join("\n");
@@ -331,6 +329,6 @@ export async function handleInput(message, speaker, agent, res, clientName, chan
         await database.instance.setMeta(agent, speaker, meta);
 
         // Write to conversation file
-        await database.instance.setConversation(agent, client, channel, speaker, `\n${agent}:${choice.text}\n`, false);
+        await database.instance.setConversation(agent, clientName, channelId, agent, choice.text, false);
         return respondWithMessage(agent, choice.text, res);
 }

@@ -6,7 +6,7 @@ import emoji from "emoji-dictionary"
 import emojiRegex from 'emoji-regex'
 import { handleInput } from '../cognition/handleInput.js'
 import { database } from "../database/database.js"
-import { getRandomEmptyResponse } from "./utils.js"
+import { getRandomEmptyResponse, startsWithCapital } from "./utils.js"
 
 // TODO: Remove this
 const config = {

@@ -2,12 +2,11 @@ import { database } from "../database/database.js";
 import readRelationshipMatrix from "../database/readRelationshipMatrix.js";
 
 export async function formOpinionAboutSpeaker(speaker, agent, input) {
-    const meta = await database.instance.getRelationshipMatrix(agent);
+    let meta = await database.instance.getRelationshipMatrix(agent);
 
     // check if metafile has personality meta in it
-    if(!meta.relationshipMatrix){
-        // If it doesn't, read initialization from agent and store in meta
-        meta.relationshipMatrix = await readRelationshipMatrix(agent);
+    if(!meta.relationshipMatrix) {
+        meta = await readRelationshipMatrix(speaker, agent);
     }
 
     // Ask some questions about the conversation

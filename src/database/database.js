@@ -332,26 +332,33 @@ export class database {
     }
 
     async setConversation(agent, client, channel, sender, text, archive) {
+        if (!text || text.length <= 0) return;
+        console.log('agent: ' + agent + ' sender: ' + sender + ' text: ' + text);
         const query = 'INSERT INTO conversation(agent, client, channel, sender, text, archive, date) VALUES($1, $2, $3, $4, $5, $6, $7)'
-        const values = [ agent, client, channel, sender, text, archive, date, convertLocalToUtcTimezone(new Date()).toString() ]
+        const values = [ agent, client, channel, sender, text, archive, (new Date()).toUTCString() ]
 
         await this.client.query(query, values);
     }
+    currentI = 0;
     async getConversation(agent, sender, client, channel, archive) {
-        const query = 'SELECT * FROM conversation WHERE agent=$1 AND client=$2 AND channel=$3 AND sender=$4 AND archive=$5'
-        const values = [ agent, client, channel, sender, archive ];
+        const query = 'SELECT * FROM conversation WHERE agent=$1 AND client=$2 AND channel=$3 AND (sender=$4 OR sender=$5) AND archive=$6'
+        const values = [ agent, client, channel, sender, agent, archive ];
 
         const row = await this.client.query(query, values);
-        if (row && row.length > 0) {
-            const array = [];
-            row.sort(function(a, b) {
+        if (row && row.rows && row.rows.length > 0) {
+            /*row.rows.sort(function(a, b) {
                 return new Date(b.date) - new Date(a.date);
-            });
-            //check might need to make them oposite
+            });*/
+            //row.rows = row.rows.reverse();
+            const max_length = parseInt(process.env.CHAT_HISTORY_MESSAGES_COUNT);
+            const length = row.rows.length > max_length ? max_length : row.rows.length;
             let data = '';
-            for(let i = 0; i < row.length; i++) {
-                data += row[i].sender + ': ' + row[i].text + '\n';
+            for(let i = 0; i < length; i++) {
+                if (!row.rows[i].text || row.rows[i].text.length <= 0) continue;
+                data += row.rows[i].sender + ': ' + row.rows[i].text + '\n';
             }
+            this.currentI++;
+            fs.writeFileSync(rootDir + '/data' + this.currentI + '.txt', data);
             return data;
         } else {
             return '';
@@ -381,8 +388,8 @@ export class database {
         const values = [agent, speaker];
 
         const row = await this.client.query(query, values);
-        if (row && row.length > 0) {
-            return row[0].model;
+        if (row && row.rows && row.rows.length > 0) {
+            return row.rows[0].model;
         } else {
             return '';
         }
@@ -407,8 +414,8 @@ export class database {
         const values = [agent, speaker];
 
         const row = await this.client.query(query, values);
-        if (row && row.length > 0) {
-            return row[0].facts;
+        if (row && row.rows && row.rows.length > 0) {
+            return row.rows[0].facts;
         } else {
             return '';
         }
@@ -432,8 +439,8 @@ export class database {
         const values = [agent, speaker];
 
         const row = await this.client.query(query, values);
-        if (row && row.length > 0) {
-            return row[0].facts;
+        if (row && row.rows && row.rows.length > 0) {
+            return row.rows[0].facts;
         }
         return '';
     }
@@ -443,7 +450,7 @@ export class database {
         let values = [];
 
         if (res.length > 0) {
-            const newFacts = row[0].facts + '\n' + facts;
+            const newFacts = res[0].facts + '\n' + facts;
             query = "UPDATE agent_facts SET facts=$1 WHERE agent=$2"
             values = [newFacts, agent];
         } else {
@@ -458,10 +465,10 @@ export class database {
         const values = [agent];
 
         const row = await this.client.query(query, values);
-        if (row && row.length > 0) {
-            return row[0].facts;
+        if (row && row.rows && row.rows.length > 0) {
+            return row.rows[0].facts;
         } else {
-            return '';
+            return await '';
         }
     }
     async updateAgentFactsArchive(agent, facts) {
@@ -483,8 +490,8 @@ export class database {
         const values = [agent];
 
         const row = await this.client.query(query, values);
-        if (row && row.length > 0) {
-            return row[0].facts;
+        if (row && row.rows && row.rows.length > 0) {
+            return row.rows[0].facts;
         }
         return '';
     }
@@ -508,8 +515,8 @@ export class database {
         const values = [agent, speaker];
 
         const row = await this.client.query(query, values);
-        if (row && row.length > 0) {
-            return row[0].meta;
+        if (row && row.rows && row.rows.length > 0) {
+            return row.rows[0].meta;
         } else {
             return '';
         }
@@ -520,7 +527,7 @@ export class database {
         let values = [];
 
         if (res.length > 0) {
-            query = "UPDATE ind SET matrix=$1 WHERE agent=$2"
+            query = "UPDATE relationship_matrix SET matrix=$1 WHERE agent=$2"
             values = [matrix, agent];
         } else {
             query = "INSERT INTO relationship_matrix(agent, matrix) VALUES($1, $2)"
@@ -530,14 +537,14 @@ export class database {
         await this.client.query(query, values);
     }
     async getRelationshipMatrix(agent) {
-        const query = 'SELECT * FROM relation_matrix WHERE agent=$1'
+        const query = 'SELECT * FROM relationship_matrix WHERE agent=$1'
         const values = [agent];
 
         const row = await this.client.query(query, values);
-        if (row && row.length > 0) {
-            return row[0].matrix;
+        if (row && row.rows && row.rows.length > 0) {
+            return row.rows[0].matrix;
         } else {
-            return '';
+            return this.getRelationshipMatrix('common');
         }
     }
     async setPersonalityQuestions(questions) {
@@ -559,8 +566,8 @@ export class database {
         const query = 'SELECT * FROM personality_questions WHERE _index=0'
         
         const row = await this.client.query(query);
-        if (row && row.length > 0) {
-            return row[0].questions;
+        if (row && row.rows && row.rows.length > 0) {
+            return row.rows[0].questions;
         } else {
             return '';
         }
@@ -576,10 +583,10 @@ export class database {
         const values = [agent];
 
         const row = await this.client.query(query, values);
-        if (row && row.length > 0) {
+        if (row && row.rows && row.rows.length > 0) {
             let res = '';
             for (let i = 0; i < row.length; i++) {
-                res += row[i].response + '\n';
+                res += row[i].rows.response + '\n';
             }
             return res;
         } else {
@@ -597,10 +604,10 @@ export class database {
         const values = [agent];
         
         const row = await this.client.query(query, values);
-        if (row && row.length > 0) {
+        if (row && row.rows && row.rows.length > 0) {
             let res = '';
             for (let i = 0; i < row.length; i++) {
-                res += row[i].response + '\n';
+                res += row[i].rows.response + '\n';
             }
             return res;
         } else {
@@ -618,8 +625,8 @@ export class database {
         const values = [agent];
 
         const row = await this.client.query(query, values);
-        if (row && row.length > 0) {
-            return row[0].responses;
+        if (row && row.rows && row.rows.length > 0) {
+            return rows.row[0].responses;
         } else {
             return '';
         }
@@ -644,8 +651,8 @@ export class database {
         const values = [agent];
 
         const row = await this.client.query(query, values);
-        if (row && row.length > 0) {
-            return row[0].rating;
+        if (row && row.rows && row.rows.length > 0) {
+            return row[0].row.rating;
         } else {
             return '';
         }
@@ -655,7 +662,7 @@ export class database {
         
         const rows = await this.client.query(query);
         if (rows && rows.length > 0) {
-            return rows._sum;
+            return rows.rows[0]._sum;
         } else {
             return '';
         }
@@ -665,8 +672,8 @@ export class database {
         const values = [agent];
 
         const rows = await this.client.query(query, values);
-        if (rows && rows.length > 0) {
-            return rows.config;
+        if (rows && rows.rows && rows.rows.length > 0) {
+            return rows.rows[0].config;
         } else {
             return this.getAgentsConfig('common');
         }
@@ -677,7 +684,7 @@ export class database {
         const values = [agent];
 
         const rows = await this.client.query(query, values);
-        if (rows && rows.length > 0) {
+        if (rows && rows.rows && rows.rows.length > 0) {
             return true;
         } else {
             return false;
@@ -699,8 +706,8 @@ export class database {
         const values = [agent];
 
         const rows = await this.client.query(query, values);
-        if (rows && rows.length > 0) {
-            return rows[0].context;
+        if (rows && rows.rows && rows.rows.length > 0) {
+            return rows.rows[0].context;
         } else {
             return '';
         }
@@ -711,8 +718,8 @@ export class database {
         const values = [agent];
 
         const rows = await this.client.query(query, values);
-        if (rows && rows.length > 0) {
-            return rows[0].room;
+        if (rows && rows.rows && rows.rows.length > 0) {
+            return rows.rows[0].room;
         } else {
             return '';
         }
@@ -723,8 +730,8 @@ export class database {
         const values = [agent];
 
         const rows = await this.client.query(query, values);
-        if (rows && rows.length > 0) {
-            return rows[0].morals;
+        if (rows && rows.rows && rows.rows.length > 0) {
+            return rows.rows[0].morals;
         } else {
             return '';
         }
@@ -735,8 +742,8 @@ export class database {
         const values = [agent];
 
         const rows = await this.client.query(query, values);
-        if (rows && rows.length > 0) {
-            return rows[0].ethics;
+        if (rows && rows.rows && rows.rows.length > 0) {
+            return rows.rows[0].ethics;
         } else {
             return '';
         }
@@ -747,8 +754,8 @@ export class database {
         const values = [agent];
 
         const rows = await this.client.query(query, values);
-        if (rows && rows.length > 0) {
-            return rows[0].personality;
+        if (rows && rows.rows && rows.rows.length > 0) {
+            return rows.rows[0].personality;
         } else {
             return '';
         }
@@ -759,8 +766,8 @@ export class database {
         const values = [agent];
 
         const rows = await this.client.query(query, values);
-        if (rows && rows.length > 0) {
-            return rows[0].needs_motivations;
+        if (rows && rows.rows && rows.rows.length > 0) {
+            return rows.rows[0].needs_motivations;
         } else {
             return '';
         }
@@ -771,8 +778,8 @@ export class database {
         const values = [agent];
 
         const rows = await this.client.query(query, values);
-        if (rows && rows.length > 0) {
-            return rows[0].dialogue;
+        if (rows && rows.rows && rows.rows.length > 0) {
+            return rows.rows[0].dialogue;
         } else {
             return '';
         }
@@ -783,8 +790,8 @@ export class database {
         const values = [agent];
 
         const rows = await this.client.query(query, values);
-        if (rows && rows.length > 0) {
-            return rows[0].monologue;
+        if (rows && rows.rows && rows.rows.length > 0) {
+            return rows.rows[0].monologue;
         } else {
             return '';
         }
@@ -801,9 +808,9 @@ export class database {
         
         const rows = await this.client.query(query);
         let res = '';
-        if (rows) {
-            for(let i = 0; i < rows.length; i++) {
-                res += row[i].word + '\n';
+        if (rows && rows.rows && rows.rows.length > 0) {
+            for(let i = 0; i < rows.rows.length; i++) {
+                res += rows.rows[i].word + '\n';
             }
         }
         return res;
@@ -820,9 +827,9 @@ export class database {
         
         const rows = await this.client.query(query);
         let res = '';
-        if (rows) {
-            for(let i = 0; i < rows.length; i++) {
-                res += row[i].word + '\n';
+        if (rows && rows.rows && rows.rows.length > 0) {
+            for(let i = 0; i < rows.rows.length; i++) {
+                res += rows.rows[i].word + '\n';
             }
         }
         return res;
@@ -839,9 +846,9 @@ export class database {
         
         const rows = await this.client.query(query);
         let res = '';
-        if (rows) {
-            for(let i = 0; i < rows.length; i++) {
-                res += row[i].phrase + '\n';
+        if (rows && rows.rows && rows.rows.length > 0) {
+            for(let i = 0; i < rows.rows.length; i++) {
+                res += rows.rows[i].phrase + '\n';
             }
         }
         return res;
@@ -858,9 +865,9 @@ export class database {
         
         const rows = await this.client.query(query);
         let res = '';
-        if (rows) {
-            for(let i = 0; i < rows.length; i++) {
-                res += row[i]._statement + '\n';
+        if (rows && rows.rows && rows.rows.length > 0) {
+            for(let i = 0; i < rows.rows.length; i++) {
+                res += rows.rows[i]._statement + '\n';
             }
         }
         return res;
@@ -898,8 +905,8 @@ export class database {
         const values = [agent];
 
         const row = await this.client.query(query, values);
-        if (row && row.length > 0) {
-            return row[0].summarization;
+        if (row && row.rows && row.rows.length > 0) {
+            return row.rows[0].summarization;
         } else {
             return '';
         }
@@ -910,8 +917,8 @@ export class database {
         const values = [agent];
 
         const rows = await this.client.query(query, values);
-        if (rows && rows.length > 0) {
-            return rows[0].facts;
+        if (rows && rows.rows && rows.rows.length > 0) {
+            return rows.rows[0].facts;
         } else {
             return '';
         }
