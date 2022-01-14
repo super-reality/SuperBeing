@@ -1,3 +1,0 @@
-$speaker: hi
-$agent: Hello, how are you?
-$speaker: doing ok

@@ -2,6 +2,7 @@ import fs from 'fs';
 import glob from "glob";
 import weaviate from "weaviate-client";
 import wiki from 'wikipedia';
+import { database } from '../database/database.js';
 import {
   makeCompletionRequest
 } from "../utilities/makeCompletionRequest.js";
@@ -39,18 +40,16 @@ export async function createWikipediaAgent(speaker, name, personality, facts) {
           const factPrompt = factSourcePrompt + out.result.extract + "\n" + facts;
   
           const personalitySourcePrompt = `Based on the above facts, the following is a description of the personality of an anthropomorphosized ${name}:`;
-          try {
-                  fs.mkdirSync(dir, { recursive: true });
-          } catch (err) {
-                  console.log("Agent folder already exists");
-          }
-          fs.writeFileSync(rootDir + "/agents/" + name + "/actions.txt", "");
-          fs.copyFileSync(rootDir + "/agents/Template/ethics.txt", rootDir + "/agents/" + name + "/ethics.txt");
+
+          await database.instance.setDefaultEthics(name);
+          await database.instance.setDefaultNeedsAndMotivations(name);
+          await database.instance.setRelationshipMatrix(name, await database.instance.getRelationshipMatrix('common'));
+          /*fs.copyFileSync(rootDir + "/agents/Template/ethics.txt", rootDir + "/agents/" + name + "/ethics.txt");
           fs.copyFileSync(rootDir + "/agents/Template/needs_and_motivations.txt", rootDir + "/agents/" + name + "/needs_and_motivations.txt");
   
           fs.writeFileSync(rootDir + "/agents/" + name + "/monologue.txt", "");
           fs.writeFileSync(rootDir + "/agents/" + name + "/room.txt", "");
-          fs.copyFileSync(rootDir + "/agents/Template/relationship_matrix.txt", rootDir + "/agents/" + name + "/relationship_matrix.txt");
+          fs.copyFileSync(rootDir + "/agents/Template/relationship_matrix.txt", rootDir + "/agents/" + name + "/relationship_matrix.txt");*/
   
           let data = {
                   "prompt": factPrompt + "\n" + personalitySourcePrompt,
@@ -71,7 +70,7 @@ export async function createWikipediaAgent(speaker, name, personality, facts) {
           console.log("res.choice.text")
           console.log(res);
   
-          fs.writeFileSync(rootDir + "/agents/" + name + "/personality.txt", personalitySourcePrompt + "\n" + personality + "\n" + res.choice.text);
+          await database.instance.setPersonality(name, personalitySourcePrompt + '\n' + personality + '\n' + res.choice.text);
   
           const dialogPrompt = `The following is a conversation with ${name}. ${name} is helpful, knowledgeable and very friendly\n${speaker}: Hi there, ${name}! Can you tell me a little bit about yourself?\n${name}:`;
   
@@ -89,10 +88,8 @@ export async function createWikipediaAgent(speaker, name, personality, facts) {
           console.log("res.choice.text (2)")
           console.log(res);
   
-          fs.writeFileSync(rootDir + "/agents/" + name + "/dialog.txt", dialogPrompt + res.choice.text);
-  
-          fs.writeFileSync(rootDir + "/agents/" + name + "/facts.txt", factPrompt);
-  
+          await database.instance.setDialogue(name, dialogPrompt + res.choice.text);
+          await database.instance.setAgentFacts(name, factPrompt);  
   
           // if(out.filePath){
           //         out.image = fs.readFileSync(out.filePath);

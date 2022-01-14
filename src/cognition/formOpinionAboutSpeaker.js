@@ -1,19 +1,16 @@
-import fs from "fs";
-import getFilesForSpeakerAndAgent from "../database/getFilesForSpeakerAndAgent.js";
+import { database } from "../database/database.js";
 import readRelationshipMatrix from "../database/readRelationshipMatrix.js";
 
 export async function formOpinionAboutSpeaker(speaker, agent, input) {
-    const metaFile = getFilesForSpeakerAndAgent(speaker, agent).speakerMetaFile;
-    const meta = JSON.parse(fs.readFileSync(metaFile).toString());
+    let meta = await database.instance.getRelationshipMatrix(agent);
 
     // check if metafile has personality meta in it
-    if(!meta.relationshipMatrix){
-        // If it doesn't, read initialization from agent and store in meta
-        meta.relationshipMatrix = readRelationshipMatrix(speaker, agent);
+    if(!meta.relationshipMatrix) {
+        meta = await readRelationshipMatrix(speaker, agent);
     }
 
     // Ask some questions about the conversation
-    const personalityQuestion =  JSON.parse(fs.readFileSync(getFilesForSpeakerAndAgent(speaker, agent).personalityQuestions).toString());
+    const personalityQuestion = database.instance.getPersonalityQuestions();  
 
     // console.log("******** meta")
     // console.log(meta);
@@ -33,7 +30,7 @@ export async function formOpinionAboutSpeaker(speaker, agent, input) {
     // Update the personality matrix
 
     // Save
-    fs.writeFileSync(metaFile, JSON.stringify(meta));
+    await database.instance.setRelationshipMatrix(agent, JSON.stringify(meta));
 
 
     // Take the input and send out a summary request

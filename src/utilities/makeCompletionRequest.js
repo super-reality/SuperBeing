@@ -1,16 +1,12 @@
 import axios from 'axios';
-import fs from 'fs';
-import { rootDir } from "./rootDir.js";
 import { config } from "dotenv";
 import { makeModelRequest } from "./makeModelRequest.js";
-import getFilesForSpeakerAndAgent from "../database/getFilesForSpeakerAndAgent.js";
-import { checkThatFilesExist } from "../database/checkThatFilesExist.js";
+import { database } from '../database/database.js';
 config();
 
 const useGPTJ = process.env.USE_GPTJ == "true";
 
 export async function makeCompletionRequest(data, speaker, agent, type, engine, log = true) {
-        if (agent && speaker) checkThatFilesExist(speaker, agent);
         if (useGPTJ) {
                 const params = {
                         temperature: 0.8,
@@ -24,10 +20,6 @@ export async function makeCompletionRequest(data, speaker, agent, type, engine, 
                 }
                 const response = await makeModelRequest(data.prompt, "EleutherAI/gpt-j-6B", params, options);
 
-                if (log && speaker && agent) {
-                        const conversationDirectory = getFilesForSpeakerAndAgent(speaker, agent).conversationDirectory;
-                        // fs.writeFileSync(conversationDirectory + "/history/" + Date.now() + "_" + type + ".txt", data.prompt + response[0].generated_text);
-                }
                 const responseModified = { success: true, choice: { text: response[0].generated_text.split('\n')[0] } };
                 return responseModified;
         } else {
@@ -42,7 +34,7 @@ async function makeOpenAIGPT3Request(data, speaker, agent, type, engine, log = t
                 'Authorization': 'Bearer ' + API_KEY
         };
         try {
-                const gptEngine = engine ?? JSON.parse(fs.readFileSync(rootDir + "/agents/common/config.json").toString()).summarizationModel;
+                const gptEngine = engine ?? JSON.parse(((await database.instance.getAgentsConfig('common')).toString())).summarizationModel;
                 const resp = await axios.post(
                         `https://api.openai.com/v1/engines/${gptEngine}/completions`,
                         data,
@@ -51,11 +43,6 @@ async function makeOpenAIGPT3Request(data, speaker, agent, type, engine, log = t
 
                 if (resp.data.choices && resp.data.choices.length > 0) {
                         let choice = resp.data.choices[0];
-                        if (log && speaker && agent) {
-                                const conversationDirectory = getFilesForSpeakerAndAgent(speaker, agent).conversationDirectory;
-                                // TODO: Re-enable?
-                                // fs.writeFileSync(conversationDirectory + "/history/" + Date.now() + "_" + type + ".txt", data.prompt + choice.text);
-                        }
                         return { success: true, choice };
 
                 }

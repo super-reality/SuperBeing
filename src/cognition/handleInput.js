@@ -1,4 +1,3 @@
-import fs from 'fs';
 import { formOpinionAboutSpeaker } from "./formOpinionAboutSpeaker.js";
 import { summarizeAndStoreFactsAboutAgent } from "./summarizeAndStoreFactsAboutAgent.js";
 import { summarizeAndStoreFactsAboutSpeaker } from "./summarizeAndStoreFactsAboutSpeaker.js";
@@ -10,12 +9,12 @@ import { telegramPacketHandler } from '../connectors/telegram.js';
 import { handleTwilio } from '../connectors/twilio.js';
 import { twitterPacketHandler } from '../connectors/twitter.js';
 import { checkThatFilesExist } from "../database/checkThatFilesExist.js";
-import getFilesForSpeakerAndAgent from "../database/getFilesForSpeakerAndAgent.js";
 import { makeCompletionRequest } from "../utilities/makeCompletionRequest.js";
 import { evaluateTextAndRespondIfToxic } from "./profanityFilter.js";
-import { rootDir } from "../utilities/rootDir.js";
 import { xrEnginePacketHandler } from '../connectors/xrengine.js';
 import keywordExtractor from '../utilities/keywordExtractor.js';
+import { database } from '../database/database.js';
+import { capitalizeFirstLetter } from "../connectors/utils.js";
 
 function respondWithMessage(agent, text, res) {
         if (res) res.status(200).send(JSON.stringify({ result: text }));
@@ -23,7 +22,7 @@ function respondWithMessage(agent, text, res) {
         return text;
 }
 
-function evaluateTerminalCommands(message, speaker, agent, res) {
+async function evaluateTerminalCommands(message, speaker, agent, res, client, channel) {
         if (message === "/reset") { // If the user types /reset into the console...
                 // If there is a response (i.e. this came from a web client, not local terminal)
                 if (res) {
@@ -35,16 +34,14 @@ function evaluateTerminalCommands(message, speaker, agent, res) {
                 } else {
                         console.log(`${agent} has been reset`);
                 }
-                const conversationDirectory = getFilesForSpeakerAndAgent(speaker, agent).conversationDirectory;
-                if (fs.existsSync(conversationDirectory))
-                        fs.rmdirSync(conversationDirectory, { recursive: true });
+                
+                await database.instance.clearConversations();
                 return true;
         }
 
         else if (message === "/dump") { // If a user types dump, show them logs of convo
                 // Read conversation history
-                const conversation = fs.readFileSync(getFilesForSpeakerAndAgent(speaker, agent).conversation).toString() +
-                        fs.readFileSync(getFilesForSpeakerAndAgent(speaker, agent).conversationArchiveFile).toString();
+                const conversation = database.instance.getConversation(agent, speaker, client, channel, false);
                 // If there is a response (i.e. this came from a web client, not local terminal)
                 const result = { result: conversation };
                 if (res) {
@@ -65,85 +62,73 @@ function evaluateTerminalCommands(message, speaker, agent, res) {
         }
 }
 
-function getConfigurationSettingsForAgent(agent) {
-        return fs.existsSync(rootDir + `/agents/${agent}/config.json`) ?
-                JSON.parse(fs.readFileSync(rootDir + `/agents/${agent}/config.json`).toString()) :
-                JSON.parse(fs.readFileSync(rootDir + "/agents/common/config.json").toString());
+async function getConfigurationSettingsForAgent(agent) {
+        return JSON.parse((await database.instance.getAgentsConfig(agent)).toString());
 }
 
 // Slice the conversation and store any more than the window size in the archive
-function archiveConversation(speaker, agent) {
+async function archiveConversation(speaker, agent, _conversation, client, channel) {
         // Get configuration settings for agent
-        const { conversationWindowSize } = getConfigurationSettingsForAgent(agent);
+        const { conversationWindowSize } = await getConfigurationSettingsForAgent(agent);
 
-        const { conversationArchiveFile, conversationFile } = getFilesForSpeakerAndAgent(speaker, agent);
-        const conversation = fs.readFileSync(conversationFile).toString().trim();
+        const conversation = (await database.instance.getConversation(agent, speaker, client, channel, false)).toString().trim();
         const conversationLines = conversation.split('\n');
         if (conversationLines.length > conversationWindowSize) {
                 const oldConversationLines = conversationLines.slice(0, Math.max(0, conversationLines.length - conversationWindowSize));
                 const newConversationLines = conversationLines.slice(Math.min(conversationLines.length - conversationWindowSize));
-                fs.appendFileSync(conversationArchiveFile, "\n" + oldConversationLines.join("\n"));
-                fs.writeFileSync(conversationFile, newConversationLines.join("\n"));
+                for(let i = 0; i < oldConversationLines.length; i++) {
+                        await database.instance.setConversation(agent, client, channel, speaker, oldConversationLines[i], true);
+                }
+                /*for(let i = 0; i < newConversationLines.length; i++) {
+                        await database.instance.setConversation(agent, client, channel, speaker, newConversationLines[i], false);
+                }*/
         }
 }
 
-function archiveFacts(speaker, agent) {
+async function archiveFacts(speaker, agent) {
         // Get configuration settings for agent
         const { speakerFactsWindowSize, agentFactsWindowSize } = getConfigurationSettingsForAgent(agent);
-        const {
-                speakerFactsFile,
-                speakerFactsArchiveFile,
-                agentFactsFile,
-                agentFactsArchiveFile,
-        } = getFilesForSpeakerAndAgent(speaker, agent);
 
-        const existingSpeakerFacts = fs.readFileSync(speakerFactsFile).toString().trim().replaceAll('\n\n', '\n');
+        const existingSpeakerFacts = (await database.instance.getSpeakersFacts(agent, speaker)).toString().trim().replaceAll('\n\n', '\n');
         const speakerFacts = existingSpeakerFacts == "" ? "" : existingSpeakerFacts; // If no facts, don't inject
         const speakerFactsLines = speakerFacts.split('\n');  // Slice the facts and store any more than the window size in the archive
         if (speakerFactsLines.length > speakerFactsWindowSize) {
-                fs.appendFileSync(speakerFactsArchiveFile, speakerFactsLines.slice(0, speakerFactsLines.length - speakerFactsWindowSize).join("\n"));
-                fs.writeFileSync(speakerFactsFile, speakerFactsLines.slice(speakerFactsLines.length - speakerFactsWindowSize).join("\n"));
+                await database.instance.updateSpeakersFactsArchive(agent, speaker, speakerFactsLines.slice(0, speakerFactsLines.length - speakerFactsWindowSize).join("\n"));
+                await database.instance.setSpeakersFacts(agent, speaker, speakerFactsLines.slice(speakerFactsLines.length - speakerFactsWindowSize).join("\n"));
         }
 
-        const existingAgentFacts = fs.readFileSync(agentFactsFile).toString().trim();
+        const existingAgentFacts = (await database.instance.getAgentFacts(agent)).toString().trim();
         const agentFacts = existingAgentFacts == "" ? "" : existingAgentFacts + "\n"; // If no facts, don't inject
         const agentFactsLines = agentFacts.split('\n'); // Slice the facts and store any more than the window size in the archive
         if (agentFactsLines.length > agentFactsWindowSize) {
-                fs.appendFileSync(agentFactsArchiveFile, agentFactsLines.slice(0, agentFactsLines.length - agentFactsWindowSize).join("\n"));
-                fs.writeFileSync(agentFactsFile, agentFactsLines.slice(Math.max(0, agentFactsLines.length - agentFactsWindowSize)).join("\n"));
+                await database.instance.updateAgentFactsArchive(agent, agentFactsLines.slice(0, agentFactsLines.length - agentFactsWindowSize).join("\n"));
+                await database.instance.setAgentFacts(agent, agentFactsLines.slice(agentFactsLines.length - agentFactsWindowSize).join("\n"));;
         }
 }
 
-function generateContext(speaker, agent, conversation, keywords) {
-        const {
-                speakerFactsFile,
-                agentFactsFile,
-        } = getFilesForSpeakerAndAgent(speaker, agent);
+async function generateContext(speaker, agent, conversation, keywords) {
+        const speakerFacts = (await database.instance.getSpeakersFacts(agent, speaker)).toString().trim().replaceAll('\n\n', '\n');
+        const agentFacts = (await database.instance.getAgentFacts(agent)).toString().trim().replaceAll('\n\n', '\n');
 
-        const speakerFacts = fs.readFileSync(speakerFactsFile).toString().trim().replaceAll('\n\n', '\n');
-        const agentFacts = fs.readFileSync(agentFactsFile).toString().trim().replaceAll('\n\n', '\n');
-
-        // Store paths to main directories for agent
-        const rootAgent = rootDir + '/agents/' + agent + '/';
-        const rootCommon = rootDir + '/agents/common/';
         let kdata = '';
         if (keywords.length > 0) {
-                kdata = "The following are information about the speaker's message:\n";
+                kdata = "More context on the chat:\n";
                 for(let k in keywords) {
-                        kdata += keywords[k].word + ': ' + keywords[k].info + '\n';
+                        kdata += 'Q: ' + capitalizeFirstLetter(keywords[k].word) + '\nA: ' + keywords[k].info + '\n\n';
                 }
+                kdata += '\n';
         }
 
         // Return a complex context (this will be passed to the transformer for completion)
-        return fs.readFileSync(rootCommon + 'context.txt').toString()
-                .replaceAll("$room", fs.readFileSync(rootAgent + 'room.txt').toString())
-                .replaceAll("$morals", fs.readFileSync(rootCommon + 'morals.txt').toString())
-                .replaceAll("$ethics", fs.readFileSync(rootAgent + 'ethics.txt').toString())
-                .replaceAll("$personality", fs.readFileSync(rootAgent + 'personality.txt').toString())
-                .replaceAll("$needsAndMotivations", fs.readFileSync(rootAgent + 'needs_and_motivations.txt').toString())
-                .replaceAll("$exampleDialog", fs.readFileSync(rootAgent + 'dialog.txt').toString())
-                .replaceAll("$monologue", fs.readFileSync(rootAgent + 'monologue.txt').toString())
-                .replaceAll("$facts", fs.readFileSync(rootAgent + 'facts.txt').toString())
+        return (await database.instance.getContext()).toString()
+                .replaceAll('$room', await database.instance.getRoom(agent))
+                .replaceAll("$morals", await database.instance.getMorals())
+                .replaceAll("$ethics", await database.instance.getEthics(agent))
+                .replaceAll("$personality", await database.instance.getPersonality(agent))
+                .replaceAll("$needsAndMotivations", await database.instance.getNeedsAndMotivations(agent))
+                .replaceAll("$exampleDialog", await database.instance.getDialogue(agent))
+                .replaceAll("$monologue", await database.instance.getMonologue(agent))
+                .replaceAll("$facts", await database.instance.getFacts(agent))
                 // .replaceAll("$actions", fs.readFileSync(rootAgent + 'actions.txt').toString())
                 .replaceAll("$speakerFacts", speakerFacts)
                 .replaceAll("$agentFacts", agentFacts)
@@ -156,7 +141,7 @@ function generateContext(speaker, agent, conversation, keywords) {
 // Todo fix me
 export async function handleDigitalBeingInput(data) {
         console.log("Handling data.message", data);
-        const response = await handleInput(data.message.content, data.username, process.env.AGENT ?? "Agent")
+        const response = await handleInput(data.message.content, data.username, process.env.AGENT ?? "Agent", null, data.clientName, data.channelId)
         const message_id = data.message.id; // data.message_id
         const channelId = data.message.channelId;
         const addPing = data.addPing; // data.addPing
@@ -247,16 +232,16 @@ export async function handleDigitalBeingInput(data) {
         // }
 }
 
-export async function handleInput(message, speaker, agent, res) {
+export async function handleInput(message, speaker, agent, res, clientName, channelId) {
         console.log("Handling input: " + message);
-        if (evaluateTerminalCommands(message, speaker, agent, res)) return;
-        checkThatFilesExist(speaker, agent);
+        if (await evaluateTerminalCommands(message, speaker, agent, res, clientName, channelId)) return;
+        await checkThatFilesExist(speaker, agent);
 
         // Get configuration settings for agent
         const { dialogFrequencyPenality,
                 dialogPresencePenality,
                 factsUpdateInterval,
-                useProfanityFilter } = getConfigurationSettingsForAgent(agent);
+                useProfanityFilter } = await getConfigurationSettingsForAgent(agent);
 
         // If the profanity filter is enabled in the agent's config...
         if (useProfanityFilter) {
@@ -269,31 +254,22 @@ export async function handleInput(message, speaker, agent, res) {
                 }
         }
 
-        // Append speaker's name to the message to appear as chat history
-        const userInput = speaker + ": " + message;
-
-        // Load agent context
-        const {
-                conversationFile,
-                speakerMetaFile
-        } = getFilesForSpeakerAndAgent(speaker, agent);
-
         // Append the speaker's message to the conversation
-        fs.appendFileSync(conversationFile, userInput);
+        await database.instance.setConversation(agent, clientName, channelId, speaker, message, false);
 
         // Parse files into objects
-        const meta = JSON.parse(fs.readFileSync(speakerMetaFile).toString());
-        const conversation = fs.readFileSync(conversationFile).toString().replaceAll('\n\n', '\n');
+        const meta = JSON.parse((await database.instance.getMeta(agent, speaker)).toString());
+        const conversation = (await database.instance.getConversation(agent, speaker, clientName, channelId, false)).toString().replaceAll('\n\n', '\n');
 
         // Increment the agent's conversation count for this speaker
         meta.messages = meta.messages + 1;
 
         // Archive previous conversation and facts to keep context window small
-        archiveConversation(speaker, agent, conversation);
-        archiveFacts(speaker, agent, conversation);
+        await archiveConversation(speaker, agent, conversation, clientName, channelId);
+        await archiveFacts(speaker, agent, conversation);
 
         const keywords = await keywordExtractor(message);
-        const context = generateContext(speaker, agent, conversation, keywords);
+        const context = await generateContext(speaker, agent, conversation, keywords);
 
         // TODO: Wikipedia?
 
@@ -323,7 +299,7 @@ export async function handleInput(message, speaker, agent, res) {
         // If it fails, tell speaker they had an error
         if (!success) {
                 const error = "Sorry, I had an error";
-                fs.appendFileSync(conversationFile, `\n${agent}: ${error}\n`);
+                await database.instance.setConversation(agent, clientName, channelId, agent, error, false);
                 return respondWithMessage(agent, error, res);
         };
         if (useProfanityFilter) {
@@ -332,7 +308,7 @@ export async function handleInput(message, speaker, agent, res) {
                 const { isProfane, response } = await evaluateTextAndRespondIfToxic(speaker, agent, choice.text, true);
 
                 if (isProfane) {
-                        fs.appendFileSync(conversationFile, `\n${agent}: ${response}\n`);
+                        await database.instance.setConversation(agent, clientName, channelId, agent, response, false);
                         return respondWithMessage(agent, response, res);
                 }
 }
@@ -340,8 +316,7 @@ export async function handleInput(message, speaker, agent, res) {
         if (meta.messages % factsUpdateInterval == 0) {
                 formOpinionAboutSpeaker(speaker, agent);
 
-                const { conversationFile } = getFilesForSpeakerAndAgent(speaker, agent);
-                const conversation = fs.readFileSync(conversationFile).toString().trim();
+                const conversation = (await database.instance.getConversation(agent, speaker, clientName, channelId, false)).toString().trim();
                 const conversationLines = conversation.split('\n');
 
                 const speakerConversationLines = conversationLines.filter(line => line != "" && line != "\n").slice(conversationLines.length - (factsUpdateInterval * 2)).join("\n");
@@ -351,9 +326,9 @@ export async function handleInput(message, speaker, agent, res) {
                 summarizeAndStoreFactsAboutAgent(speaker, agent, agentConversationLines + choice.text);
 
         }
-        fs.writeFileSync(speakerMetaFile, JSON.stringify(meta));
+        await database.instance.setMeta(agent, speaker, meta);
 
         // Write to conversation file
-        fs.appendFileSync(conversationFile, `\n${agent}:${choice.text}\n`);
+        await database.instance.setConversation(agent, clientName, channelId, agent, choice.text, false);
         return respondWithMessage(agent, choice.text, res);
 }

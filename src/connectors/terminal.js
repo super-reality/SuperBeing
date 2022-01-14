@@ -89,7 +89,7 @@ export function initTerminal(agent) {
                                         }
                                 ];
                                 prompt(questions).then(async (text) => {
-                                        await handleInput(text.Input, speaker, currentAgent);
+                                        await handleInput(text.Input, speaker, currentAgent, null, 'terminal', '0');
                                         currentState = states.READY;
                                 });
                         }
