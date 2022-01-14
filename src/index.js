@@ -6,6 +6,7 @@ import { Server } from "socket.io";
 import { initTerminal } from "./connectors/terminal.js"
 import cors from "cors";
 import { handleInput } from './cognition/handleInput.js';
+import { createWikipediaAgent } from './connectors/wikipedia.js';
 
 dotenv.config();
 

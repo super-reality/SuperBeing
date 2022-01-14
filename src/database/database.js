@@ -338,7 +338,6 @@ export class database {
 
         await this.client.query(query, values);
     }
-    currentI = 0;
     async getConversation(agent, sender, client, channel, archive) {
         const query = 'SELECT * FROM conversation WHERE agent=$1 AND client=$2 AND channel=$3 AND (sender=$4 OR sender=$5) AND archive=$6'
         const values = [ agent, client, channel, sender, agent, archive ];
@@ -356,8 +355,6 @@ export class database {
                 if (!row.rows[i].text || row.rows[i].text.length <= 0) continue;
                 data += row.rows[i].sender + ': ' + row.rows[i].text + '\n';
             }
-            this.currentI++;
-            fs.writeFileSync(rootDir + '/data' + this.currentI + '.txt', data);
             return data;
         } else {
             return '';
@@ -747,7 +744,25 @@ export class database {
             return '';
         }
     }
+    async setDefaultEthics(agent) {
+        const query = 'INSERT INTO ethics(agent, ethics) VALUES($1, $2)';
+        const values = [agent, ''];
 
+        await this.client.query(query, values);
+    }
+    async setDefaultNeedsAndMotivations(agent) {
+        const query = 'INSERT INTO needs_motivations(agent, needs_motivations) VALUES($1, $2)';
+        const values = [agent, '$speaker: What would you say your needs are?\n$agent: I need to make friends with others who can house me and take care of me.'];
+        
+        await this.client.query(query, values);
+    }
+
+    async setPersonality(agent, personality) {
+        const query = 'INSERT INTO personality(agent, personality) VALUES($1, $2)';
+        const values = [agent, personality];
+
+        await this.client.query(query, values);
+    }
     async getPersonality(agent) {
         const query = 'SELECT * FROM personality WHERE agent=$1';
         const values = [agent];
@@ -782,6 +797,12 @@ export class database {
         } else {
             return '';
         }
+    }
+    async setDialogue(agent, dialogue) {
+        const query = 'INSERT INTO dialogue(agent, dialogue) VALUES($1, $2)';
+        const values = [agent, dialogue];
+
+        await this.client.query(query, values);
     }
 
     async getMonologue(agent) {

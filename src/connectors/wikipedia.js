@@ -41,8 +41,8 @@ export async function createWikipediaAgent(speaker, name, personality, facts) {
   
           const personalitySourcePrompt = `Based on the above facts, the following is a description of the personality of an anthropomorphosized ${name}:`;
 
-          await database.instance.setDefaultEthics(name, '');
-          await database.instance.setDefaultNeedsAndMotivations(name, '');
+          await database.instance.setDefaultEthics(name);
+          await database.instance.setDefaultNeedsAndMotivations(name);
           await database.instance.setRelationshipMatrix(name, await database.instance.getRelationshipMatrix('common'));
           /*fs.copyFileSync(rootDir + "/agents/Template/ethics.txt", rootDir + "/agents/" + name + "/ethics.txt");
           fs.copyFileSync(rootDir + "/agents/Template/needs_and_motivations.txt", rootDir + "/agents/" + name + "/needs_and_motivations.txt");
@@ -88,7 +88,7 @@ export async function createWikipediaAgent(speaker, name, personality, facts) {
           console.log("res.choice.text (2)")
           console.log(res);
   
-          await database.instance.setDialog(name, dialogPrompt + res.choice.text);
+          await database.instance.setDialogue(name, dialogPrompt + res.choice.text);
           await database.instance.setAgentFacts(name, factPrompt);  
   
           // if(out.filePath){
