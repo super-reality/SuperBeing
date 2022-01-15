@@ -62,7 +62,7 @@ let enabled_services = (process.env.ENABLED_SERVICES || '').split(',').map(
             next();
     });
     
-    const allowedOrigins = ['http://localhost:3000', 'https://supermind-client.vercel.app', 'https://superreality.com', 'http://localhost:65535']
+    const allowedOrigins = ['*']
     const corsOptions = {
             origin: function (origin, callback) {
                     console.log("Origin is", origin);
@@ -98,10 +98,12 @@ let enabled_services = (process.env.ENABLED_SERVICES || '').split(',').map(
             const agent = req.body.agent
             console.log("executing for ", req.body)
             if (message.includes("/become")) {
+                console.log("becoming")
                     const out = await createWikipediaAgent("Speaker", agent, "", "");
                     while (out === null) {
                         out = await createWikipediaAgent('Speaker', defaultAgent, "", "");
                     }
+                    console.log("sending out", out)
                     return res.send(out);
             }
             await handleInput(message, speaker, agent, res, 'web', '0')
