@@ -19,7 +19,12 @@ export async function keywordExtractor(input) {
     for (let i = 0; i < res.length; i++) {
         for (let j = 0; j < result.length; j++) {
             if (result[j].word === res[i]) {
-                if (result[j].entity_group === 'NN' || result[j].entity_group === 'NNS' && !skw.includes(res[i])) {
+                console.log(res[i] + ' - ' + skw.includes(res[i]));
+                if (skw.includes(res[i])) {
+                    continue;
+                }
+
+                if (result[j].entity_group === 'NN' || result[j].entity_group === 'NNS') {
                     keywords.push(res[i]);
                     break;
                 }
