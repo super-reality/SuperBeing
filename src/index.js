@@ -1,12 +1,14 @@
-import express, { urlencoded, json } from 'express';
-import dotenv from "dotenv";
-import { database } from "./database/database.js";
-import { createServer } from "http";
-import { Server } from "socket.io";
-import { initTerminal } from "./connectors/terminal.js"
 import cors from "cors";
+import dotenv from "dotenv";
+import express, { json, urlencoded } from 'express';
+import { createServer } from "http";
 import { handleInput } from './cognition/handleInput.js';
+import { initTerminal } from "./connectors/terminal.js";
 import { createWikipediaAgent } from './connectors/wikipedia.js';
+import { database } from "./database/database.js";
+import cors_server from "./utilities/cors-server.js";
+
+new cors_server(process.env.CORS_PORT, '0.0.0.0');
 
 dotenv.config();
 
@@ -42,7 +44,6 @@ let enabled_services = (process.env.ENABLED_SERVICES || '').split(',').map(
     const router = express.Router();
     
     const server = createServer(app);
-    const io = new Server(server);
     
     app.use(json())
    
@@ -54,11 +55,6 @@ let enabled_services = (process.env.ENABLED_SERVICES || '').split(',').map(
             console.log()
     })
     
-    io.on("connection", (socket) => {
-            console.log("Connected", socket.id);
-            socket.emit("message", `hello ${socket.id}`);
-    })
-        
     app.use(function(req, res, next) {
             res.header("Access-Control-Allow-Origin", "*");
             res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
@@ -125,15 +121,14 @@ let enabled_services = (process.env.ENABLED_SERVICES || '').split(',').map(
             let ignoreContentFilter = true;
             // Make a function that self-invokes with the opposites
             runBattleBot(speaker, agent, message, ignoreContentFilter);
-    }
-    
-    
-    async function runBattleBot(speaker, agent, message, ignoreContentFilter) {
-            console.log(speaker, agent, message, ignoreContentFilter)
-            const m = await handleInput(message, speaker, agent, ignoreContentFilter, 'battlebots', '0');
-            setTimeout(() => runBattleBot(agent, speaker, m, ignoreContentFilter), 10000);
-    }
-
+            
+            
+            async function runBattleBot(speaker, agent, message, ignoreContentFilter) {
+                console.log(speaker, agent, message, ignoreContentFilter)
+                const m = await handleInput(message, speaker, agent, ignoreContentFilter, 'battlebots', '0');
+                setTimeout(() => runBattleBot(agent, speaker, m, ignoreContentFilter), 10000);
+            }
+        }
 
         // Discord support
         if (enabled_services.includes('discord')) {
