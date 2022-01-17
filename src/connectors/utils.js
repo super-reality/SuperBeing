@@ -72,7 +72,7 @@ export function convertLocalToUtcTimezone(date) {
 
 export function getStartingMessageKeywords() {
   const res = [];
-  const data = process.env.STARTING_MESSAGES.split('|');
+  const data = customConfig.instance.get('starting_messages').split('|');
   for (let i = 0; i < data.length; i++) {
       const kw = simpleExtractor(data[i]);
       for (let j = 0; j < kw.length; j++) {

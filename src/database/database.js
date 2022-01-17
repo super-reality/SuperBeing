@@ -1,8 +1,8 @@
 import pg from 'pg';
 import { initProfanityFilter } from '../cognition/profanityFilter.js';
-import { convertLocalToUtcTimezone } from '../connectors/utils.js';
 import fs from 'fs';
 import { rootDir } from '../utilities/rootDir.js';
+import customConfig from '../utilities/customConfig.js';
 const { Client } = pg;
 
 export class database {
@@ -60,13 +60,30 @@ export class database {
     }
 
     async connect() {
+        console.log('connect');
         //this.client = await this.pool.connect()
         this.client = new Client()
         this.client.connect()
         const res = await this.client.query('SELECT NOW()')
 
-        await initProfanityFilter();
+        await this.readConfig();
         await this.onInit();
+        await initProfanityFilter();
+    }
+
+    async readConfig() {
+        const configs = {}
+        const query = 'SELECT * FROM config';
+        
+        const rows = await this.client.query(query);
+
+        if (rows && rows.rows && rows.rows.length > 0) {
+            for (let i = 0; i < rows.rows.length; i++) {
+                configs[rows.rows[i]._key] = rows.rows[i]._value;
+            }
+        }
+
+        const config = new customConfig(configs);
     }
 
     async addMessageInHistory(client_name, chat_id, message_id, sender, content) {  
@@ -295,10 +312,12 @@ export class database {
     async getBannedUsers() {
         const query = "SELECT * FROM blocked_users;"
 
-        await this.client.query(query, (err, res) => {
-            if (err) console.log(`${err} ${err.stack}`)
-                else database.instance.bannedUsers = res.rows
-        });
+        if (this.client) {
+            await this.client.query(query, (err, res) => {
+                if (err) console.log(`${err} ${err.stack}`)
+                    else database.instance.bannedUsers = res.rows
+            });
+        }
     }
     async banUser(user_id, client) {
         const query = "INSERT INTO blocked_users(user_id, client) VALUES($1, $2);"    
@@ -348,7 +367,7 @@ export class database {
                 return new Date(b.date) - new Date(a.date);
             });*/
             //row.rows = row.rows.reverse();
-            const max_length = parseInt(process.env.CHAT_HISTORY_MESSAGES_COUNT);
+            const max_length = parseInt(customConfig.instance.get('chatHistoryMessageCount'));
             const length = row.rows.length > max_length ? max_length : row.rows.length;
             let data = '';
             for(let i = 0; i < length; i++) {

@@ -1,6 +1,7 @@
 import SnooStream from 'snoostream';
 import * as snoowrap from 'snoowrap';
 import { database } from '../database/database.js';
+import customConfig from '../utilities/customConfig.js';
 
 export let reddit;
 
@@ -98,11 +99,11 @@ export class redditHandler {
         Object.keys(responses).map(function(key, index) {
             if (args === 'isChat') {
                 redditHandler.instance.reddit.getMessage(messageId).reply(responses[key]).then(res => {
-                    database.instance.addMessageInHistory('reddit', chat_id, res.id, process.env.BOT_NAME, responses[key])
+                    database.instance.addMessageInHistory('reddit', chat_id, res.id, customConfig.instance.get('botName'), responses[key])
                 })
             } else if (args === 'isPost') {
                 reddit.getSubmission(chat_id).reply(responses[key]).then(res => {
-                    database.instance.addMessageInHistory('reddit', chat_id, res.id, process.env.BOT_NAME, responses[key])
+                    database.instance.addMessageInHistory('reddit', chat_id, res.id, customConfig.instance.get('botName'), responses[key])
                 })
             }
         })
@@ -110,9 +111,9 @@ export class redditHandler {
 }
 
 export const createRedditClient = async () => {
-    const appId = process.env.REDDIT_APP_ID;
-    const appSecredId = process.env.REDDIT_APP_SECRED_ID;
-    const oauthToken = process.env.REDDIT_OATH_TOKEN;
+    const appId = customConfig.instance.get('redditAppID')
+    const appSecredId = customConfig.instance.get('redditAppSecretID')
+    const oauthToken = customConfig.instance.get('redditOathToken')
     //https://github.com/not-an-aardvark/reddit-oauth-helper
     if (!appId || !appSecredId) return console.warn("No API token for Reddit bot, skipping");
     

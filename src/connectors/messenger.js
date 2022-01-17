@@ -1,5 +1,6 @@
 import request from 'request';
 import { database } from "../database/database.js";
+import customConfig from '../utilities/customConfig.js';
 import { getRandomEmptyResponse } from "./utils.js";
 
 export function getDbKey(chatId, messageId) {
@@ -71,10 +72,10 @@ export async function handlePacketSend(senderPsid, responses) {
 
 export async function callSendAPI(senderPsid, response, text) {
   await database.instance.getNewMessageId('messenger', senderPsid, async (msgId) => {
-    addMessageToHistory(senderPsid, process.env.BOT_NAME, text, msgId)
+    addMessageToHistory(senderPsid, customConfig.instance.get('botName'), text, msgId)
     console.log('sending response: ' + response)
     // The page access token we have generated in your app settings
-    const PAGE_ACCESS_TOKEN = process.env.MESSENGER_TOKEN
+    const PAGE_ACCESS_TOKEN = customConfig.instance.get('messengerToken')
 
     // Construct the message body
     let requestBody = {
@@ -101,8 +102,8 @@ export async function callSendAPI(senderPsid, response, text) {
 }
 
 export const createMessengerClient = async (app) => {
-  const token = process.env.MESSENGER_TOKEN
-  const verify_token = process.env.MESSENGER_VERIFY_TOKEN
+  const token = customConfig.instance.get('messengerToken')
+  const verify_token = customConfig.instance.get('messengerVerifyToken')
   
     if (!token || !verify_token) return console.warn("No API tokens for Messenger bot, skipping");
 

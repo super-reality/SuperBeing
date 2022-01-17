@@ -3,8 +3,7 @@ import http from 'http';
 import url from 'url';
 import { handleInput } from "./handleInput.js";
 import TwitterClient from 'twit';
-
-const currentAgent = process.env.AGENT;
+import customConfig from '../utilities/customConfig.js';
 
 let TwitClient;
 
@@ -31,7 +30,7 @@ const SendMessage = (id, twitterUserId, messageType, text) => {
 }
 
 const HandleResponse = async (id, name, receivedMessage, messageType, event) => {
-  let reply = await handleInput(receivedMessage, name, currentAgent, null, 'twitter', id);
+  let reply = await handleInput(receivedMessage, name, customConfig.instance.get('botName'), null, 'twitter', id);
 
   // if prompt is more than 280 characters, remove the last sentence
   while (reply.length > 280) {
@@ -51,22 +50,22 @@ const validateWebhook = (token, auth) => {
   return { response_token: `sha256=${responseToken}` };
 }
 
-export const createTwitterClient = async (twitterId = process.env.twitterId) => {
+export const createTwitterClient = async (twitterId = customConfig.instance.get('twitterId')) => {
   TwitClient = new TwitterClient({
-    consumer_key: process.env.twitterConsumerKey,
-    consumer_secret: process.env.twitterConsumerSecret,
-    access_token: process.env.twitterAccessToken,
-    access_token_secret: process.env.twitterAccessTokenSecret
+    consumer_key: customConfig.instance.get('twitterConsumerKey'),
+    consumer_secret: customConfig.instance.get('twitterConsumerSecret'),
+    access_token: customConfig.instance.get('twitterAccessToken'),
+    access_token_secret: customConfig.instance.get('twitterAccessTokenSecret'),
   });
 
   const webhook = new Autohook({
-    token: process.env.twitterAccessToken,
-    token_secret: process.env.twitterAccessTokenSecret,
-    consumer_key: process.env.twitterConsumerKey,
-    consumer_secret: process.env.twitterConsumerSecret,
-    ngrok_secret: process.env.ngrokToken,
+    token: customConfig.instance.get('twitterWebhookToken'),
+    token_secret: customConfig.instance.get('twtterAccessTokenSecret'),
+    consumer_key: customConfig.instance.get('twitterConsumerKey'),
+    consumer_secret: customConfig.instance.get('twitterConsumerSecret'),
+    ngrok_secret: customConfig.instance.get('ngrokToken'),
     env: 'dev',
-    port: process.env.twitterWebhookPort
+    port: customConfig.instance.get('twitterWebhookPort'),
   });
   await webhook.removeWebhooks();
   webhook.on('event', event => {
@@ -95,7 +94,9 @@ export const createTwitterClient = async (twitterId = process.env.twitterId) => 
     }
   });
   await webhook.start();
-  await webhook.subscribe({ oauth_token: process.env.twitterAccessToken, oauth_token_secret: process.env.twitterAccessTokenSecret, screen_name: twitterId });
+  await webhook.subscribe({ oauth_token: customConfig.instance.get('twitterAccessToken'), 
+                        oauth_token_secret: customConfig.instance.get('twitterAccessTokenSecret'), 
+                        screen_name: customConfig.instance.get('twitterID') });
 
   // handle this
   http.createServer((req, res) => {
@@ -108,17 +109,17 @@ export const createTwitterClient = async (twitterId = process.env.twitterId) => 
     if (route.query.crc_token) {
       console.log("Validating webhook")
       console.log(route.query.crc_token)
-      const crc = validateWebhook(route.query.crc_token, process.env.twitterConsumerSecret);
+      const crc = validateWebhook(route.query.crc_token, customConfig.instance.get('twitterConsumerSecret'));
       res.writeHead(200, { 'content-type': 'application/json' });
       res.end(JSON.stringify(crc));
     }
-  }).listen(process.env.twitterWebhookPort);
+  }).listen(customConfig.instance.get('twitterWebhookPort'));
   
 
   setInterval(async () => {
-    let prompt = "Could you please write a short, optimistic tweet on web 3.0 culture, the metaverse, internet technology or the state of the world? Must be in less than three sentences.\n" + currentAgent + ":";
+    let prompt = "Could you please write a short, optimistic tweet on web 3.0 culture, the metaverse, internet technology or the state of the world? Must be in less than three sentences.\n" + customConfig.instance.get('botName') + ":";
   
-    let reply = await handleInput(prompt, "Friend", currentAgent, null, false, 'twitter', 'prompt');
+    let reply = await handleInput(prompt, "Friend", customConfig.instance.get('botName'), null, false, 'twitter', 'prompt');
 
         // if prompt is more than 280 characters, remove the last sentence
         while (reply.length > 280) {

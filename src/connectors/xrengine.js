@@ -1,5 +1,6 @@
 import { handleInput } from "../cognition/handleInput.js";
 import { database } from "../database/database.js";
+import customConfig from "../utilities/customConfig.js";
 import Browser, { PageUtils } from './browser.js';
 import { detectOsOption, getRandomEmptyResponse, startsWithCapital } from "./utils.js";
 
@@ -122,7 +123,7 @@ export async function handleMessages(messages, bot) {
         else if (messages[i].senderName === bot.name ||
             (messages[i].sender !== undefined && messages[i].sender.id === bot.userId) ||
             (messages[i].author !== undefined && messages[i].author[1] === bot.userId)) {
-            addMessageToHistory(messages[i].channelId, messages[i].id, process.env.BOT_NAME, messages[i].text)
+            addMessageToHistory(messages[i].channelId, messages[i].id, customConfig.instance.get('botName'), messages[i].text)
             continue
         }
         await wasHandled(messages[i].channelId, messages[i].id, () => {
@@ -202,7 +203,7 @@ export async function handleMessages(messages, bot) {
             // 
             console.log("Sending out input");
 
-            const response = await handleInput(content.replace('!ping', ''), _sender, process.env.AGENT ?? "Agent", null, 'xr-engine', messages[i].channelId);
+            const response = await handleInput(content.replace('!ping', ''), _sender, customConfig.instance.get('agent') ?? "Agent", null, 'xr-engine', messages[i].channelId);
             console.log("Handling response");
             await xrEnginePacketHandler.instance.handleXREngineResponse(response, addPing, _sender)
 
@@ -263,17 +264,14 @@ export class xrEnginePacketHandler {
     }
 }
 
-const XRENGINE_URL = process.env.XRENGINE_URL || 'https://localhost:3000/location/test';
-
-
 const doTests = false
 
 async function createXREngineClient() {
     //generateVoice('hello there', (buf, path) => {}, false)
     console.log('creating xr engine client')
-    const xrengineBot = new XREngineBot({ headless: !process.env.GUI });
+    const xrengineBot = new XREngineBot({ headless: true });
 
-    console.log("Preparing to connect to ", XRENGINE_URL);
+    console.log("Preparing to connect to ", customConfig.instance.get('xrEngineURL'));
     xrengineBot.delay(Math.random() * 100000);
     console.log("Connecting to server...");
     await xrengineBot.launchBrowser();
@@ -787,7 +785,7 @@ class XREngineBot {
             name = this.name
         }
 
-        this.username_regex = new RegExp(process.env.BOT_NAME_REGEX, 'ig')
+        this.username_regex = new RegExp(customConfig.instance.get('botName'), 'ig')
 
         if (this.headless) {
             // Disable rendering for headless, otherwise chromium uses a LOT of CPU

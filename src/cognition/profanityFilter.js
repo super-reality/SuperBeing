@@ -4,8 +4,7 @@ import grawlixRacism from 'grawlix-racism';
 import { makeCompletionRequest } from "../utilities/makeCompletionRequest.js";
 import { makeModelRequest } from "../utilities/makeModelRequest.js";
 import { database } from '../database/database.js';
-
-const HF_API_TOKEN = process.env.HF_API_TOKEN;
+import customConfig from '../utilities/customConfig.js';
 
 function nWord(text) {
     const r = new RegExp(`n+[i1l|]+[gkq469]+[e3a4i]+[ra4]s?`);
@@ -56,7 +55,7 @@ function getWordCount(text) {
 }
 
 async function testIfIsToxic(text, threshold) {
-    if (HF_API_TOKEN) {
+    if (customConfig.instance.get('hf_api_token')) {
         const result = await makeModelRequest(text, "unitary/toxic-bert");
         console.log(result);
         result[0].forEach((sentence) => {

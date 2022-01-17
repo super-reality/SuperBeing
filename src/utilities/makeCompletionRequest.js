@@ -2,12 +2,11 @@ import axios from 'axios';
 import { config } from "dotenv";
 import { makeModelRequest } from "./makeModelRequest.js";
 import { database } from '../database/database.js';
+import customConfig from './customConfig.js';
 config();
 
-const useGPTJ = process.env.USE_GPTJ == "true";
-
 export async function makeCompletionRequest(data, speaker, agent, type, engine, log = true) {
-        if (useGPTJ) {
+        if (customConfig.instance.getBool('use_gptj')) {
                 const params = {
                         temperature: 0.8,
                         repetition_penalty: 0.5,
@@ -28,7 +27,7 @@ export async function makeCompletionRequest(data, speaker, agent, type, engine, 
 }
 
 async function makeOpenAIGPT3Request(data, speaker, agent, type, engine, log = true) {
-        const API_KEY = process.env.OPENAI_API_KEY;
+        const API_KEY = customConfig.instance.get('openai_api_key')
         const headers = {
                 'Content-Type': 'application/json',
                 'Authorization': 'Bearer ' + API_KEY

@@ -4,6 +4,7 @@ import { database } from "./database.js"
 import { getRandomEmptyResponse, startsWithCapital } from "../../utils.js"
 import { addMessageToHistory, exitConversation, getChatHistory, isInConversation, onMessageResponseUpdated, prevMessage, prevMessageTimers, sentMessage } from "../chatHistory.js"
 import { botName, username_regex } from "../whatsapp-client.js"
+import customConfig from '../utilities/customConfig.js'
 
 export async function onMessage(msg, messageResponseHandler) {
     console.log(JSON.stringify(msg))
@@ -39,8 +40,8 @@ export async function onMessage(msg, messageResponseHandler) {
         }
         addPing = _prev !== undefined && _prev !== '' && _prev !== _sender
 
-        const isMention = msg.entities !== undefined && msg.entities.length === 1 && msg.entities[0].type === 'mention' && content.includes('@' + process.env.TELEGRAM_BOT_NAME)
-        const otherMention = msg.entities !== undefined && msg.entities.length > 0 && msg.entities[0].type === 'mention'  && !content.includes('@' + process.env.TELEGRAM_BOT_NAME)
+        const isMention = msg.entities !== undefined && msg.entities.length === 1 && msg.entities[0].type === 'mention' && content.includes('@' + customConfig.instance.get('whatsappBotName'))
+        const otherMention = msg.entities !== undefined && msg.entities.length > 0 && msg.entities[0].type === 'mention'  && !content.includes('@' + customConfig.instance.get('whatsappBotName'))
         let startConv = false
         let startConvName = ''
         if (!isMention && !otherMention) {
@@ -229,9 +230,9 @@ export async function updateMessage(chatId, messageId, newContent) {
     await database.instance.updateMessage('whatsapp', chatId, messageId, newContent, true)
 }
 
-const token = process.env.WHATSAPP_TOKEN
-export const username_regex = new RegExp('((?:digital|being)(?: |$))', 'ig')
-export let botName = process.env.WHATSAPP_BOT_NAME
+const token = customConfig.instance.get('whatsappToken')
+export const username_regex = new RegExp(customConfig.instance.get('botNameRegex'), 'ig')
+export let botName = customConfig.instance.get('whatsappBotName')
 
 export const createWhatsappClient = async (messageResponseHandler) => {
     if (!token) return console.warn("No API token for Whatsapp bot, skipping");

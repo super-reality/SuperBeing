@@ -4,6 +4,7 @@ import { rootDir } from "../utilities/rootDir.js";
 import { handleInput } from "../cognition/handleInput.js";
 import { createWikipediaAgent } from "../connectors/wikipedia.js";
 import { defaultAgent } from "../index.js";
+import customConfig from "../utilities/customConfig.js";
 
 export var prompt = inquirer.createPromptModule();
 
@@ -107,7 +108,7 @@ export function initTerminal(agent) {
                 else {
                         prompt(namePrompt).then((text) => {
                                 // Check for OpenAI key, this will help people who clone it to get started
-                                if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY.includes("XXXXX")) {
+                                if (!customConfig.instance.get('openai_api_key') || customConfig.instance.get('openai_api_key').includes("XXXXX")) {
                                         return console.error("Please create a .env file in root of this directory and add your OpenAI API key to it");
                                 }
 

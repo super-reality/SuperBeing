@@ -1,9 +1,11 @@
+import customConfig from "./customConfig";
+
 const textToSpeech = require("@google-cloud/text-to-speech");
 
 export default function getSpeechForText(){
 
     const textToSpeechClient = new textToSpeech.TextToSpeechClient({
-        projectId: process.env.GOOGLE_PROJECT_ID,
+        projectId: customConfig.instance.get('google_project_id'),
     });
     
     var request = {

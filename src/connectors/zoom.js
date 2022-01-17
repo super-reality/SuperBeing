@@ -1,4 +1,5 @@
 import { launch } from "puppeteer-stream";
+import customConfig from "../utilities/customConfig.js";
 import { detectOsOption } from "./utils.js";
 let Xvfb  = require('xvfb')
 
@@ -58,15 +59,15 @@ export class zoom {
     
         this.page.setViewport({ width: 0, height: 0 })
         await this.page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36')
-        await this.navigate(process.env.ZOOM_INVITATION_LINK)
+        await this.navigate(customConfig.instance.get('zoomInvitationLink'))
         await this.delay(20000)
-        await this.typeMessage('inputname', process.env.BOT_NAME, false)
+        await this.typeMessage('inputname', customConfig.instance.get('botName'), false)
         await this.clickElementById('button', 'joinBtn')
         await this.delay(20000)
         await this.clickElementById('button', 'wc_agree1')
         await this.delay(20000)
         try {
-            await this.typeMessage('inputpasscode', process.env.ZOOM_PASSWORD, false)
+            await this.typeMessage('inputpasscode', customConfig.instance.get('zoomPassword'), false)
             await this.clickElementById('button', 'joinBtn')
             await this.delay(20000)
         } catch (ex) {}

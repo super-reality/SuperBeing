@@ -1,5 +1,6 @@
 import { IgApiClient } from 'instagram-private-api';
 import { database } from '../database/database.js';
+import customConfig from '../utilities/customConfig.js';
 
 export class instagramPacketHandler {
     static instance
@@ -19,8 +20,8 @@ export class instagramPacketHandler {
 }
 
 export const createInstagramClient = async () => {
-    const username = process.env.IG_USERNAME
-    const password = process.env.IG_PASSWORD
+    const username = customConfig.instance.get('instagramUsername')
+    const password = customConfig.instance.get('instagramPassword')
     if (!username || !password) return console.warn("No Instagram credentials found, skipping");
 
     const ig = new IgApiClient()
@@ -43,7 +44,7 @@ export const createInstagramClient = async () => {
             await database.instance.messageExists('instagram', 
                 pending.thread_id, 
                 pending.last_permanent_item.item_id + '',
-                pending.last_permanent_item.user_id === loggedInUser.pk ? process.env.BOT_NAME : pending.thread_title,
+                pending.last_permanent_item.user_id === loggedInUser.pk ? customConfig.instance.get('botName') : pending.thread_title,
                 pending.last_permanent_item.text, 
                 parseInt(pending.last_permanent_item.timestamp) / 1000)
         }
@@ -61,7 +62,7 @@ export const createInstagramClient = async () => {
                     await database.instance.messageExists('instagram', 
                         pending.thread_id, 
                         pending.last_permanent_item.item_id + '',
-                        pending.last_permanent_item.user_id === loggedInUser.pk ? process.env.BOT_NAME : pending.thread_title,
+                        pending.last_permanent_item.user_id === loggedInUser.pk ? customConfig.instance.get('botName') : pending.thread_title,
                         pending.last_permanent_item.text, 
                         parseInt(pending.last_permanent_item.timestamp) / 1000)
 

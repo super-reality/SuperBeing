@@ -1,4 +1,5 @@
 import { database } from "../database/database.js"
+import customConfig from "../utilities/customConfig.js"
 import { getRandomEmptyResponse, startsWithCapital } from "./utils.js"
 
 export class telegramPacketHandler {
@@ -28,11 +29,11 @@ export class telegramPacketHandler {
                 while (text === undefined || text === '' || text.replace(/\s/g, '').length === 0) text = getRandomEmptyResponse()
                 if (addPing) telegramPacketHandler.instance.bot.sendMessage(chat_id,`<a href="tg://user?id=${senderId}">${senderName}</a> ${text}`, {parse_mode: 'HTML'}).then(function (_resp) {
                     onMessageResponseUpdated(_resp.chat.id, message_id, _resp.message_id)
-                    addMessageToHistory(_resp.chat.id, _resp.message_id, process.env.BOT_NAME, text)
+                    addMessageToHistory(_resp.chat.id, _resp.message_id, customConfig.instance.get('botName'), text)
                     }).catch(console.error)
                 else telegramPacketHandler.instance.bot.sendMessage(chat_id,text).then(function (_resp) {
                     onMessageResponseUpdated(_resp.chat.id, message_id, _resp.message_id)
-                    addMessageToHistory(_resp.chat.id, _resp.message_id, process.env.BOT_NAME, text)
+                    addMessageToHistory(_resp.chat.id, _resp.message_id, customConfig.instance.get('botName'), text)
                 }).catch(console.error)       
         }
             else {
@@ -40,11 +41,11 @@ export class telegramPacketHandler {
                 while (emptyResponse === undefined || emptyResponse === '' || emptyResponse.replace(/\s/g, '').length === 0) emptyResponse = getRandomEmptyResponse()
                 if (addPing) telegramPacketHandler.instance.bot.sendMessage(chat_id,`<a href="tg://user?id=${senderId}">${senderName}</a> ${emptyResponse}`, {parse_mode: 'HTML'}).then(function (_resp) {
                     onMessageResponseUpdated(_resp.chat.id, message_id, _resp.message_id)
-                    addMessageToHistory(_resp.chat.id, _resp.message_id, process.env.BOT_NAME, emptyResponse)
+                    addMessageToHistory(_resp.chat.id, _resp.message_id, customConfig.instance.get('botName'), emptyResponse)
                     }).catch(console.error)           
                 else telegramPacketHandler.instance.bot.sendMessage(chat_id,emptyResponse).then(function (_resp) {
                     onMessageResponseUpdated(_resp.chat.id, message_id, _resp.message_id)
-                    addMessageToHistory(_resp.chat.id, _resp.message_id, process.env.BOT_NAME, emptyResponse)
+                    addMessageToHistory(_resp.chat.id, _resp.message_id, customConfig.instance.get('botName'), emptyResponse)
                     }).catch(console.error)
             }
         });          
@@ -165,8 +166,8 @@ export async function onMessage(bot, msg, botName, username_regex) {
         }
         addPing = (_prev !== undefined && _prev !== '' && _prev !== _sender) || moreThanOneInConversation()
 
-        const isMention = msg.entities !== undefined && msg.entities.length === 1 && msg.entities[0].type === 'mention' && content.includes('@' + process.env.TELEGRAM_BOT_NAME)
-        const otherMention = msg.entities !== undefined && msg.entities.length > 0 && msg.entities[0].type === 'mention'  && !content.includes('@' + process.env.TELEGRAM_BOT_NAME)
+        const isMention = msg.entities !== undefined && msg.entities.length === 1 && msg.entities[0].type === 'mention' && content.includes('@' + customConfig.instance.get('telegramBotName'))
+        const otherMention = msg.entities !== undefined && msg.entities.length > 0 && msg.entities[0].type === 'mention'  && !content.includes('@' + customConfig.instance.get('telegramBotName'))
         let startConv = false
         let startConvName = ''
         if (!isMention && !otherMention) {
@@ -318,10 +319,10 @@ export async function updateMessage(chatId, messageId, newContent) {
 }
 
 export const createTelegramClient = () => {
-    const token = process.env.TELEGRAM_BOT_TOKEN
+    const token = customConfig.instance.get('telegramBotToken')
 
     if (!token) return console.warn("No API token for Telegram bot, skipping");
-    const username_regex = new RegExp(process.env.BOT_NAME_REGEX, 'ig')
+    const username_regex = new RegExp(customConfig.instance.get('botNameRegex'), 'ig')
     let botName = ''
 
     const bot = new TelegramBot(token, {polling: true})

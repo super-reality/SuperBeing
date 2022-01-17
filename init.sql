@@ -286,3 +286,99 @@ INSERT INTO speaker_fact_summarization
 
 CREATE TABLE IF NOT EXISTS facts(agent TEXT, facts TEXT);
 CREATE TABLE IF NOT EXISTS actions(agent TEXT, actions TEXT);
+
+CREATE TABLE IF NOT EXISTS config(_key TEXT, _value TEXT);
+INSERT INTO config
+    select t.*
+    from ((SELECT  'agent' as _key, 'Thales' as _value
+          ) union all 
+		 (SELECT  'openai_api_key' as _key, '' as _value
+		  ) union all 
+		 (SELECT  'google_project_id' as _key, '' as _value
+		  ) union all 
+		 (SELECT  'hf_api_token' as _key, '' as _value
+		  ) union all 
+		 (SELECT  'use_gptj' as _key, '' as _value
+		  ) union all 
+		 (SELECT  'discord_api_token' as _key, '' as _value
+		  ) union all 
+		 (SELECT  'starting_messages' as _key, 'Starts the conversation greeting $speaker' as _value
+		  ) union all 
+		 (SELECT  'twitterConsumerKey' as _key, '' as _value
+		  ) union all 
+		 (SELECT  'twitterConsumerSecret' as _key, '' as _value
+		  ) union all 
+		 (SELECT  'twitterAccessToken' as _key, '' as _value
+		  ) union all 
+		 (SELECT  'twitterAccessTokenSecret' as _key, '' as _value
+		  ) union all 
+		 (SELECT  'ngrokToken' as _key, '' as _value
+		  ) union all 
+		 (SELECT  'twitterWebhookPort' as _key, '3002' as _value
+		  ) union all 
+		 (SELECT  'twitterID' as _key, '' as _value
+		  ) union all 
+		 (SELECT  'twitterBearerToken' as _key, '' as _value
+		  ) union all 
+		 (SELECT  'twitterBearerToken' as _key, '' as _value
+		  ) union all 
+		 (SELECT  'twitterTweetRules' as _key, 'digital,being,digital being' as _value
+		  ) union all 
+		 (SELECT  'loadDiscordLogger' as _key, 'false' as _value
+		  ) union all 
+		 (SELECT  'editMessageMaxCount' as _key, '5' as _value
+		  ) union all 
+		 (SELECT  'logDMUserID' as _key, '' as _value
+		  ) union all 
+		 (SELECT  'twilioAccountSID' as _key, '' as _value
+		  ) union all 
+		 (SELECT  'twiolioPhoneNumber' as _key, '' as _value
+		  ) union all 
+		 (SELECT  'twiolioAuthToken' as _key, '' as _value
+		  ) union all 
+		 (SELECT  'twiolioPhoneNumber' as _key, '' as _value
+		  ) union all 
+		 (SELECT  'telegramBotToken' as _key, '' as _value
+		  ) union all 
+		 (SELECT  'xrEngineURL' as _key, 'https://dev.theoverlay.io/location/bot' as _value
+		  ) union all 
+		 (SELECT  'whatsappBotName' as _key, '' as _value
+		  ) union all 
+		 (SELECT  'harmonyURL' as _key, '' as _value
+		  ) union all 
+		 (SELECT  'zoomInvitationLink' as _key, '' as _value
+		  ) union all 
+		 (SELECT  'zoomPassword' as _key, '' as _value
+		  ) union all 
+		 (SELECT  'messengerToken' as _key, '' as _value
+		  ) union all 
+		 (SELECT  'messengerVerifyToken' as _key, '' as _value
+		  ) union all 
+		 (SELECT  'botNameRegex' as _key, '((?:digital|being)(?: |$))' as _value
+		  ) union all 
+		 (SELECT  'chatHistoryMessagesCount' as _key, '20' as _value
+		  ) union all 
+		 (SELECT  'botName' as _key, 'digital being' as _value
+		  ) union all 
+		 (SELECT  'botNameHandler' as _key, 'digital.being' as _value
+		  ) union all 
+		 (SELECT  'digitalBeingsOnly' as _key, 'false' as _value
+		  ) union all 
+		 (SELECT  'redditAppID' as _key, '' as _value
+		  ) union all 
+		 (SELECT  'redditAppSecretID' as _key, '' as _value
+		  ) union all 
+		 (SELECT  'redditUsername' as _key, '' as _value
+		  ) union all 
+		 (SELECT  'redditPassword' as _key, '' as _value
+		  ) union all 
+		 (SELECT  'redditOAthToken' as _key, '' as _value
+		  ) union all 
+		 (SELECT  'instagramUsername' as _key, '' as _value
+		  ) union all 
+		 (SELECT  'instagramPassword' as _key, '' as _value
+		  ) union all 
+		 (SELECT  'enabledServices' as _key, 'Discord' as _value
+		  )
+         ) t
+    WHERE NOT EXISTS (SELECT * FROM config);

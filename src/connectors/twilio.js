@@ -1,5 +1,6 @@
 import Twilio from 'twilio';
 import { database } from '../database/database.js';
+import customConfig from '../utilities/customConfig.js';
 import { getRandomEmptyResponse } from './utils.js';
 
 export async function message(req, res) {
@@ -58,7 +59,7 @@ export class handleTwilio {
                     let text = responses[key]
                     while (text === undefined || text === '' || text.replace(/\s/g, '').length === 0) text = getRandomEmptyResponse()
                     sendMessage(handleTwilio.instance.client, chat_id, text); 
-                    addMessageToHistory(chat_id, process.env.BOT_NAME, text, msgId)                 
+                    addMessageToHistory(chat_id, customConfig.instance.get('botName'), text, msgId)                 
                 }
                 else if (responses[key].length > 160) {
                     const lines = []
@@ -77,7 +78,7 @@ export class handleTwilio {
                                 let text = lines[1]
                                 while (text === undefined || text === '' || text.replace(/\s/g, '').length === 0) text = getRandomEmptyResponse()
                                 sendMessage(handleTwilio.instance.client, chat_id, text); 
-                                addMessageToHistory(chat_id, process.env.BOT_NAME, text, msgId)
+                                addMessageToHistory(chat_id, customConfig.instance.get('botName'), text, msgId)
                         }
                     }
                 }
@@ -86,7 +87,7 @@ export class handleTwilio {
                     let emptyResponse = getRandomEmptyResponse()
                     while (emptyResponse === undefined || emptyResponse === '' || emptyResponse.replace(/\s/g, '').length === 0) emptyResponse = getRandomEmptyResponse()
                     sendMessage(handleTwilio.instance.client, chat_id, emptyResponse); 
-                    addMessageToHistory(chat_id, process.env.BOT_NAME, emptyResponse, msgId)
+                    addMessageToHistory(chat_id, customConfig.instance.get('botName'), emptyResponse, msgId)
                 }
             })
         })
@@ -104,9 +105,9 @@ export async function addMessageToHistory(chatId, senderName, content, messageId
 }
 
 export const createTwilioClient = async (app, router) => {
-    const accountSid = process.env.TWILIO_ACCOUNT_SID;
-    const authToken = process.env.TWILIO_AUTH_TOKEN;
-    const twilioNumber = process.env.TWILIO_PHONE_NUMBER;
+    const accountSid = customConfig.instance.get('twilioAccountSID')
+    const authToken = customConfig.instance.get('twilioAuthToken')
+    const twilioNumber = customConfig.instance.get('twilioPhoneNumber')
     console.log('init')
     if (!accountSid || !authToken || !twilioNumber)  return console.warn("No API token for Twilio bot, skipping");
     console.log('twilio client created, sid: ' + accountSid + ' auth token: ' + authToken)
@@ -122,7 +123,7 @@ export const createTwilioClient = async (app, router) => {
 
 export function sendMessage(client, toNumber, body) {
     console.log('sending sms: ' + body)
-    client.messages.create({from: process.env.TWILIO_PHONE_NUMBER,
+    client.messages.create({from: customConfig.instance.get('twilioPhoneNumber'),
         to: toNumber,
         body: body
     }).then((message) => console.log('sent message: ' + message.sid)).catch(console.error)

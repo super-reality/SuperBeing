@@ -6,6 +6,7 @@ import emoji from "emoji-dictionary"
 import emojiRegex from 'emoji-regex'
 import { handleInput } from '../cognition/handleInput.js'
 import { database } from "../database/database.js"
+import customConfig from '../utilities/customConfig.js'
 import { getRandomEmptyResponse, startsWithCapital } from "./utils.js"
 
 // TODO: Remove this
@@ -164,7 +165,6 @@ export async function setname (client, message, args, author, addPing, channel) 
     }
 
     const name = args.parsed_words[0]
-    process.env.BOT_NAME = 'test'
     client.bot_name = name
     client.name_regex = new RegExp(name, 'ig')
     config.bot_name = name
@@ -228,7 +228,7 @@ export const messageCreate = async (client, message) => {
                     const user = await client.users.cache.find(user => user.id == x)
                     if (user !== undefined) {
                         //const u = '@' + user.username + '#' + user.discriminator
-                        const u = user.id == client.user ? process.env.BOT_NAME : user.username
+                        const u = user.id == client.user ? customConfig.instance.get('botName') : user.username
                         content = content.replace(data[i], u)
                     }
                 } catch (err) { console.log(err) }
@@ -368,7 +368,7 @@ export const messageCreate = async (client, message) => {
 
     }, message.content.length)
 
-    const response = await handleInput(message.content, message.author.username, process.env.AGENT ?? "Agent", null, 'discord', channel.id);
+    const response = await handleInput(message.content, message.author.username, customConfig.instance.get('agent') ?? "Agent", null, 'discord', channel.id);
     await discordPackerHandler.instance.handlePing(message.id, channel.id, response, addPing)
 };
 
@@ -454,7 +454,7 @@ export const presenceUpdate = async (client, oldMember, newMember) => {
 };
 
 export const ready = async (client) => {
-    await client.users.fetch(process.env.LOG_DM_USER_ID).then((user) => {
+    await client.users.fetch(customConfig.instance.get('logDMUserID')).then((user) => {
         client.log_user = user
     }).catch((error) => { console.log(error) });
 
@@ -494,7 +494,7 @@ export const ready = async (client) => {
                     channel.messages.fetch({ limit: 100 }).then(async messages => {
                         messages.forEach(async function (msg) {
                             let _author = msg.author.username
-                            if (msg.author.isBot || msg.author.username.toLowerCase().includes('digital being')) _author = process.env.BOT_NAME
+                            if (msg.author.isBot || msg.author.username.toLowerCase().includes('digital being')) _author = customConfig.instance.get('botName')
 
                             if (msg.deleted === true) { await deleteMessageFromHistory(channel.id, msg.id); console.log('deleted message: ' + msg.content) }
                             else await wasHandled(channel.id, msg.id, _author, msg.content, msg.createdTimestamp)
@@ -607,7 +607,7 @@ export async function sendSlashCommandResponse(client, interaction, chat_id, tex
             }
         }
     }).then(() => {
-        addMessageToHistory(chat_id, interaction.id, process.env.BOT_NAME, text)
+        addMessageToHistory(chat_id, interaction.id, customConfig.instance.get('botName'), text)
     }).catch(console.error)
 }
 
@@ -644,7 +644,7 @@ export class discordPackerHandler {
                     if (addPing) {
                         message.reply(text).then(async function (msg) {
                             onMessageResponseUpdated(channel.id, message.id, msg.id)
-                            addMessageToHistory(channel.id, msg.id, process.env.BOT_NAME, text,)
+                            addMessageToHistory(channel.id, msg.id, customConfig.instance.get('botName'), text,)
                         }).catch(console.error)
 
                     } else {
@@ -652,7 +652,7 @@ export class discordPackerHandler {
                         console.log('response1: ' + text)
                         message.channel.send(text).then(async function (msg) {
                             onMessageResponseUpdated(channel.id, message.id, msg.id)
-                            addMessageToHistory(channel.id, msg.id, process.env.BOT_NAME, text,)
+                            addMessageToHistory(channel.id, msg.id, customConfig.instance.get('botName'), text,)
                         }).catch(console.error)
                     }
                 }
@@ -661,7 +661,7 @@ export class discordPackerHandler {
                     if (addPing) {
                         message.reply(text).then(async function (msg) {
                             onMessageResponseUpdated(channel.id, message.id, msg.id)
-                            addMessageToHistory(channel.id, msg.id, process.env.BOT_NAME, text,)
+                            addMessageToHistory(channel.id, msg.id, customConfig.instance.get('botName'), text,)
                         })
                     } else {
                         while (text === undefined || text === '' || text.replace(/\s/g, '').length === 0) text = getRandomEmptyResponse()
@@ -670,7 +670,7 @@ export class discordPackerHandler {
                     if (text.length > 0) {
                         message.channel.send(text, { split: true }).then(async function (msg) {
                             onMessageResponseUpdated(channel.id, message.id, msg.id)
-                            addMessageToHistory(channel.id, msg.id, process.env.BOT_NAME, text,)
+                            addMessageToHistory(channel.id, msg.id, customConfig.instance.get('botName'), text,)
                         })
                     }
                 }
@@ -682,14 +682,14 @@ export class discordPackerHandler {
                         if (addPing) {
                             message.reply(text).then(async function (msg) {
                                 onMessageResponseUpdated(channel.id, message.id, msg.id)
-                                addMessageToHistory(channel.id, msg.id, process.env.BOT_NAME, text,)
+                                addMessageToHistory(channel.id, msg.id, customConfig.instance.get('botName'), text,)
                             }).catch(console.error)
                         } else {
                             while (text === undefined || text === '' || text.replace(/\s/g, '').length === 0) text = getRandomEmptyResponse()
                             console.log('response4: ' + text)
                             message.channel.send(text).then(async function (msg) {
                                 onMessageResponseUpdated(channel.id, message.id, msg.id)
-                                addMessageToHistory(channel.id, msg.id, process.env.BOT_NAME, text,)
+                                addMessageToHistory(channel.id, msg.id, customConfig.instance.get('botName'), text,)
                             }).catch(console.error)
                         }
                     }
@@ -748,7 +748,7 @@ export class discordPackerHandler {
                         if (addPing) {
                             message.reply(text).then(async function (msg) {
                                 onMessageResponseUpdated(channel.id, message.id, msg.id)
-                                addMessageToHistory(channel.id, msg.id, process.env.BOT_NAME, text,)
+                                addMessageToHistory(channel.id, msg.id, customConfig.instance.get('botName'), text,)
                             }).catch(console.error)
 
                         } else {
@@ -756,7 +756,7 @@ export class discordPackerHandler {
                             console.log('response1: ' + text)
                             message.channel.send(text).then(async function (msg) {
                                 onMessageResponseUpdated(channel.id, message.id, msg.id)
-                                addMessageToHistory(channel.id, msg.id, process.env.BOT_NAME, text,)
+                                addMessageToHistory(channel.id, msg.id, customConfig.instance.get('botName'), text,)
                             }).catch(console.error)
                         }
                     }
@@ -765,7 +765,7 @@ export class discordPackerHandler {
                         if (addPing) {
                             message.reply(text).then(async function (msg) {
                                 onMessageResponseUpdated(channel.id, message.id, msg.id)
-                                addMessageToHistory(channel.id, msg.id, process.env.BOT_NAME, text,)
+                                addMessageToHistory(channel.id, msg.id, customConfig.instance.get('botName'), text,)
                             })
                         } else {
                             while (text === undefined || text === '' || text.replace(/\s/g, '').length === 0) text = getRandomEmptyResponse()
@@ -774,7 +774,7 @@ export class discordPackerHandler {
                         if (text.length > 0) {
                             message.channel.send(text, { split: true }).then(async function (msg) {
                                 onMessageResponseUpdated(channel.id, message.id, msg.id)
-                                addMessageToHistory(channel.id, msg.id, process.env.BOT_NAME, text,)
+                                addMessageToHistory(channel.id, msg.id, customConfig.instance.get('botName'), text,)
                             })
                         }
                     }
@@ -786,14 +786,14 @@ export class discordPackerHandler {
                             if (addPing) {
                                 message.reply(text).then(async function (msg) {
                                     onMessageResponseUpdated(channel.id, message.id, msg.id)
-                                    addMessageToHistory(channel.id, msg.id, process.env.BOT_NAME, text,)
+                                    addMessageToHistory(channel.id, msg.id, customConfig.instance.get('botName'), text,)
                                 }).catch(console.error)
                             } else {
                                 while (text === undefined || text === '' || text.replace(/\s/g, '').length === 0) text = getRandomEmptyResponse()
                                 console.log('response4: ' + text)
                                 message.channel.send(text).then(async function (msg) {
                                     onMessageResponseUpdated(channel.id, message.id, msg.id)
-                                    addMessageToHistory(channel.id, msg.id, process.env.BOT_NAME, text,)
+                                    addMessageToHistory(channel.id, msg.id, customConfig.instance.get('botName'), text,)
                                 }).catch(console.error)
                             }
                         }
@@ -852,7 +852,7 @@ export class discordPackerHandler {
                                     if (text.length > 0) {
                                         edited.channel.send(text, { split: true }).then(async function (msg) {
                                             onMessageResponseUpdated(channel.id, edited.id, msg.id)
-                                            addMessageToHistory(channel.id, msg.id, process.env.BOT_NAME, text,)
+                                            addMessageToHistory(channel.id, msg.id, customConfig.instance.get('botName'), text,)
                                         })
                                     }
                                 }
@@ -877,8 +877,6 @@ export class discordPackerHandler {
         })
     }
 }
-
-const DISCORD_API_TOKEN = process.env.DISCORD_API_TOKEN
 
 export const prevMessage = {}
 export const prevMessageTimers = {}
@@ -983,7 +981,7 @@ export function moreThanOneInConversation() {
 export let client = undefined
 
 export const createDiscordClient = () => {
-    if (!process.env.DISCORD_API_TOKEN) return console.warn('No API token for Discord bot, skipping');
+    if (!customConfig.instance.get('discord_api_token')) return console.warn('No API token for Discord bot, skipping');
     console.log("Creating Discord client");
     client = new Discord.Client({
         partials: ['MESSAGE', 'USER', 'REACTION'],
@@ -997,8 +995,8 @@ export const createDiscordClient = () => {
     client._parseWords = _parseWords;
     client.bot_name = config.bot_name
     client.name_regex = new RegExp(config.bot_name, 'ig')
-    client.username_regex = new RegExp(process.env.BOT_NAME_REGEX, 'ig')
-    client.edit_messages_max_count = process.env.EDIT_MESSAGES_MAX_COUNT
+    client.username_regex = new RegExp(customConfig.instance.get('botNameRegex'), 'ig')
+    client.edit_messages_max_count = customConfig.instance.getInt('editMessageMaxCount')
 
     const embed = new Discord.MessageEmbed()
         .setColor(0x00AE86)
@@ -1042,7 +1040,7 @@ export const createDiscordClient = () => {
     client.commands.set("setname", setname);
     client.commands.set("unban", unban);
 
-    client.login(process.env.DISCORD_API_TOKEN);
+    client.login(customConfig.instance.get('discord_api_token'));
     console.log("Creating new discord packer handler");
     new discordPackerHandler(client)
 };

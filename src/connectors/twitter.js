@@ -1,5 +1,6 @@
 import { TwitterApi } from 'twitter-api-v2';
 import { database } from '../database/database.js';
+import customConfig from '../utilities/customConfig.js';
 
 export class twitterPacketHandler {
     static instance
@@ -21,10 +22,10 @@ export class twitterPacketHandler {
                     recipient_id: chat_id,
                     text: responses[key]
                 })
-                database.instance.addMessageInHistory('twitter', chat_id, dmSent.event.id, process.env.BOT_NAME, responses[key])
+                database.instance.addMessageInHistory('twitter', chat_id, dmSent.event.id, customConfig.instance.get('botName'), responses[key])
             } else if (args === 'Twit') {
                 await twitterPacketHandler.instance.twitterV1.v1.reply(responses[key], chat_id).then(res => {
-                    database.instance.addMessageInHistory('twitter', chat_id, res.id_str, process.env.BOT_NAME, responses[key])
+                    database.instance.addMessageInHistory('twitter', chat_id, res.id_str, customConfig.instance.get('botName'), responses[key])
                 })
             }
         })
@@ -32,14 +33,14 @@ export class twitterPacketHandler {
 }
 
 export const createTwitterClient = async () => {
-    const bearerToken = process.env.TWITTER_BEARER_TOKEN
-    const twitterUser = process.env.TWITTER_ID
-    const twitterAppToken = process.env.TWITTER_APP_TOKEN
-    const twitterAppTokenSecret = process.env.TWITTER_APP_TOKEN_SECRET
-    const twitterAccessToken = process.env.TWITTER_ACCESS_TOKEN
-    const twitterAccessTokenSecret = process.env.TWITTER_Access_TOKEN_SECRET
+    const bearerToken = customConfig.instance.get('twitterBearerToken')
+    const twitterUser = customConfig.instance.get('twitterID')
+    const twitterAppToken = customConfig.instance.get('twitterAppToken')
+    const twitterAppTokenSecret = customConfig.instance.get('twitterAppTokenSecret')
+    const twitterAccessToken = customConfig.instance.get('tiwtterAccessToken')
+    const twitterAccessTokenSecret = customConfig.instance.get('twitterAccessTokenSecret')
     const regex = new RegExp('', 'ig')
-    const regex2 = new RegExp(process.env.BOT_NAME_REGEX, 'ig')
+    const regex2 = new RegExp(customConfig.instance.get('botNameRegex'), 'ig')
     if (!bearerToken || !twitterUser) return console.warn("No API token for Whatsapp bot, skipping");
 
     let twitter = new TwitterApi(bearerToken) 

@@ -15,6 +15,7 @@ import { xrEnginePacketHandler } from '../connectors/xrengine.js';
 import keywordExtractor from '../utilities/keywordExtractor.js';
 import { database } from '../database/database.js';
 import { capitalizeFirstLetter } from "../connectors/utils.js";
+import customConfig from "../utilities/customConfig.js";
 
 function respondWithMessage(agent, text, res) {
         if (res) res.status(200).send(JSON.stringify({ result: text }));
@@ -141,7 +142,7 @@ async function generateContext(speaker, agent, conversation, keywords) {
 // Todo fix me
 export async function handleDigitalBeingInput(data) {
         console.log("Handling data.message", data);
-        const response = await handleInput(data.message.content, data.username, process.env.AGENT ?? "Agent", null, data.clientName, data.channelId)
+        const response = await handleInput(data.message.content, data.username, customConfig.instance.get('agent') ?? "Agent", null, data.clientName, data.channelId)
         const message_id = data.message.id; // data.message_id
         const channelId = data.message.channelId;
         const addPing = data.addPing; // data.addPing
