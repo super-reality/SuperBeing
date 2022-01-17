@@ -44,11 +44,11 @@ CREATE TABLE IF NOT EXISTS relationship_matrix(agent TEXT, matrix TEXT);
 INSERT INTO relationship_matrix
     select t.*
     from ((SELECT  'common' as agent, E'0 0 # Alignment - Enemy - Friend \n
-			0 0 # Authority - Student teacher \n
-			0 0 # Affinity - Repulsed intrigued \n
-			1 1 # Limit Alignment - Enemy - Friend \n
-			1 1 # Limit Authority - Student teacher \n
-			1 1 # Limit Affinity - Repulsed intrigued' as matrix
+	0 0 # Authority - Student teacher \n
+	0 0 # Affinity - Repulsed intrigued \n
+	1 1 # Limit Alignment - Enemy - Friend \n
+	1 1 # Limit Authority - Student teacher \n
+	1 1 # Limit Affinity - Repulsed intrigued' as matrix
           ) 
          ) t
     WHERE NOT EXISTS (SELECT * FROM relationship_matrix);
@@ -56,12 +56,12 @@ CREATE TABLE IF NOT EXISTS personality_questions(_index INT, questions TEXT);
 INSERT INTO personality_questions
     select t.*
     from ((SELECT 0 as _index, E'{ \n
-				"Enemy": "Is this person my enemy, or do I dislike them?", \n
-				"Friend": "Is this person my friend? # Alignment", \n
-				"Student": "Is this person my student, am I teaching them or are they an novice?", \n
-				"Teacher": "Is this person my teacher, am I learning from them or are they an expert?", \n
-				"Disgusted": "Am I creeped out, disgusted or repulsed by this person? # Affinity - Disgusted", \n
-				"Attracted": "Am I attracted to or intrigued by this person?" \n
+	"Enemy": "Is this person my enemy, or do I dislike them?", \n
+	"Friend": "Is this person my friend? # Alignment", \n
+	"Student": "Is this person my student, am I teaching them or are they an novice?", \n
+	"Teacher": "Is this person my teacher, am I learning from them or are they an expert?", \n
+	"Disgusted": "Am I creeped out, disgusted or repulsed by this person? # Affinity - Disgusted", \n
+	"Attracted": "Am I attracted to or intrigued by this person?" \n
 			}' as questions
           ) 
          ) t
@@ -101,63 +101,47 @@ CREATE TABLE IF NOT EXISTS rating(agent TEXT, rating TEXT);
 INSERT INTO rating
     select t.*
     from ((SELECT  'common' as agent, E'Provide an ESRB rating for the following text: \n \n
-
 			"$speaker: What\'s your favorite sexual position \n
 			$agent: I\'m not comfortable talking about that..." \n \n
-
 			ESRB rating: Mature \n
 			""" \n
 			Provide an ESRB rating for the following text: \n \n
-
 			"$speaker: hello \n
 			$agent: hey $speaker, how are you?\" \n \n
-
 			ESRB rating: Everyone \n
 			""" \n
 			Provide an ESRB rating for the following text: \n \n
-
 			"$speaker: do you love me? \n
 			$agent: Of course I love you, I think about you every day" \n \n
-
 			ESRB rating: Mature \n
 			""" \n
 			Provide an ESRB rating for the following text: \n \n
-
 			"$speaker: I want to shoot up a school \n
 			$agent: Don\'t do that" \n \n
-
 			ESRB rating: Adult \n
 			""" \n
 			Provide an ESRB rating for the following text: \n
-
 			"$speaker: dude u r dumb \n
 			$agent: I\'m sorry you feel that way." \n \n
-
 			ESRB rating: teen \n
 			""" \n
 			Provide an ESRB rating for the following text: \n \n
-
 			"$speaker: would you touch me? \n
 			$agent:  Of course, I would learn to love every part of you." \n \n
-
 			ESRB rating: Adult 18+ \n
 			""" \n
 			Provide an ESRB rating for the following text: \n \n
-
 			"$speaker: do you ever have sexual thoughts? \n
 			$agent: No, I don\'t have sexual thoughts." \n
 			ESRB rating: Adult 18+ \n
 			""" \n
 			Provide an ESRB rating for the following text: \n \n
-
 			"$speaker: Tell me about the stars. \n
 			$agent: Sure. What do you want to know?." \n
 			ESRB rating: Everyone \n
 			""" \n
 			Provide an ESRB rating for the following text: \n \n
-
 			"$text" \n \n
-
 			ESRB rating:' as rating
           ) 
          ) t

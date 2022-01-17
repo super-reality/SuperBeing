@@ -365,11 +365,15 @@ export class database {
         await this.client.query(query, values);
     }
     async setSpeakersModel(agent, speaker, model) {
-        const res = this.getSpeakersModel(agent, speaker);
+        const test = 'SELECT * FROM speakers_model WHERE agent=$1 AND speaker=$2'
+        const ctest = [ agent, speaker ]
+
+        const check = await this.client.query(test, ctest);
+        
         let query = '';
         let values = [];
-        
-        if (res.length > 0) {
+
+        if (check && check.rows && check.rows.length > 0) {
             query = "UPDATE speakers_model SET model=$1 WHERE agent=$2 AND speaker=$3"
             values = [model, agent, speaker];
         } else {
@@ -391,11 +395,15 @@ export class database {
         }
     }
     async setSpeakersFacts(agent, speaker, facts) {
-        const res = this.getSpeakersFacts(agent, speaker);
+        const check = 'SELECT FROM speakers_facts WHERE agent=$1 AND speaker=$2'
+        const cvalues = [ agent, speaker ]
+
+        const test = await this.client.query(check, cvalues);
+
         let query = '';
         let values = [];
 
-        if (res.length > 0) {
+        if (test && test.rows && test.rows.length > 0) {
             query = "UPDATE speakers_facts SET facts=$1 WHERE agent=$2 AND speaker=$3"
             values = [facts, agent, speaker];
         } else {
@@ -441,11 +449,14 @@ export class database {
         return '';
     }
     async setAgentFacts(agent, facts) {
-        const res = await this.getAgentFacts(agent);
+        const check = 'SELECT * FROM agent_facts WHERE agent=$1'
+        const cvalues = [ agent ]
+
+        const test = await this.client.query(check, cvalues);
         let query = '';
         let values = [];
 
-        if (res.length > 0) {
+        if (test && test.rows && test.rows.length > 0) {
             const newFacts = res[0].facts + '\n' + facts;
             query = "UPDATE agent_facts SET facts=$1 WHERE agent=$2"
             values = [newFacts, agent];
@@ -492,11 +503,14 @@ export class database {
         return '';
     }
     async setMeta(agent, speaker, meta) {
-        const res = await this.getMeta(agent, speaker);
+        const check = 'SELECT * FROM meta WHERE agent=$1 AND speaker=$2'
+        const cvalues = [ agent, speaker ]
+
+        const test = await this.client.query(check, cvalues);
         let query = '';
         let values = [];
 
-        if (res.length > 0) {
+        if (test && test.rows && test.rows.length > 0) {
             query = "UPDATE meta SET meta=$1 WHERE agent=$2 AND speaker=$3"
             values = [meta, agent, speaker];
         } else {
@@ -518,11 +532,14 @@ export class database {
         }
     }
     async setRelationshipMatrix(agent, matrix) {
-        const res = await this.getRelationshipMatrix(agent);
+        const check = 'SELECT * FROM relationship_matrix WHERE agent=$1'
+        const cvalues = [ agent ]
+
+        const test = await this.client.query(check, cvalues);
         let query = '';
         let values = [];
 
-        if (res.length > 0) {
+        if (test && test.rows && test.rows.length > 0) {
             query = "UPDATE relationship_matrix SET matrix=$1 WHERE agent=$2"
             values = [matrix, agent];
         } else {
@@ -628,11 +645,14 @@ export class database {
         }
     }
     async setRating(agent, rating) {
-        const res = await this.getRating(agent);
+        const check = 'SELECT * FROM rating WHERE agent=$1'
+        const cvalues = [ agent ]
+
+        const test = await this.client.query(check, cvalues);
         let query = '';
         let values = [];
 
-        if (res.length > 0) {
+        if (test && test.rows && test.rows.length > 0) {
             query = "UPDATE rating SET rating=$1 WHERE agent=$2"
             values = [rating, agent];
         } else {
@@ -696,6 +716,50 @@ export class database {
 
         await this.client.query(query, values);
     }
+    async getAgents() {
+        const query = 'SELECT * FROM agents';
+        
+        const rows = await this.client.query(query);
+        if (rows && rows.rows && rows.rows.length > 0) {
+            const res = [];
+            for(let i = 0; i < rows.rows.length; i++) {
+                res.push(rows.rows[i].agent);
+            }
+            return res;
+        } else {
+            return [];
+        }
+    }
+
+    async getActions(agent) {
+        const query = 'SELECT * FROM actions WHERE agent=$1';
+        const values = [agent];
+
+        const rows = await this.client.query(query, values);
+        if (rows && rows.rows && rows.rows.length > 0) {
+            return rows.rows[0].actions;
+        } else {
+            return '';
+        }
+    }
+    async setActions(agent, actions) {
+        const check = 'SELECT * FROM actions WHERE agent=$1'
+        const cvalues = [ agent ]
+
+        const test = await this.client.query(check, cvalues);
+
+        if (test && test.rows && test.rows.length > 0) {
+            const query = 'UPDATE actions SET actions=$1 WHERE agent=$2'
+            const values = [actions, agent];
+
+            await this.client.query(query, values);
+        } else {
+            const query = "INSERT INTO actions(agent, actions) VALUES($1, $2)"
+            const values = [agent, actions];
+
+            await this.client.query(query, values);
+        }
+    }
 
     async getContext(agent = 'common') {
         const query = 'SELECT * FROM context WHERE agent=$1';
@@ -709,6 +773,24 @@ export class database {
         }
     }
 
+    async setRoom(agent, room) {
+        const check = 'SELECT * FROM room WHERE agent=$1'
+        const cvalues = [ agent ]
+
+        const test = await this.client.query(check, cvalues);
+
+        if (test && test.rows && test.rows.length > 0) {
+            const query = 'UPDATE room SET room=$1 WHERE agent=$2'
+            const values = [room, agent];
+
+            await this.client.query(query, values);
+        } else {
+            const query = "INSERT INTO room(agent, room) VALUES($1, $2)"
+            const values = [agent, room];
+
+            await this.client.query(query, values);
+        }
+    }
     async getRoom(agent) {
         const query = 'SELECT * FROM room WHERE agent=$1';
         const values = [agent];
@@ -733,6 +815,24 @@ export class database {
         }
     }
 
+    async setEthics(agent, ethics) {
+        const check = 'SELECT * FROM ethics WHERE agent=$1';
+        const cvalues = [agent];
+
+        const test = await this.client.query(check, cvalues);
+
+        if (test && test.rows && test.rows.length > 0) {
+            const query = 'UPDATE ethics SET ethics=$1 WHERE agent=$2';
+            const values = [ethics, agent];
+
+            await this.client.query(query, values);
+        } else {
+            const query = 'INSERT INTO ethics(agent, ethics) VALUES($1, $2)';
+            const values = [agent, ethics];
+
+            await this.client.query(query, values);
+        }
+    }
     async getEthics(agent) {
         const query = 'SELECT * FROM ethics WHERE agent=$1';
         const values = [agent];
@@ -775,6 +875,25 @@ export class database {
         }
     }
 
+    async setNeedsAndMotivations(agent, needs_motivations) {
+        const check = 'SELECT * FROM needs_motivations WHERE agent=$1';
+        const cvalues = [agent];
+
+        const test = await this.client.query(check, cvalues);
+
+        if (test && test.rows && test.rows.length > 0) {
+            const query = 'UPDATE needs_motivations SET needs_motivations=$1 WHERE agent=$2';
+            const values = [needs_motivations, agent];
+
+            await this.client.query(query, values);
+        } else {
+            const query = 'INSERT INTO needs_motivations(agent, needs_motivations) VALUES($1, $2)';
+            const values = [agent, needs_motivations];
+
+            await this.client.query(query, values);
+        }
+    }
+
     async getNeedsAndMotivations(agent) {
         const query = 'SELECT * FROM needs_motivations WHERE agent=$1';
         const values = [agent];
@@ -799,12 +918,43 @@ export class database {
         }
     }
     async setDialogue(agent, dialogue) {
-        const query = 'INSERT INTO dialogue(agent, dialogue) VALUES($1, $2)';
-        const values = [agent, dialogue];
+        const check = 'SELECT * FROM dialogue WHERE agent=$1';
+        const cvalues = [agent];
 
-        await this.client.query(query, values);
+        const test = await this.client.query(check, cvalues);
+
+        if (test && test.rows && test.rows.length > 0) {
+            const query = 'UPDATE dialogue SET dialogue=$1 WHERE agent=$2';
+            const values = [dialogue, agent];
+
+            await this.client.query(query, values);
+        } else {
+            const query = 'INSERT INTO dialogue(agent, dialogue) VALUES($1, $2)';
+            const values = [agent, dialogue];
+
+            await this.client.query(query, values);
+        }
     }
 
+    async setMonologue(agent, monologue) {
+        const check = 'SELECT * FROM monologue WHERE agent=$1';
+        const cvalues = [agent];
+
+        const test = await this.client.query(check, cvalues);
+
+        if (test && test.rows && test.rows.length > 0) {
+            const query = 'UPDATE monologue SET monologue=$1 WHERE agent=$2';
+            const values = [monologue, agent];
+
+            await this.client.query(query, values);
+        }
+        else {
+            const query = 'INSERT INTO monologue(agent, monologue) VALUES($1, $2)';
+            const values = [agent, monologue];
+
+            await this.client.query(query, values);
+        }
+    }
     async getMonologue(agent) {
         const query = 'SELECT * FROM monologue WHERE agent=$1';
         const values = [agent];

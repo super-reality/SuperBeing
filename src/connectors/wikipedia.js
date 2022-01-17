@@ -89,7 +89,8 @@ export async function createWikipediaAgent(speaker, name, personality, facts) {
           console.log(res);
   
           await database.instance.setDialogue(name, dialogPrompt + res.choice.text);
-          await database.instance.setAgentFacts(name, factPrompt);  
+          await database.instance.setAgentFacts(name, factPrompt); 
+          await database.instance.setAgentExists(name); 
   
           // if(out.filePath){
           //         out.image = fs.readFileSync(out.filePath);

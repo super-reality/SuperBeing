@@ -1,11 +1,13 @@
+import express, { urlencoded, json } from 'express';
 import cors from "cors";
 import dotenv from "dotenv";
-import express, { json, urlencoded } from 'express';
-import { createServer } from "http";
-import { handleInput } from './cognition/handleInput.js';
-import { initTerminal } from "./connectors/terminal.js";
-import { createWikipediaAgent } from './connectors/wikipedia.js';
 import { database } from "./database/database.js";
+import { createServer } from "http";
+import { Server } from "socket.io";
+import { initTerminal } from "./connectors/terminal.js"
+import cors from "cors";
+import { handleInput } from './cognition/handleInput.js';
+import { createWikipediaAgent } from './connectors/wikipedia.js';
 import cors_server from "./utilities/cors-server.js";
 
 new cors_server(process.env.CORS_PORT, '0.0.0.0');
@@ -54,7 +56,7 @@ let enabled_services = (process.env.ENABLED_SERVICES || '').split(',').map(
     server.listen(process.env.SOCKETIO_PORT, () => {
             console.log()
     })
-    
+        
     app.use(function(req, res, next) {
             res.header("Access-Control-Allow-Origin", "*");
             res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
@@ -90,7 +92,49 @@ let enabled_services = (process.env.ENABLED_SERVICES || '').split(',').map(
             const speaker = req.body.sender
             await handleInput(message, speaker, agent, res, 'web', '0');
     });
-    
+
+    app.get('/get_agents', async function (req, res) {
+        const agents = await database.instance.getAgents();
+        return res.send(agents);
+    });
+
+    app.get('/get_agent', async function(req, res) {
+        const agent = req.query.agent;
+        const data = { 
+            actions: (await database.instance.getActions(agent)).trim(),
+            dialogue: (await database.instance.getDialogue(agent)).trim(),
+            ethics: (await database.instance.getEthics(agent)).trim(),
+            facts: (await database.instance.getAgentFacts(agent)).trim(),
+            monologue: (await database.instance.getMonologue(agent)).trim(),
+            needsAndMotivation: (await database.instance.getNeedsAndMotivations(agent)).trim(),
+            personality: (await database.instance.getPersonality(agent)).trim(),
+            relationshipMatrix: (await database.instance.getRelationshipMatrix(agent)).trim(),
+            room: (await database.instance.getRoom(agent)).trim()
+        };
+        return res.send(data);
+    });
+
+    app.post('/update_agent', async function(req, res) {
+        const agentName = req.body.agent;
+        const data = req.body.data;
+
+        try {
+            await database.instance.setActions(agentName, data.actions);
+            await database.instance.setDialogue(agentName, data.dialogue);
+            await database.instance.setEthics(agentName, data.ethics);
+            await database.instance.setAgentFacts(agentName, data.facts);
+            await database.instance.setMonologue(agentName, data.monologue);
+            await database.instance.setNeedsAndMotivations(agentName, data.needsAndMotivation);
+            await database.instance.setPersonality(agentName, data.personality);
+            await database.instance.setRelationshipMatrix(agentName, data.relationshipMatrix);
+            await database.instance.setRoom(agentName, data.room);
+        } catch (e) {
+            console.log(e + '\n' + e.stack);
+            return res.send('internal error');
+        }
+
+        return res.send('ok');
+    });
     
     app.post("/execute", async function (req, res) {
             const message = req.body.command
@@ -99,12 +143,12 @@ let enabled_services = (process.env.ENABLED_SERVICES || '').split(',').map(
             console.log("executing for ", req.body)
             if (message.includes("/become")) {
                 console.log("becoming")
-                    const out = await createWikipediaAgent("Speaker", agent, "", "");
-                    while (out === null) {
-                        out = await createWikipediaAgent('Speaker', defaultAgent, "", "");
-                    }
-                    console.log("sending out", out)
-                    return res.send(out);
+                const out = await createWikipediaAgent("Speaker", agent, "", "");
+                while (out === null) {
+                    out = await createWikipediaAgent('Speaker', defaultAgent, "", "");
+                }
+                console.log("sending out", out)
+                return res.send(out);
             }
             await handleInput(message, speaker, agent, res, 'web', '0')
     });
@@ -114,23 +158,24 @@ let enabled_services = (process.env.ENABLED_SERVICES || '').split(',').map(
     if (process.env.TERMINAL) {
             initTerminal(agent);
     }
-    
+
     if(process.env.BATTLEBOTS){
-            const speaker = process.env.SPEAKER?.replace('_', ' ');
-            const agent = process.env.AGENT?.replace('_', ' ');
-            const message = "Hello, " + agent;
-            console.log(speaker + " >>> " + message);
-            let ignoreContentFilter = true;
-            // Make a function that self-invokes with the opposites
-            runBattleBot(speaker, agent, message, ignoreContentFilter);
-            
-            
-            async function runBattleBot(speaker, agent, message, ignoreContentFilter) {
-                console.log(speaker, agent, message, ignoreContentFilter)
-                const m = await handleInput(message, speaker, agent, ignoreContentFilter, 'battlebots', '0');
-                setTimeout(() => runBattleBot(agent, speaker, m, ignoreContentFilter), 10000);
-            }
+        const speaker = process.env.SPEAKER?.replace('_', ' ');
+        const agent = process.env.AGENT?.replace('_', ' ');
+        const message = "Hello, " + agent;
+        console.log(speaker + " >>> " + message);
+        let ignoreContentFilter = true;
+        // Make a function that self-invokes with the opposites
+        runBattleBot(speaker, agent, message, ignoreContentFilter);
+        
+        
+        async function runBattleBot(speaker, agent, message, ignoreContentFilter) {
+            console.log(speaker, agent, message, ignoreContentFilter)
+            const m = await handleInput(message, speaker, agent, ignoreContentFilter, 'battlebots', '0');
+            setTimeout(() => runBattleBot(agent, speaker, m, ignoreContentFilter), 10000);
         }
+    }
+
 
         // Discord support
         if (enabled_services.includes('discord')) {

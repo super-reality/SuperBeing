@@ -12,3 +12,4 @@ INSERT INTO personality(agent, personality) VALUES('agent', E'');
 INSERT INTO relationship_matrix(agent, matrix) VALUES('agent', E'');
 
 INSERT INTO room(agent, room) VALUES('agent', E'');
+INSERT INTO agents(agent) VALUES('agent');
