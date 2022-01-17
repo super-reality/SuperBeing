@@ -1,4 +1,5 @@
 import { existsSync } from "fs";
+import customConfig from "../utilities/customConfig.js";
 import { simpleExtractor } from "../utilities/keywordExtractor.js";
 
 export function getRandomNumber(min, max) {
