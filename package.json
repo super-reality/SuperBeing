@@ -14,7 +14,7 @@
   "type": "module",
   "scripts": {
     "build": "bash build.sh",
-    "start": "node src/index.js",
+    "start": "node src/appHandler.js",
     "start-gui": "GUI=true node src/index.js",
     "start-local": "URL=https://localhost:3000/location/test node src/index.js",
     "start-gui-local": "URL=https://localhost:3000/location/test GUI=true node src/index.js",

@@ -85,6 +85,23 @@ export class database {
 
         const config = new customConfig(configs);
     }
+    async setConfig(key, value) {
+        const check = 'SELECT * FROM config WHERE _key=$1';
+        const cvalue = [key];
+
+        const rows = await this.client.query(check, cvalue);
+        if (rows && rows.rows && rows.rows.length > 0) {
+            const query = 'UPDATE config SET _value=$1 WHERE _key=$2';
+            const values = [value, key];
+
+            await this.client.query(query, values);
+        } else {
+            const query = 'INSERT INTO config(_key, _value) VALUES($1, $2)';
+            const values = [key, value];
+
+            await this.client.query(query, values);
+        }
+    }
 
     async addMessageInHistory(client_name, chat_id, message_id, sender, content) {  
         const date = new Date();

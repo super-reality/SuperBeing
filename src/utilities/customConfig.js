@@ -1,3 +1,5 @@
+import { database } from "../database/database.js";
+
 export class customConfig {
     static instance;
 
@@ -20,8 +22,9 @@ export class customConfig {
     getBool(key) {
         return this.configs[key].toLowerCase() === 'true';
     }
-    set(key, value) {
+    async set(key, value) {
         this.configs[key] = value;
+        await database.instance.setConfig(key, value);
     }
 
     getAll() {

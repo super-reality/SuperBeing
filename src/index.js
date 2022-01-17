@@ -18,7 +18,6 @@ export let defaultAgent = '';
 
 const db = new database();
 (async function(){  
-    console.log('connecting to db');
     await db.connect()
 
     const expectedServerDelta = 1000 / 60;
@@ -38,17 +37,14 @@ const db = new database();
         serverLoop()
     }
 
-    console.log('enabled services');
     let enabled_services = (customConfig.instance.get('enabledServices') || '').split(',').map(
         (item) => {
-            console.log(item);
             item.trim().toLowerCase()
         }
     ).filter(
         (value, index, self) => self.indexOf(value) === index
     );
 
-    console.log('creating app');
     const app = express();
     const router = express.Router();
         
@@ -160,14 +156,15 @@ const db = new database();
 
         try {
             for (let i = 0; i < data.length; i++) {
-                customConfig.instance.set(data[i].key, data[i].value);
+                await customConfig.instance.set(data[i].key, data[i].value);
             }
+
+            res.send('ok');
+            process.exit(1);
         } catch (e) {
             console.log(e + '\n' + e.stack);
             return res.send('internal error');
         }
-
-        return res.send('ok');
     });
         
     app.post("/execute", async function (req, res) {
@@ -187,7 +184,6 @@ const db = new database();
         await handleInput(message, speaker, agent, res, 'web', '0')
     });
         
-    console.log('creating server');
     app.listen(process.env.PORT, () => { console.log(`Server listening on http://localhost:${process.env.PORT}`); })
         
     if (process.env.TERMINAL) {
