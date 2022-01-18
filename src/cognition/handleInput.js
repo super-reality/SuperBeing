@@ -107,12 +107,13 @@ async function archiveFacts(speaker, agent) {
         }
 }
 
-async function generateContext(speaker, agent, conversation, keywords) {
+async function generateContext(speaker, agent, conversation, message) {
+        const keywords = keywordExtractor(message, agent);
         const speakerFacts = (await database.instance.getSpeakersFacts(agent, speaker)).toString().trim().replaceAll('\n\n', '\n');
         const agentFacts = (await database.instance.getAgentFacts(agent)).toString().trim().replaceAll('\n\n', '\n');
 
         let kdata = '';
-        if (keywords.length > 0) {
+        if ((await keywords).length > 0) {
                 kdata = "More context on the chat:\n";
                 for(let k in keywords) {
                         kdata += 'Q: ' + capitalizeFirstLetter(keywords[k].word) + '\nA: ' + keywords[k].info + '\n\n';
@@ -266,11 +267,10 @@ export async function handleInput(message, speaker, agent, res, clientName, chan
         meta.messages = meta.messages + 1;
 
         // Archive previous conversation and facts to keep context window small
-        await archiveConversation(speaker, agent, conversation, clientName, channelId);
-        await archiveFacts(speaker, agent, conversation);
+        archiveConversation(speaker, agent, conversation, clientName, channelId);
+        archiveFacts(speaker, agent, conversation);
 
-        const keywords = await keywordExtractor(message, agent);
-        const context = await generateContext(speaker, agent, conversation, keywords);
+        const context = await generateContext(speaker, agent, conversation, message);
 
         // TODO: Wikipedia?
 
@@ -300,7 +300,6 @@ export async function handleInput(message, speaker, agent, res, clientName, chan
         // If it fails, tell speaker they had an error
         if (!success) {
                 const error = "Sorry, I had an error";
-                await database.instance.setConversation(agent, clientName, channelId, agent, error, false);
                 return respondWithMessage(agent, error, res);
         };
         if (useProfanityFilter) {
@@ -309,10 +308,10 @@ export async function handleInput(message, speaker, agent, res, clientName, chan
                 const { isProfane, response } = await evaluateTextAndRespondIfToxic(speaker, agent, choice.text, true);
 
                 if (isProfane) {
-                        await database.instance.setConversation(agent, clientName, channelId, agent, response, false);
+                        database.instance.setConversation(agent, clientName, channelId, agent, response, false);
                         return respondWithMessage(agent, response, res);
                 }
-}
+        }
 
         if (meta.messages % factsUpdateInterval == 0) {
                 formOpinionAboutSpeaker(speaker, agent);
@@ -327,9 +326,9 @@ export async function handleInput(message, speaker, agent, res, clientName, chan
                 summarizeAndStoreFactsAboutAgent(speaker, agent, agentConversationLines + choice.text);
 
         }
-        await database.instance.setMeta(agent, speaker, meta);
+        database.instance.setMeta(agent, speaker, meta);
 
         // Write to conversation file
-        await database.instance.setConversation(agent, clientName, channelId, agent, choice.text, false);
+        database.instance.setConversation(agent, clientName, channelId, agent, choice.text, false);
         return respondWithMessage(agent, choice.text, res);
 }

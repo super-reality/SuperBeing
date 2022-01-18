@@ -10,6 +10,7 @@ import { namedEntityRecognition } from '../utilities/namedEntityRecognition.js';
 import {
   rootDir
 } from "../utilities/rootDir.js";
+import { wait } from './utils.js';
 
 const client = weaviate.client({
   scheme: "http",
@@ -26,7 +27,7 @@ export async function createWikipediaAgent(speaker, name, personality, facts) {
             return null;
           }
 
-          const type = await namedEntityRecognition(out.result.title);
+          //const type = await namedEntityRecognition(out.result.title);
 
           // create a constant called name which uses the value of nameRaw but removes all punctuation
           // const name = nameRaw.replace(/[^\w\s]/gi, '');
@@ -34,23 +35,16 @@ export async function createWikipediaAgent(speaker, name, personality, facts) {
           if (out.result.extract == "" || out.result.extract == null) {
                   return console.log("Error, couldn't find anything on wikiedia about " + name);
           }
-          const dir = rootDir + "/agents/" + name;
-  
+          
           const factSourcePrompt = `The follow are facts about ${name}\n`;
           const factPrompt = factSourcePrompt + out.result.extract + "\n" + facts;
   
           const personalitySourcePrompt = `Based on the above facts, the following is a description of the personality of an anthropomorphosized ${name}:`;
 
-          await database.instance.setDefaultEthics(name);
-          await database.instance.setDefaultNeedsAndMotivations(name);
-          await database.instance.setRelationshipMatrix(name, await database.instance.getRelationshipMatrix('common'));
-          /*fs.copyFileSync(rootDir + "/agents/Template/ethics.txt", rootDir + "/agents/" + name + "/ethics.txt");
-          fs.copyFileSync(rootDir + "/agents/Template/needs_and_motivations.txt", rootDir + "/agents/" + name + "/needs_and_motivations.txt");
-  
-          fs.writeFileSync(rootDir + "/agents/" + name + "/monologue.txt", "");
-          fs.writeFileSync(rootDir + "/agents/" + name + "/room.txt", "");
-          fs.copyFileSync(rootDir + "/agents/Template/relationship_matrix.txt", rootDir + "/agents/" + name + "/relationship_matrix.txt");*/
-  
+          database.instance.setDefaultEthics(name);
+          database.instance.setDefaultNeedsAndMotivations(name);
+          database.instance.setRelationshipMatrix(name, await database.instance.getRelationshipMatrix('common'));
+          
           let data = {
                   "prompt": factPrompt + "\n" + personalitySourcePrompt,
                   "temperature": 0.9,
@@ -70,7 +64,7 @@ export async function createWikipediaAgent(speaker, name, personality, facts) {
           console.log("res.choice.text")
           console.log(res);
   
-          await database.instance.setPersonality(name, personalitySourcePrompt + '\n' + personality + '\n' + res.choice.text);
+          database.instance.setPersonality(name, personalitySourcePrompt + '\n' + personality + '\n' + res.choice.text);
   
           const dialogPrompt = `The following is a conversation with ${name}. ${name} is helpful, knowledgeable and very friendly\n${speaker}: Hi there, ${name}! Can you tell me a little bit about yourself?\n${name}:`;
   
@@ -88,9 +82,11 @@ export async function createWikipediaAgent(speaker, name, personality, facts) {
           console.log("res.choice.text (2)")
           console.log(res);
   
-          await database.instance.setDialogue(name, dialogPrompt + res.choice.text);
-          await database.instance.setAgentFacts(name, factPrompt); 
-          await database.instance.setAgentExists(name); 
+          database.instance.setDialogue(name, dialogPrompt + res.choice.text);
+          database.instance.setAgentFacts(name, factPrompt); 
+          database.instance.setAgentExists(name); 
+
+          await wait(2500);
   
           return out;
   } catch (error) {

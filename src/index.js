@@ -178,12 +178,13 @@ const db = new database();
         console.log("executing for ", req.body)
         if (message.includes("/become")) {
             console.log("becoming")
+            const msg = database.instance.getRandomStartingMessage(agent)
             const out = await createWikipediaAgent("Speaker", agent, "", "");
-            while (out === null) {
-                out = await createWikipediaAgent('Speaker', defaultAgent, "", "");
+            while (!out || out === undefined) {
+                out = createWikipediaAgent('Speaker', defaultAgent, "", "");
             }
-            out.startingMessage = (await database.instance.getRandomStartingMessage(agent)).replace('$agent', agent).replace('$speaker', speaker);
-            await database.instance.setConversation(agent, 'web', '0', agent, out.startingMessage, false);
+            out.startingMessage = (await msg);
+            database.instance.setConversation(agent, 'web', '0', agent, out.startingMessage, false);
             console.log("sending out", out)
             return res.send(out);
         }
