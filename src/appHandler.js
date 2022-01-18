@@ -19,6 +19,6 @@ async function run() {
     });
 
     server.stderr.on('data', function(data) {
-        console.log('error: ' + error);
+        console.log('error: ' + data);
     });
 }

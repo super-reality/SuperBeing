@@ -302,8 +302,6 @@ INSERT INTO config
 		  ) union all 
 		 (SELECT  'discord_api_token' as _key, '' as _value
 		  ) union all 
-		 (SELECT  'starting_messages' as _key, 'Starts the conversation greeting $speaker' as _value
-		  ) union all 
 		 (SELECT  'twitterConsumerKey' as _key, '' as _value
 		  ) union all 
 		 (SELECT  'twitterConsumerSecret' as _key, '' as _value
@@ -382,3 +380,21 @@ INSERT INTO config
 		  )
          ) t
     WHERE NOT EXISTS (SELECT * FROM config);
+
+CREATE TABLE IF NOT EXISTS starting_message(agent TEXT, _message TEXT);
+INSERT INTO starting_message
+    select t.*
+    from ((SELECT  'common' as agent, 'Hello there, nice to meet you!' as _message
+          ) union all 
+		 (SELECT  'common' as agent, 'How are you?' as _message
+		  )
+         ) t
+    WHERE NOT EXISTS (SELECT * FROM starting_message);
+
+CREATE TABLE IF NOT EXISTS ignored_keywords(agent TEXT, keyword TEXT);
+INSERT INTO ignored_keywords
+    select t.*
+    from ((SELECT  'common' as agent, 'conversation' as keyword
+          )
+         ) t
+    WHERE NOT EXISTS (SELECT * FROM ignored_keywords);

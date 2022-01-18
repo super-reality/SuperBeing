@@ -3,6 +3,7 @@ import { initProfanityFilter } from '../cognition/profanityFilter.js';
 import fs from 'fs';
 import { rootDir } from '../utilities/rootDir.js';
 import customConfig from '../utilities/customConfig.js';
+import { getRandomInt } from '../connectors/utils.js';
 const { Client } = pg;
 
 export class database {
@@ -68,7 +69,7 @@ export class database {
 
         await this.readConfig();
         await this.onInit();
-        await initProfanityFilter();
+        await initProfanityFilter();        
     }
 
     async readConfig() {
@@ -1128,6 +1129,34 @@ export class database {
         } else {
             return '';
         }
+    }
+
+    async getRandomStartingMessage(agent) {
+        const query = 'SELECT * FROM starting_message WHERE agent=$1';
+        const values = [agent];
+
+        const rows = await this.client.query(query, values);
+        if (rows && rows.rows && rows.rows.length > 0) {
+            const index = getRandomInt(0, rows.rows.length);
+            return rows.rows[index]._message;
+        } else {
+            return this.getRandomStartingMessage('common');
+        }
+    }
+
+    async getIgnoredKeywords(agent) {
+        const query = 'SELECT * FROM ignored_keywords WHERE agent=$1 OR agent=$2';
+        const values = [agent, 'common'];
+
+        const rows = await this.client.query(query, values);
+        const res = [];
+        if (rows && rows.rows && rows.rows.length) {
+            for(let i = 0; i < rows.rows.length; i++) {
+                res.push(rows.rows[i].keyword);
+            }
+        }
+
+        return res;
     }
 
     // async getChatFilterData(init) {

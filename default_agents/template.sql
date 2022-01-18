@@ -13,3 +13,5 @@ INSERT INTO relationship_matrix(agent, matrix) VALUES('agent', E'');
 
 INSERT INTO room(agent, room) VALUES('agent', E'');
 INSERT INTO agents(agent) VALUES('agent');
+
+INSERT INTO starting_message(agent, _message) VALUES('agent', E'');

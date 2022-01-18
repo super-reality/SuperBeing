@@ -178,6 +178,8 @@ const db = new database();
             while (out === null) {
                 out = await createWikipediaAgent('Speaker', defaultAgent, "", "");
             }
+            out.startingMessage = (await database.instance.getRandomStartingMessage(agent)).replace('$agent', agent).replace('$speaker', speaker);
+            await database.instance.setConversation(agent, 'web', '0', agent, out.startingMessage, false);
             console.log("sending out", out)
             return res.send(out);
         }

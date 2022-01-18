@@ -269,7 +269,7 @@ export async function handleInput(message, speaker, agent, res, clientName, chan
         await archiveConversation(speaker, agent, conversation, clientName, channelId);
         await archiveFacts(speaker, agent, conversation);
 
-        const keywords = await keywordExtractor(message);
+        const keywords = await keywordExtractor(message, agent);
         const context = await generateContext(speaker, agent, conversation, keywords);
 
         // TODO: Wikipedia?

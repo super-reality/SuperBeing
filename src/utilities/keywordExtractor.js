@@ -1,9 +1,9 @@
 import keyword_extractor from "keyword-extractor";
-import { getStartingMessageKeywords } from "../connectors/utils.js";
 import { makeWeaviateRequest } from "../connectors/wikipedia.js";
+import { database } from "../database/database.js";
 import { makeModelRequest } from "./makeModelRequest.js";
 
-export async function keywordExtractor(input) {
+export async function keywordExtractor(input, agent) {
     const keywords = []
 
     const res = keyword_extractor.extract(input, {
@@ -14,7 +14,7 @@ export async function keywordExtractor(input) {
     });
     const result = await makeModelRequest(input, "flair/pos-english");
 
-    const skw = getStartingMessageKeywords();
+    const skw = database.instance.getIgnoredKeywords(agent);
 
     for (let i = 0; i < res.length; i++) {
         for (let j = 0; j < result.length; j++) {
