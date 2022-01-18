@@ -493,7 +493,7 @@ export class database {
         let values = [];
 
         if (test && test.rows && test.rows.length > 0) {
-            const newFacts = res[0].facts + '\n' + facts;
+            const newFacts = test.rows[0].facts + '\n' + facts;
             query = "UPDATE agent_facts SET facts=$1 WHERE agent=$2"
             values = [newFacts, agent];
         } else {
