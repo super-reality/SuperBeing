@@ -1143,6 +1143,40 @@ export class database {
             return this.getRandomStartingMessage('common');
         }
     }
+    async getStartingPhrases(agent) {
+        const query = 'SELECT * FROM starting_message WHERE agent=$1';
+        const values = [agent];
+
+        const rows = await this.client.query(query, values);
+        console.log(rows.rows);
+        if (rows && rows.rows && rows.rows.length > 0) {
+            let res = '';
+            for(let i = 0; i < rows.rows.length; i++) {
+                if (rows.rows[i]._message.length <= 0) continue;
+                res += rows.rows[i]._message + '|';
+            }
+            return res;
+        }
+
+        return '';
+    }
+
+    async setStartingPhrases(agent, data) {
+        if (!agent || agent.length <= 0) return;
+        const query = 'DELETE FROM starting_message WHERE agent=$1';
+        const values = [agent];
+
+        await this.client.query(query, values);
+
+        const messages = data.split('|');
+        for (let i = 0; i < messages.length; i++) {
+            if (messages.length <= 0) continue;
+            const query2 = 'INSERT INTO starting_message(agent, _message) VALUES($1, $2)';
+            const values2 = [agent, messages[i]];
+
+            await this.client.query(query2, values2);
+        }
+    }
 
     async getIgnoredKeywords(agent) {
         const query = 'SELECT * FROM ignored_keywords WHERE agent=$1 OR agent=$2';
@@ -1157,6 +1191,40 @@ export class database {
         }
 
         return res;
+    }
+
+    async getIgnoredKeywordsData(agent) {
+        const query = 'SELECT * FROM ignored_keywords WHERE agent=$1';
+        const values = [agent];
+
+        const rows = await this.client.query(query, values);
+        if (rows && rows.rows && rows.rows.length) {
+            let res = '';
+            for(let i = 0; i < rows.rows.length; i++) {
+                if (rows.rows[i].keyword.length <= 0) continue;
+                res += rows.rows[i].keyword + '|';
+            }
+            return res;
+        }
+
+        return '';
+    }
+
+    async setIgnoredKeywords(agent, data) {
+        if (!agent || agent.length <= 0) return;
+        const query = 'DELETE FROM ignored_keywords WHERE agent=$1';
+        const values = [agent];
+
+        await this.client.query(query, values);
+
+        const keywords = data.split('|');
+        for (let i = 0; i < keywords.length; i++) {
+            if (keywords.length <= 0) continue;
+            const query2 = 'INSERT INTO ignored_keywords(agent, keyword) VALUES($1, $2)';
+            const values2 = [agent, keywords[i]];
+
+            await this.client.query(query2, values2);
+        }
     }
 
     // async getChatFilterData(init) {

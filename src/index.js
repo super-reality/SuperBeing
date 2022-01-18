@@ -116,13 +116,15 @@ const db = new database();
             needsAndMotivation: (await database.instance.getNeedsAndMotivations(agent)).trim(),
             personality: (await database.instance.getPersonality(agent)).trim(),
             relationshipMatrix: (await database.instance.getRelationshipMatrix(agent)).trim(),
-            room: (await database.instance.getRoom(agent)).trim()
+            room: (await database.instance.getRoom(agent)).trim(),
+            startingPhrases: (await database.instance.getStartingPhrases(agent)).trim(),
+            ignoredKeywords: (await database.instance.getIgnoredKeywordsData(agent)).trim(),
         };
         return res.send(data);
     });
 
     app.post('/update_agent', async function(req, res) {
-        const agentName = req.body.agent;
+        const agentName = req.body.agentName;
         const data = req.body.data;
 
         try {
@@ -135,6 +137,8 @@ const db = new database();
             await database.instance.setPersonality(agentName, data.personality);
             await database.instance.setRelationshipMatrix(agentName, data.relationshipMatrix);
             await database.instance.setRoom(agentName, data.room);
+            await database.instance.setStartingPhrases(agentName, data.startingPhrases);
+            await database.instance.setIgnoredKeywords(agentName, data.ignoredKeywords);
         } catch (e) {
             console.log(e + '\n' + e.stack);
             return res.send('internal error');

@@ -208,6 +208,11 @@ INSERT INTO agent_config
          ) t
     WHERE NOT EXISTS (SELECT * FROM agent_config);
 CREATE TABLE IF NOT EXISTS agents(agent TEXT);
+INSERT INTO agents
+    select t.*
+    from ((SELECT  'common' as agent) 
+         ) t
+    WHERE NOT EXISTS (SELECT * FROM agents);
 CREATE TABLE IF NOT EXISTS context(agent TEXT, context TEXT);
 INSERT INTO context
     select t.*
