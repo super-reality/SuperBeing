@@ -63,9 +63,18 @@ export class database {
     async connect() {
         console.log('connect');
         //this.client = await this.pool.connect()
-        this.client = new Client()
+        this.client = new Client({
+            user: process.env.PGUSER,
+            password: process.env.PGPASSWORD,
+            database: process.env.PGDATABASE,
+            port: process.env.PGPORT,
+            host: process.env.PGHOST,
+            ssl: process.env.PGSSL ? {
+                rejectUnauthorized: false
+            } : false
+        });
         this.client.connect()
-        const res = await this.client.query('SELECT NOW()')
+        await this.client.query('SELECT NOW()')
 
         await this.readConfig();
         await this.onInit();
