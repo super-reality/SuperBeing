@@ -68,10 +68,14 @@ const db = new database();
     });
         
     const allowedOrigins = ['*']
+    const dissalowedOrigins = [ /*'http://localhost:3001'*/ ]
     const corsOptions = {
         origin: function (origin, callback) {
             console.log("Origin is", origin);
-            if (allowedOrigins.indexOf('*') !== -1) {
+            if (dissalowedOrigins.indexOf(origin) !== -1) {
+                callback(new Error('Not allowed by CORS'));
+            }
+            else if (allowedOrigins.indexOf('*') !== -1) {
                 callback(null, true);
             } 
             else {
@@ -144,8 +148,73 @@ const db = new database();
             return res.send('internal error');
         }
 
-            return res.send('ok');
-        });
+        return res.send('ok');
+    });
+
+    app.post('/delete_agent', async function(req, res) { 
+        const agentName = req.body.agentName;
+        if (agentName === 'common') {
+            return res.send('you can\'t delete the default agent');
+        }
+
+        await database.instance.deleteAgent(agentName);
+
+        return res.send('ok');
+    });
+
+    app.post('/create_agent_sql', async function(req, res) {
+        const sql = req.body.sql;
+        try {
+            const resp = await database.instance.createAgentSQL(sql);
+            if (!resp || resp === false) {
+                return res.send('invalid sql format');
+            }
+        } catch (e) {
+            console.log(e);
+            return res.send('internal error');
+        }
+
+        return res.send('ok');
+    });
+
+    app.post('/create_agent', async function(req, res) {
+        const data = req.body.data;
+        const agentName = data.agentName;
+        if (!agentName || agentName == undefined || agentName.length <= 0) {
+            return res.send('invalid agent name');
+        }
+
+        try {
+            await database.instance.setAgentExists(agentName);
+            if (!data.actions || data.actions === undefined) data.actions = '';
+            await database.instance.setActions(agentName, data.actions);
+            if (!data.dialogue || data.dialogue === undefined) data.dialogue = '';
+            await database.instance.setDialogue(agentName, data.dialogue);
+            if (!data.ethics || data.ethics === undefined) data.ethics = '';
+            await database.instance.setEthics(agentName, data.ethics);
+            if (!data.facts || data.facts === undefined) data.facts = '';
+            await database.instance.setAgentFacts(agentName, data.facts);
+            if (!data.monologue || data.monologue === undefined) data.monologue = '';
+            await database.instance.setMonologue(agentName, data.monologue);
+            if (!data.needsAndMotivation || data.needsAndMotivation === undefined) data.needsAndMotivation = '';
+            await database.instance.setNeedsAndMotivations(agentName, data.needsAndMotivation);
+            if (!data.personality || data.personality === undefined) data.personality = '';
+            await database.instance.setPersonality(agentName, data.personality);
+            if (!data.relationshipMatrix || data.relationshipMatrix === undefined) data.relationshipMatrix = '';
+            await database.instance.setRelationshipMatrix(agentName, data.relationshipMatrix);
+            if (!data.room || data.room === undefined) data.room = '';
+            await database.instance.setRoom(agentName, data.room);
+            if (!data.startingPhrases || data.startingPhrases === undefined) data.startingPhrases = '';
+            await database.instance.setStartingPhrases(agentName, data.startingPhrases);
+            if (!data.ignoredKeywords || data.ignoredKeywords === undefined) data.ignoredKeywords = '';
+            await database.instance.setIgnoredKeywords(agentName, data.ignoredKeywords);
+        } catch (e) {
+            console.log(e + '\n' + e.stack);
+            return res.send('internal error');
+        }
+
+        return res.send('ok');
+    });
 
     app.get('/get_config', async function(req, res) {
         const data = {

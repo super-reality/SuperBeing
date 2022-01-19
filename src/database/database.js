@@ -753,12 +753,12 @@ export class database {
         }
     }
     async setAgentExists(agent) {
-        if (this.getAgentExists(agent)) {
+        if (await this.getAgentExists(agent)) {
             return;
         }
 
-        const query = 'INSERT INTO agents(agent) VALUES($1)';
         const values = [agent];
+        console.log(query, values);
 
         await this.client.query(query, values);
     }
@@ -1234,6 +1234,55 @@ export class database {
 
             await this.client.query(query2, values2);
         }
+    }
+
+    async deleteAgent(agent) {
+        let query = 'DELETE FROM agents WHERE agent=$1';
+        const values = [agent];
+
+        await this.client.query(query, values);
+        
+        query = 'DELETE FROM actions WHERE agent=$1';
+        await this.client.query(query, values);
+        
+        query = 'DELETE FROM dialogue WHERE agent=$1';
+        await this.client.query(query, values);
+        
+        query = 'DELETE FROM ethics WHERE agent=$1';
+        await this.client.query(query, values);
+        
+        query = 'DELETE FROM agent_facts WHERE agent=$1';
+        await this.client.query(query, values);
+        
+        query = 'DELETE FROM monologue WHERE agent=$1';
+        await this.client.query(query, values);
+        
+        query = 'DELETE FROM needs_motivations WHERE agent=$1';
+        await this.client.query(query, values);
+        
+        query = 'DELETE FROM personality WHERE agent=$1';
+        await this.client.query(query, values);
+        
+        query = 'DELETE FROM relationship_matrix WHERE agent=$1';
+        await this.client.query(query, values);
+        
+        query = 'DELETE FROM room WHERE agent=$1';
+        await this.client.query(query, values);
+        
+        query = 'DELETE FROM starting_message WHERE agent=$1';
+        await this.client.query(query, values);
+        
+        query = 'DELETE FROM ignored_keywords WHERE agent=$1';
+        await this.client.query(query, values);
+    }
+
+    async createAgentSQL(sql) {
+        if (!sql || sql.length <= 0) {
+            return false;
+        }
+
+        await this.client.query(sql);
+        return true;
     }
 
     // async getChatFilterData(init) {
