@@ -7,7 +7,7 @@
     "url": "git://github.com/SuperReality/SuperBeing.git"
   },
   "engines": {
-    "node": ">= 16.3.0"
+    "node": "16.x"
   },
   "npmClient": "npm",
   "main": "src/index.js",
