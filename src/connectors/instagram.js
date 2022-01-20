@@ -1,23 +1,8 @@
 import { IgApiClient } from 'instagram-private-api';
+import { handleInput } from '../cognition/handleInput.js';
 import { database } from '../database/database.js';
 import customConfig from '../utilities/customConfig.js';
 
-export class instagramPacketHandler {
-    static instance
-    ig
-
-    constructor(ig) {
-        instagramPacketHandler.instance = this
-        this.ig = ig
-    }
-
-    async handle(chatId, responses) {
-        Object.keys(responses).map(async function(key, index) {
-            const thread = instagramPacketHandler.instance.ig.entity.directThread(chatId)
-            await thread.broadcastText(responses[key])
-        })
-    }
-}
 
 export const createInstagramClient = async () => {
     const username = customConfig.instance.get('instagramUsername')
@@ -31,8 +16,6 @@ export const createInstagramClient = async () => {
     await ig.simulate.preLoginFlow()
     const loggedInUser = await ig.account.login(username, password)
     process.nextTick(async () => await ig.simulate.postLoginFlow())
-    
-    new instagramPacketHandler(ig)
 
     const history = { 
         pending: await ig.feed.directInbox().items(),
@@ -83,15 +66,12 @@ export const createInstagramClient = async () => {
             
                         console.log('got new message: ' + pending.last_permanent_item.text)
 
-                        // TODO: Handle me to the response handler
-                        // MessageClient.instance.sendMessage(pending.last_permanent_item.text,
-                        //     pending.last_permanent_item.item_id + '', 
-                        //     'instagram',
-                        //     pending.thread_id, 
-                        //     utcStr, 
-                        //     false, 
-                        //     pending.users[0].username)
-                    
+                        const resp = await handleInput(pending.last_permanent_item.text, pending.users[0].username,
+                            customConfig.instance.get('agent') ?? "Agent", null, 'instagram', pending.last_permanent_item.item_id);
+                        
+                        const thread = ig.entity.directThread(chatId)
+                        await thread.broadcastText(resp)
+
                         database.instance.addMessageInHistoryWithDate('instagram',
                             pending.thread_id, 
                             pending.last_permanent_item.item_id + '', 

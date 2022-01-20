@@ -1,5 +1,6 @@
 import SnooStream from 'snoostream';
 import * as snoowrap from 'snoowrap';
+import { handleInput } from '../cognition/handleInput.js';
 import { database } from '../database/database.js';
 import customConfig from '../utilities/customConfig.js';
 
@@ -70,6 +71,18 @@ export function getResponse(channel, message) {
     return messageResponses[channel][message]
 }
 
+async function handleMessage(response, messageId, chat_id, args, reddit) {
+    if (args === 'isChat') {
+        redditHandler.instance.reddit.getMessage(messageId).reply(responses[key]).then(res => {
+            database.instance.addMessageInHistory('reddit', chat_id, res.id, customConfig.instance.get('botName'), response)
+        })
+    } else if (args === 'isPost') {
+        reddit.getSubmission(chat_id).reply(responses[key]).then(res => {
+            database.instance.addMessageInHistory('reddit', chat_id, res.id, customConfig.instance.get('botName'), response)
+        })
+    }
+}
+
 export function addMessageToHistory(chatId, messageId, senderName, content) {
     database.instance.addMessageInHistory('reddit-chat', chatId, messageId, senderName, content)
 }
@@ -84,30 +97,6 @@ export async function updateMessage(chatId, messageId, newContent) {
 }
 export async function wasHandled(chatId, messageId, sender, content, timestamp) {
     return await database.instance.messageExistsAsync('reddit-chat', chatId, messageId, sender, content, timestamp)
-}
-
-export class redditHandler {
-    static instance
-    reddit;
-
-    constructor(reddit) {
-        redditHandler.instance = this
-        this.reddit = reddit
-    }
-
-    async handleMessage(responses, messageId, chat_id, args) {
-        Object.keys(responses).map(function(key, index) {
-            if (args === 'isChat') {
-                redditHandler.instance.reddit.getMessage(messageId).reply(responses[key]).then(res => {
-                    database.instance.addMessageInHistory('reddit', chat_id, res.id, customConfig.instance.get('botName'), responses[key])
-                })
-            } else if (args === 'isPost') {
-                reddit.getSubmission(chat_id).reply(responses[key]).then(res => {
-                    database.instance.addMessageInHistory('reddit', chat_id, res.id, customConfig.instance.get('botName'), responses[key])
-                })
-            }
-        })
-    }
 }
 
 export const createRedditClient = async () => {
@@ -130,7 +119,6 @@ export const createRedditClient = async () => {
     });
     reddit.config(snooWrapOpptions);
     const stream = new SnooStream(reddit)
-    new redditHandler(reddit)
     console.log('loaded reddit client')
 
     const regex = new RegExp('((?:carl|sagan)(?: |$))', 'ig')
@@ -152,8 +140,8 @@ export const createRedditClient = async () => {
             const author = post.author.name
             const body = post.body
             const timestamp = post.created_utc
-            // TODO: Replace me with input handler
-            // MessageClient.instance.sendMessage(body, id, 'reddit', chat_id, timestamp, false, author, 'isPost') 
+            const resp = await handleInput(body, author, customConfig.instance.get('agent') ?? "Agent", null, 'reddit', chat_id);
+            await handleMessage(resp, id, chat_id, 'isPost', reddit);
             const date = new Date(post.created)
             const utc = new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds());
             const utcStr = date.getDate() + '/' + (date.getMonth() + 1) + '/' + date.getFullYear() + ' ' + utc.getHours() + ':' + utc.getMinutes() + ':' + utc.getSeconds()
@@ -168,9 +156,8 @@ export const createRedditClient = async () => {
                 const author = post.author
                 const body = post.body
                 const timestamp = post.created_utc
-                // TODO: Replace with direct message handler
-                console.log(body, id, 'reddit', chat_id, timestamp, false, author, 'isPost');
-                // MessageClient.instance.sendMessage(body, id, 'reddit', chat_id, timestamp, false, author, 'isPost') 
+                const resp = await handleInput(body, author, customConfig.instance.get('agent') ?? "Agent", null, 'reddit', chat_id);
+                await handleMessage(resp, id, chat_id, 'isPost', reddit);
                 const date = new Date(post.created)
                 const utc = new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds());
                 const utcStr = date.getDate() + '/' + (date.getMonth() + 1) + '/' + date.getFullYear() + ' ' + utc.getHours() + ':' + utc.getMinutes() + ':' + utc.getSeconds()
@@ -196,9 +183,8 @@ export const createRedditClient = async () => {
             const author = post.author.name
             const body = post.selftext
             const timestamp = post.created_utc
-            // TODO: Replace with direct message handler
-            console.log(body, id, 'reddit', id, timestamp, false, author, 'isPost');
-            // MessageClient.instance.sendMessage(body, id, 'reddit', id, timestamp, false, author, 'isPost') 
+            const resp = await handleInput(body, author, customConfig.instance.get('agent') ?? "Agent", null, 'reddit', chat_id);
+            await handleMessage(resp, id, chat_id, 'isPost', reddit); 
             const date = new Date(post.created)
             const utc = new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds());
             const utcStr = date.getDate() + '/' + (date.getMonth() + 1) + '/' + date.getFullYear() + ' ' + utc.getHours() + ':' + utc.getMinutes() + ':' + utc.getSeconds()
@@ -213,9 +199,8 @@ export const createRedditClient = async () => {
                 const author = post.author
                 const body = post.selftext
                 const timestamp = post.created_utc
-                // TODO: Replace with direct message handler
-                console.log(body, id, 'reddit', id, timestamp, false, author, 'isPost');
-                // MessageClient.instance.sendMessage(body, id, 'reddit', id, timestamp, false, author, 'isPost') 
+                const resp = await handleInput(body, author, customConfig.instance.get('agent') ?? "Agent", null, 'reddit', chat_id);
+                await handleMessage(resp, id, chat_id, 'isPost', reddit);
                 const date = new Date(post.created)
                 const utc = new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds());
                 const utcStr = date.getDate() + '/' + (date.getMonth() + 1) + '/' + date.getFullYear() + ' ' + utc.getHours() + ':' + utc.getMinutes() + ':' + utc.getSeconds()
@@ -236,9 +221,8 @@ export const createRedditClient = async () => {
                 //console.log('current message: ' + body)
                 await database.instance.messageExistsAsyncWitHCallback('reddit', senderId, id, author, body, timestamp, () => {
                     console.log('got new message: ' + body)
-                    // TODO: Replace with direct message handler
-                    console.log(body, id, 'reddit', senderId, timestamp, false, author, 'isChat');
-                    // MessageClient.instance.sendMessage(body, id, 'reddit', senderId, timestamp, false, author, 'isChat')
+                    const resp = await handleInput(body, author, customConfig.instance.get('agent') ?? "Agent", null, 'reddit', chat_id);
+                    await handleMessage(resp, id, chat_id, 'isChat', reddit);
                     const date = new Date(timestamp)
                     const utc = new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds());
                     const utcStr = date.getDate() + '/' + (date.getMonth() + 1) + '/' + date.getFullYear() + ' ' + utc.getHours() + ':' + utc.getMinutes() + ':' + utc.getSeconds()
@@ -248,37 +232,4 @@ export const createRedditClient = async () => {
             }
         })
     }, 1000)
-    /*submissionStream.on('post', async (post, match) => {
-        console.log('22')
-        console.log('submission stream: ' + JSON.stringify(await post))    
-    });*/
-    
-    /*reddit.getSubreddit('test_db')
-        .submitSelfpost({
-            subredditName: 'test_db',
-            title: 'test',
-            text: 'test'
-        })*/
-
-    /*;(await reddit.getSubreddit('test_db').getTop().then()).forEach(post => {
-        console.log(post.title)
-    })
-    reddit.getSubreddit('test_db').getNew().then(posts => {
-        posts.forEach(post => console.log(post.title))
-    })
-
-    await (await reddit.getInbox()).forEach(post => {
-        console.log(post.body)
-    })*/
-
-    /*;(await reddit.getHot()).map(post => {
-        const date = new Date(post.created)
-        const utc = new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds());
-        const utcStr = date.getDate() + '/' + (date.getMonth() + 1) + '/' + date.getFullYear() + ' ' + utc.getHours() + ':' + utc.getMinutes() + ':' + utc.getSeconds()
-        console.log(utcStr)
-    });
-
-    console.log(reddit.getSubmission('2np694'))
-    console.log('author: ' + (reddit.getSubmission('2np694').then(console.log)))
-    reddit.getSubreddit('test_db').getModqueue({limit: -1}).then(console.log)*/
 }

@@ -199,36 +199,25 @@ export async function handleMessages(messages, bot) {
             var utc = new Date(dateNow.getUTCFullYear(), dateNow.getUTCMonth(), dateNow.getUTCDate(), dateNow.getUTCHours(), dateNow.getUTCMinutes(), dateNow.getUTCSeconds());
             const utcStr = dateNow.getDate() + '/' + (dateNow.getMonth() + 1) + '/' + dateNow.getFullYear() + ' ' + utc.getHours() + ':' + utc.getMinutes() + ':' + utc.getSeconds()
 
-
-            // 
             console.log("Sending out input");
 
             const response = await handleInput(content.replace('!ping', ''), _sender, customConfig.instance.get('agent') ?? "Agent", null, 'xr-engine', messages[i].channelId);
             console.log("Handling response");
-            await xrEnginePacketHandler.instance.handleXREngineResponse(response, addPing, _sender)
+            await handleXREngineResponse(response, addPing, _sender)
 
         })
 
     }
 }
 
-export class xrEnginePacketHandler {
-    static instance
-    bot
 
-    constructor(bot) {
-        console.log('creating packet handler')
-        this.bot = bot
-        xrEnginePacketHandler.instance = this
-    }
-
-    async handleXREngineResponse(responses, addPing, _sender) {
+    async function handleXREngineResponse(responses, addPing, _sender) {
         console.log('response: ' + responses)
         if (responses !== undefined && responses.length <= 2000 && responses.length > 0) {
             let text = responses
             while (text === undefined || text === '' || text.replace(/\s/g, '').length === 0) text = getRandomEmptyResponse()
             if (addPing) text = _sender + ' ' + text
-            xrEnginePacketHandler.instance.bot.sendMessage(text)
+            xrengineBot.sendMessage(text)
         }
         else if (responses.length > 2000) {
             const lines = []
@@ -250,7 +239,7 @@ export class xrEnginePacketHandler {
                             text = _sender + ' ' + text
                             addPing = false
                         }
-                        xrEnginePacketHandler.instance.bot.sendMessage(text)
+                        xrengineBot.sendMessage(text)
                     }
                 }
             }
@@ -259,17 +248,17 @@ export class xrEnginePacketHandler {
             let emptyResponse = getRandomEmptyResponse()
             while (emptyResponse === undefined || emptyResponse === '' || emptyResponse.replace(/\s/g, '').length === 0) emptyResponse = getRandomEmptyResponse()
             if (addPing) emptyResponse = _sender + ' ' + emptyResponse
-            xrEnginePacketHandler.instance.bot.sendMessage(emptyResponse)
+            xrengineBot.sendMessage(emptyResponse)
         }
     }
-}
 
 const doTests = false
+let xrengineBot = null;
 
 async function createXREngineClient() {
     //generateVoice('hello there', (buf, path) => {}, false)
     console.log('creating xr engine client')
-    const xrengineBot = new XREngineBot({ headless: true });
+    xrengineBot = new XREngineBot({ headless: true });
 
     console.log("Preparing to connect to ", customConfig.instance.get('xrEngineURL'));
     xrengineBot.delay(Math.random() * 100000);
@@ -281,7 +270,7 @@ async function createXREngineClient() {
     await xrengineBot.delay(10000)
     console.log('bot delay done')*/
 
-    await xrengineBot.sendMessage("Hello World! I have connected.")
+    await xrenginexrengineBot.sendMessage("Hello World! I have connected.")
     /*
         await new Promise((resolve) => {
             setTimeout(() => xrengineBot.enterRoom(XRENGINE_URL, { name: "TestBot" }), 1000);
@@ -289,7 +278,7 @@ async function createXREngineClient() {
     
     console.log('bot loaded')
         await new Promise((resolve) => {
-            setTimeout(() => xrengineBot.sendMessage("Hello World! I have connected."), 5000);
+            setTimeout(() => xrenginexrengineBot.sendMessage("Hello World! I have connected."), 5000);
         });*/
     console.log('bot fully loaded')
 }
@@ -316,7 +305,6 @@ class XREngineBot {
         headless = true,
         autoLog = true } = {}
     ) {
-        new xrEnginePacketHandler(this)
         this.headless = headless;
         this.name = name;
         this.autoLog = autoLog;
@@ -715,8 +703,8 @@ class XREngineBot {
             else if (message.text().startsWith('emotions|')) {
             }
 
-            //if (this.autoLog)
-            //    console.log(">> ", message.text())
+            if (this.autoLog)
+                console.log(">> ", message.text())
         })
 
         this.page.setViewport({ width: 0, height: 0 });

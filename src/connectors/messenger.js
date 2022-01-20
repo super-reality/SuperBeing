@@ -1,4 +1,5 @@
 import request from 'request';
+import { handleInput } from '../cognition/handleInput.js';
 import { database } from "../database/database.js";
 import customConfig from '../utilities/customConfig.js';
 import { getRandomEmptyResponse } from "./utils.js";
@@ -24,25 +25,25 @@ export async function handleMessage(senderPsid, receivedMessage) {
       const date = new Date();
       const utc = new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds());
       const utcStr = date.getDate() + '/' + (date.getMonth() + 1) + '/' + date.getFullYear() + ' ' + utc.getHours() + ':' + utc.getMinutes() + ':' + utc.getSeconds()
-      // TODO: Replace me with direct message handler      
-      // MessageClient.instance.sendMessage(message, senderPsid, 'Messenger', senderPsid, utcStr, false, senderPsid)
+
+      const resp = await handleInput(message, senderPsid, customConfig.instance.get('agent') ?? "Agent", null, 'messenger', senderPsid);
+      handlePacketSend(senderPsid, resp);
     })
   }
 }
 
-export async function handlePacketSend(senderPsid, responses) {
-  Object.keys(responses).map(function(key, index) {
-    console.log('response: ' + responses[key])
-    if (responses[key] !== undefined && responses[key].length <= 2000 && responses[key].length > 0) {
-        let text = responses[key]
+export async function handlePacketSend(senderPsid, response) {
+    console.log('response: ' + response)
+    if (response !== undefined && response.length <= 2000 && response.length > 0) {
+        let text = response
         while (text === undefined || text === '' || text.replace(/\s/g, '').length === 0) text = getRandomEmptyResponse()
         callSendAPI(senderPsid, { 'text': text }, text);
     }
-    else if (responses[key].length > 20000) {
+    else if (response.length > 20000) {
         const lines = []
         let line = ''
-        for(let i = 0; i < responses[key].length; i++) {
-            line+= responses[key]
+        for(let i = 0; i < response.length; i++) {
+            line+= response
             if (i >= 1980 && (line[i] === ' ' || line[i] === '')) {
                 lines.push(line)
                 line = ''
@@ -64,7 +65,6 @@ export async function handlePacketSend(senderPsid, responses) {
         while (emptyResponse === undefined || emptyResponse === '' || emptyResponse.replace(/\s/g, '').length === 0) emptyResponse = getRandomEmptyResponse()
         callSendAPI(senderPsid, { 'text': emptyResponse }, emptyResponse);
     }
-}); 
 }
 
 export async function callSendAPI(senderPsid, response, text) {

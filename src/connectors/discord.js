@@ -1,6 +1,4 @@
 // required for message.lineReply
-import 'discord-inline-reply'
-import 'discord-reply'
 import Discord, { Intents } from 'discord.js'
 import emoji from "emoji-dictionary"
 import emojiRegex from 'emoji-regex'
@@ -387,7 +385,7 @@ export const messageCreate = async (client, message) => {
     }, message.content.length)
 
     const response = await handleInput(message.content, message.author.username, customConfig.instance.get('agent') ?? "Agent", null, 'discord', channel.id);
-    await discordPackerHandler.instance.handlePing(message.id, channel.id, response, addPing)
+    await handlePing(message.id, channel.id, response, addPing)
 };
 
 //Event that is triggered when a message is deleted
@@ -636,7 +634,6 @@ export async function sendSlashCommandResponse(client, interaction, chat_id, tex
 }
 
 export async function handleSlashCommand(client, interaction) {
-    const messageResponseHandler = undefined
     const command = interaction.data.name.toLowerCase();
     const sender = interaction.member.user.username + ''
     const chatId = interaction.channel_id + ''
@@ -649,17 +646,8 @@ export async function handleSlashCommand(client, interaction) {
     // MessageClient.instance.sendSlashCommand(sender, command, command === 'say' ? interaction.data.options[0].value : 'none', 'Discord', chatId, utcStr)
 }
 
-export class discordPackerHandler {
-    static instance
-    client
-
-    constructor(client) {
-        discordPackerHandler.instance = this
-        this.client = client
-    }
-
-    async handlePing(message_id, chat_id, responses, addPing) {
-        this.client.channels.fetch(chat_id).then(channel => {
+    async function handlePing(message_id, chat_id, responses, addPing) {
+        client.channels.fetch(chat_id).then(channel => {
             channel.messages.fetch(message_id).then(message => {
 
                 console.log('response: ' + responses)
@@ -723,33 +711,33 @@ export class discordPackerHandler {
         });
     }
 
-    async handleSlashCommand(chat_id, response) {
-        this.client.channels.fetch(chat_id).then(channel => {
+export async function handleSlashCommandResponse(chat_id, response) {
+        client.channels.fetch(chat_id).then(channel => {
             channel.send(response)
             channel.stopTyping();
         }).catch(err => console.log(err))
     }
 
-    async handleUserUpdateEvent(response) {
+    export async function handleUserUpdateEvent(response) {
         console.log('handleUserUpdateEvent: ' + response)
     }
 
-    async handleGetAgents(chat_id, response) {
-        this.client.channels.fetch(chat_id).then(channel => {
+    export async function handleGetAgents(chat_id, response) {
+        client.channels.fetch(chat_id).then(channel => {
             channel.send(response)
             channel.stopTyping();
         }).catch(err => console.log(err))
     }
 
-    async handleSetAgentsFields(chat_id, response) {
-        this.client.channels.fetch(chat_id).then(channel => {
+    export async function handleSetAgentsFields(chat_id, response) {
+        client.channels.fetch(chat_id).then(channel => {
             channel.send(response)
             channel.stopTyping();
         }).catch(err => console.log(err))
     }
 
-    async handlePingSoloAgent(chat_id, message_id, responses, addPing) {
-        this.client.channels.fetch(chat_id).then(channel => {
+    export async function handlePingSoloAgent(chat_id, message_id, responses, addPing) {
+        client.channels.fetch(chat_id).then(channel => {
             channel.messages.fetch(message_id).then(message => {
                 Object.keys(responses).map(function (key, index) {
                     console.log('response: ' + responses)
@@ -814,20 +802,15 @@ export class discordPackerHandler {
         }).catch(err => console.log(err))
     }
 
-    async handleMessageReactionAdd(response) {
-        console.log('handleMessageReactionAdd: ' + response)
-    }
-
-    async handleMessageEdit(message_id, chat_id, responses, addPing) {
-
-        this.client.channels.fetch(chat_id).then(async channel => {
+    async function handleMessageEdit(message_id, chat_id, responses, addPing) {
+        client.channels.fetch(chat_id).then(async channel => {
             const oldResponse = getResponse(channel.id, message_id)
             if (oldResponse === undefined) {
                 return
             }
 
             channel.messages.fetch(oldResponse).then(async msg => {
-                channel.messages.fetch({ limit: this.client.edit_messages_max_count }).then(async messages => {
+                channel.messages.fetch({ limit: client.edit_messages_max_count }).then(async messages => {
                     messages.forEach(async function (edited) {
                         if (edited.id === message_id) {
                             // Warn an offending user about their actions
@@ -886,7 +869,6 @@ export class discordPackerHandler {
             })
         })
     }
-}
 
 export const prevMessage = {}
 export const prevMessageTimers = {}
@@ -1045,7 +1027,6 @@ export const createDiscordClient = () => {
 
     client.login(customConfig.instance.get('discord_api_token'));
     console.log("Creating new discord packer handler");
-    new discordPackerHandler(client)
 };
 
 export default createDiscordClient;

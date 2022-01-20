@@ -1,4 +1,5 @@
 import Twilio from 'twilio';
+import { handleInput } from '../cognition/handleInput.js';
 import { database } from '../database/database.js';
 import customConfig from '../utilities/customConfig.js';
 import { getRandomEmptyResponse } from './utils.js';
@@ -37,35 +38,26 @@ export async function message(req, res) {
         var utc = new Date(dateNow.getUTCFullYear(), dateNow.getUTCMonth(), dateNow.getUTCDate(), dateNow.getUTCHours(), dateNow.getUTCMinutes(), dateNow.getUTCSeconds());
         const utcStr = dateNow.getDate() + '/' + (dateNow.getMonth() + 1) + '/' + dateNow.getFullYear() + ' ' + utc.getHours() + ':' + utc.getMinutes() + ':' + utc.getSeconds()
         
-        // TODO: Replace me with direct message handler
-        // MessageClient.instance.sendMessage(req.body.Body, msgId + '' || '1', 'Twilio', req.body.From, utcStr, false, req.body.From)
+        const resp = await handleInput(req.body.Body, req.body.From, customConfig.instance.get('agent') ?? "Agent", null, 'twilio', req.body.From);
+        await handleTwilioMsg(req.body.From, resp, client);
     })
 }
 
-export class handleTwilio {
-    static instance
-    client;
 
-    constructor(client) {
-        handleTwilio.instance = this
-        this.client = client
-    }
-
-    async handleTwilioMsg(chat_id, responses) {
-        Object.keys(responses).map(async function(key, index) {
+    async function handleTwilioMsg(chat_id, response, client) {
             await database.instance.getNewMessageId('twilio', chat_id, async (msgId) => {
-                console.log('response: ' + responses[key])
-                if (responses[key] !== undefined && responses[key].length <= 2000 && responses[key].length > 0) {
-                    let text = responses[key]
+                console.log('response: ' + response)
+                if (response !== undefined && response.length <= 2000 && response.length > 0) {
+                    let text = response
                     while (text === undefined || text === '' || text.replace(/\s/g, '').length === 0) text = getRandomEmptyResponse()
-                    sendMessage(handleTwilio.instance.client, chat_id, text); 
+                    sendMessage(client, chat_id, text); 
                     addMessageToHistory(chat_id, customConfig.instance.get('botName'), text, msgId)                 
                 }
-                else if (responses[key].length > 160) {
+                else if (response.length > 160) {
                     const lines = []
                     let line = ''
-                    for(let i = 0; i < responses[key].length; i++) {
-                        line+= responses[key]
+                    for(let i = 0; i < response.length; i++) {
+                        line+= response
                         if (i >= 1980 && (line[i] === ' ' || line[i] === '')) {
                             lines.push(line)
                             line = ''
@@ -77,7 +69,7 @@ export class handleTwilio {
                             if (i === 0) {
                                 let text = lines[1]
                                 while (text === undefined || text === '' || text.replace(/\s/g, '').length === 0) text = getRandomEmptyResponse()
-                                sendMessage(handleTwilio.instance.client, chat_id, text); 
+                                sendMessage(client, chat_id, text); 
                                 addMessageToHistory(chat_id, customConfig.instance.get('botName'), text, msgId)
                         }
                     }
@@ -86,13 +78,11 @@ export class handleTwilio {
                 else {
                     let emptyResponse = getRandomEmptyResponse()
                     while (emptyResponse === undefined || emptyResponse === '' || emptyResponse.replace(/\s/g, '').length === 0) emptyResponse = getRandomEmptyResponse()
-                    sendMessage(handleTwilio.instance.client, chat_id, emptyResponse); 
+                    sendMessage(client, chat_id, emptyResponse); 
                     addMessageToHistory(chat_id, customConfig.instance.get('botName'), emptyResponse, msgId)
                 }
             })
-        })
     }
-}
 
 export async function getChatHistory(chatId, length) {
     return await database.instance.getHistory(length, 'twilio', chatId)
@@ -102,6 +92,7 @@ export async function addMessageToHistory(chatId, senderName, content, messageId
     database.instance.addMessageInHistory('twilio', chatId, messageId + '', senderName, content)
 }
 
+let client = null
 export const createTwilioClient = async (app, router) => {
     const accountSid = customConfig.instance.get('twilioAccountSID')
     const authToken = customConfig.instance.get('twilioAuthToken')
@@ -110,8 +101,7 @@ export const createTwilioClient = async (app, router) => {
     if (!accountSid || !authToken || !twilioNumber)  return console.warn("No API token for Twilio bot, skipping");
     console.log('twilio client created, sid: ' + accountSid + ' auth token: ' + authToken)
 
-    const client = new Twilio(accountSid, authToken);
-    new handleTwilio(client)
+    client = new Twilio(accountSid, authToken);
 
     app.use('/sms', router.post("/", async (req, res) => {
         await message(req, res)

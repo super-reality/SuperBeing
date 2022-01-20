@@ -1,36 +1,22 @@
 import { TwitterApi } from 'twitter-api-v2';
+import { handleInput } from '../cognition/handleInput.js';
 import { database } from '../database/database.js';
 import customConfig from '../utilities/customConfig.js';
 
-export class twitterPacketHandler {
-    static instance
-    twitter
-    twitterV1
-    localUser
-
-    constructor(twitter, twitterV1, localUser) {
-        twitterPacketHandler.instance = this
-        this.twitter = twitter
-        this.twitterV1 = twitterV1
-        this.localUser = localUser
-    }
-    
-    async handleMessage(responses, messageId, chat_id, args) {
-        Object.keys(responses).map(async function(key, index) {
+    async function handleMessage(response, chat_id, args, twitter, twitterV1, localUser) {
             if (args === 'DM') {
-                const dmSent = await twitterPacketHandler.instance.twitterV1.v1.sendDm({
+                const dmSent = await twitterV1.v1.sendDm({
                     recipient_id: chat_id,
-                    text: responses[key]
+                    text: response
                 })
-                database.instance.addMessageInHistory('twitter', chat_id, dmSent.event.id, customConfig.instance.get('botName'), responses[key])
+                database.instance.addMessageInHistory('twitter', chat_id, dmSent.event.id, customConfig.instance.get('botName'), response)
             } else if (args === 'Twit') {
-                await twitterPacketHandler.instance.twitterV1.v1.reply(responses[key], chat_id).then(res => {
-                    database.instance.addMessageInHistory('twitter', chat_id, res.id_str, customConfig.instance.get('botName'), responses[key])
+                await twitterV1.v1.reply(response, chat_id).then(res => {
+                    database.instance.addMessageInHistory('twitter', chat_id, res.id_str, customConfig.instance.get('botName'), response)
                 })
             }
-        })
     }
-}
+
 
 export const createTwitterClient = async () => {
     const bearerToken = customConfig.instance.get('twitterBearerToken')
@@ -82,15 +68,8 @@ export const createTwitterClient = async () => {
                 if (author) authorName = author.data.username
 
                 await database.instance.messageExistsAsyncWitHCallback2('twitter', event.message_create.target.recipient_id, event.id, authorName, event.message_create.message_data.text, parseInt(event.created_timestamp), () => {
-                    // TODO: Replace me with direction message handler
-                    // MessageClient.instance.sendMessage(event.message_create.message_data.text,
-                    //     event.id,
-                    //     'twitter',
-                    //     author.data.id,
-                    //     event.created_timestamp,
-                    //     false,
-                    //     authorName,
-                    //     'DM')
+                const resp = await handleInput(event.message_create.message_data.text, authorName, customConfig.instance.get('agent') ?? "Agent", null, 'twitter', event.id);
+                handleMessage(resp, event.id, 'DM', twitter, tv1, localUser);
 
                     database.instance.addMessageInHistoryWithDate(
                         'twitter',

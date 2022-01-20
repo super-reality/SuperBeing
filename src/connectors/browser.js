@@ -3,12 +3,7 @@ import fs from 'fs';
 
 //The default browser class for puppeteer, it can be used to build other clients with puppeteer
 class Browser {
-    static window(options) {
-        throw new Error("Method not implemented.");
-    }
-    constructor() {}
-    _browser
-    async window(options) {
+    static async window(options) {
         console.log('Making new browser');
         console.log(this._browser);
         if (this._browser) return await this._browser
@@ -19,8 +14,8 @@ class Browser {
             options.args = (options.args || []).concat(['--no-sandbox', '--disable-setuid-sandbox'])
         }
 
-        this._browser = puppeteer.launch(options);
-        return await this._browser
+        const _browser = puppeteer.launch(options);
+        return await _browser
     }
 }
 
@@ -39,6 +34,7 @@ export class PageUtils {
     }, buttonName)
 }
     
+//clicks a selector using the class name's regex
     async clickSelectorClassRegex(selector, classRegex) {
         if (this.autoLog)
             console.log(`Clicking for a ${selector} matching ${classRegex}`);
@@ -51,6 +47,7 @@ export class PageUtils {
                 enterButton.click();
         }, selector, classRegex.toString().slice(1, -1));
     }
+    //clicks a selector based on their id
     async clickSelectorId(selector, id) {
         if (this.autoLog) console.log(`Clicking for a ${selector} matching ${id}`)
         
@@ -79,6 +76,7 @@ export class PageUtils {
           id
         )
       }
+    //clicks a selector based on their alt value
     async clickSelectorByAlt(selector, title) {
         if (this.autoLog) console.log(`Clicking for a ${selector} matching ${title}`)
 
@@ -103,6 +101,7 @@ export class PageUtils {
             }
         }, selector, title)
     }
+    //clicks the first selector it finds of the given type 
     async clickSelectorFirstMatch(selector) {
         if (this.autoLog)
             console.log(`Clicking for first ${selector}`);
