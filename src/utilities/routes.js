@@ -1,12 +1,12 @@
 import { handleInput } from '../cognition/handleInput.js';
 import { createWikipediaAgent } from '../connectors/wikipedia.js';
 import { database } from '../database/database.js';
-import { app, defaultAgent } from '../index.js';
+import { defaultAgent } from '../index.js';
 import customConfig from './customConfig.js';
 
 //Routes for the expres server
 
-export async function registerRoutes() {
+export async function registerRoutes(app) {
     //a health check for the server
     app.get("/health", async function (req, res) {
         res.send(`Server is alive and running! ${new Date()}`);
