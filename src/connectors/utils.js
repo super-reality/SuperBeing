@@ -1,11 +1,10 @@
 import { existsSync } from "fs";
-import customConfig from "../utilities/customConfig.js";
-import { simpleExtractor } from "../utilities/keywordExtractor.js";
 
 export function getRandomNumber(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+//Empty responses in-case of an agent error in order to avoid crashing the client bots
 export const emptyResponse = [ 
     'Idk',
     'You tell me',
@@ -25,7 +24,6 @@ export function startsWithCapital(word){
 
 export function getOS() {
   const platform = process.platform;
-  console.log(platform);
   let os;
   if (platform.includes('darwin')) {
     os = 'Mac OS';
@@ -38,6 +36,7 @@ export function getOS() {
   return os;
 }
 
+//returns the Chrome path for puppeteer based on the OS
 export function detectOsOption() {
   const os = getOS();
   const options = {executablePath: null};
@@ -73,10 +72,6 @@ export function convertLocalToUtcTimezone(date) {
 
 export function capitalizeFirstLetter(word) {
   return word.charAt(0).toUpperCase() + word.slice(1);
-}
-
-export function getRandomInt(min, max) { 
-  return Math.floor(Math.random() * (max - min) + min);
 }
 
 export async function wait(ms) {

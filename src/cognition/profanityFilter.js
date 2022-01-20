@@ -6,11 +6,13 @@ import { makeModelRequest } from "../utilities/makeModelRequest.js";
 import { database } from '../database/database.js';
 import customConfig from '../utilities/customConfig.js';
 
+//check if a text contains the n* word
 function nWord(text) {
     const r = new RegExp(`n+[i1l|]+[gkq469]+[e3a4i]+[ra4]s?`);
     return r.test(text);
 };
 
+//check if a text contains the nazi word
 function nazi(text) {
     const r = new RegExp(`n+[a4|]+[z]+[i1l]s?`);
     return r.test(text);
@@ -25,6 +27,7 @@ let sensitiveWords;
 let sensitivePhrases;
 let leadingStatements;
 
+//loads all the predefined words and phrases for the profanity system
 export async function initProfanityFilter() {
     // TODO: remove punctuation from phrases and words before testing
     badWords = (await database.instance.getBadWords()).toString().split("\n");
@@ -54,6 +57,7 @@ function getWordCount(text) {
     return text.split(" ").length;
 }
 
+//gets the toxicity threshold of a text
 async function testIfIsToxic(text, threshold) {
     if (customConfig.instance.get('hf_api_token')) {
         const result = await makeModelRequest(text, "unitary/toxic-bert");
@@ -194,15 +198,16 @@ async function filterByRating(speaker, agent, text) {
     const { success, choice } = await makeCompletionRequest(data, speaker, agent, "rating");
 
     // If it's for everyone, just allow it
-    const isForEveryone = await validateESRB(speaker, agent, text, true);
+    const isForEveryone = await validateESRB(agent, text, true);
 
     // Otherwise, check if it meets the agent maximum rating
-    let shouldFilter = !isForEveryone && await validateESRB(speaker, agent, text);
+    let shouldFilter = !isForEveryone && await validateESRB(agent, text);
 
     return { success, choice, shouldFilter };
 }
 
-async function validateESRB(speaker, agent, text, checkIfForEveryone) {
+//ESRB stands for: Entertainment Software Rating Board
+async function validateESRB(agent, text, checkIfForEveryone) {
     const { contentRating } = JSON.parse((await database.instance.getAgentsConfig(agent)).toString());
 
     const ratings =

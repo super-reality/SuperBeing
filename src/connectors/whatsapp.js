@@ -6,6 +6,7 @@ import { addMessageToHistory, exitConversation, getChatHistory, isInConversation
 import { botName, username_regex } from "../whatsapp-client.js"
 import customConfig from '../utilities/customConfig.js'
 
+//TODO: Needs tests - misses API key (needs request from whatsapp)
 export async function onMessage(msg, messageResponseHandler) {
     console.log(JSON.stringify(msg))
     const date = Date.now() / 1000

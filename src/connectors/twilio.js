@@ -93,9 +93,7 @@ export class handleTwilio {
         })
     }
 }
-export function getDbKey(chatId, messageId) {
-    return 'twilio.' + chatId + '.' + messageId
-}
+
 export async function getChatHistory(chatId, length) {
     return await database.instance.getHistory(length, 'twilio', chatId)
 }

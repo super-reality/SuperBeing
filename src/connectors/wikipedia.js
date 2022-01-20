@@ -10,15 +10,16 @@ import { namedEntityRecognition } from '../utilities/namedEntityRecognition.js';
 import {
   rootDir
 } from "../utilities/rootDir.js";
-import { wait } from './utils.js';
 
 const client = weaviate.client({
   scheme: "http",
   host: "semantic-search-wikipedia-with-weaviate.api.vectors.network:8080/",
 });
 
+//Creates a new agent based on its Wikipedia article
 export async function createWikipediaAgent(speaker, name, personality, facts) {
-  try {
+  try {   
+          //gets the info from the wikipedia article, if the agent name can't be found it returns null, in order to send the default agent
           let out = null;
           try {
             out = await searchWikipedia(name);
@@ -82,11 +83,9 @@ export async function createWikipediaAgent(speaker, name, personality, facts) {
           console.log("res.choice.text (2)")
           console.log(res);
   
-          database.instance.setDialogue(name, dialogPrompt + res.choice.text);
-          database.instance.setAgentFacts(name, factPrompt); 
-          database.instance.setAgentExists(name); 
-
-          await wait(2500);
+          await database.instance.setDialogue(name, dialogPrompt + res.choice?.text);
+          await database.instance.setAgentFacts(name, factPrompt); 
+          await database.instance.setAgentExists(name); 
   
           return out;
   } catch (error) {

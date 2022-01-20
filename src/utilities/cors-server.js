@@ -1,5 +1,6 @@
 import cors_proxy from 'cors-anywhere';
 
+//CORs server that is used for the web client to request an agent's image from wikipedia
 export class cors_server {
     static getInstance;
 

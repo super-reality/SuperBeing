@@ -3,9 +3,6 @@ import { database } from "../database/database.js";
 import customConfig from '../utilities/customConfig.js';
 import { getRandomEmptyResponse } from "./utils.js";
 
-export function getDbKey(chatId, messageId) {
-    return 'twilio.' + chatId + '.' + messageId
-}
 export async function getChatHistory(chatId, length) {
     return await database.instance.getHistory(length, 'facebook', chatId)
 }

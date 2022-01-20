@@ -24,6 +24,7 @@ export const createInstagramClient = async () => {
     const password = customConfig.instance.get('instagramPassword')
     if (!username || !password) return console.warn("No Instagram credentials found, skipping");
 
+    //creates the instagram client and logs in using the credentials
     const ig = new IgApiClient()
     ig.state.generateDevice(username);
 

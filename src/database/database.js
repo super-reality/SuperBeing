@@ -3,7 +3,7 @@ import { initProfanityFilter } from '../cognition/profanityFilter.js';
 import fs from 'fs';
 import { rootDir } from '../utilities/rootDir.js';
 import customConfig from '../utilities/customConfig.js';
-import { getRandomInt } from '../connectors/utils.js';
+import { getRandomNumber } from '../connectors/utils.js';
 const { Client } = pg;
 
 export class database {
@@ -23,6 +23,7 @@ export class database {
         }, 60000)
     }
 
+    //checks if a user is banned
     isUserBanned(user_id, client) {
         for(let x in this.bannedUsers) {
             console.log(x + ' - ' + this.bannedUsers[x].user_id + ' - ' + user_id + ' - ' + (this.bannedUsers[x].user_id === user_id))
@@ -81,6 +82,7 @@ export class database {
         await initProfanityFilter();        
     }
 
+    //reads the config table from the database
     async readConfig() {
         const configs = {}
         const query = 'SELECT * FROM config';
@@ -93,8 +95,9 @@ export class database {
             }
         }
 
-        const config = new customConfig(configs);
+        new customConfig(configs);
     }
+    //updates a config value
     async setConfig(key, value) {
         const check = 'SELECT * FROM config WHERE _key=$1';
         const cvalue = [key];
@@ -757,8 +760,8 @@ export class database {
             return;
         }
 
+        const query = 'INSERT INTO agents(agent) VALUES($1)'
         const values = [agent];
-        console.log(query, values);
 
         await this.client.query(query, values);
     }
@@ -1146,7 +1149,7 @@ export class database {
 
         const rows = await this.client.query(query, values);
         if (rows && rows.rows && rows.rows.length > 0) {
-            const index = getRandomInt(0, rows.rows.length);
+            const index = getRandomNumber(0, rows.rows.length);
             return rows.rows[index]._message;
         } else {
             return this.getRandomStartingMessage('common');

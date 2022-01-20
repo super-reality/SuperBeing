@@ -1,6 +1,7 @@
 import puppeteer from 'puppeteer';
 import fs from 'fs';
 
+//The default browser class for puppeteer, it can be used to build other clients with puppeteer
 class Browser {
     static window(options) {
         throw new Error("Method not implemented.");

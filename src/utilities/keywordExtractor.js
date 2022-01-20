@@ -3,6 +3,7 @@ import { makeWeaviateRequest } from "../connectors/wikipedia.js";
 import { database } from "../database/database.js";
 import { makeModelRequest } from "./makeModelRequest.js";
 
+//Keyword extractor is used to extract keywords (nouns) from a sentence and get more data based on wikepedia for each of them to feed it to the agent
 export async function keywordExtractor(input, agent) {
     const keywords = []
 

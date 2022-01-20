@@ -1,5 +1,10 @@
-import { exec, spawn } from 'child_process';
+import { spawn } from 'child_process';
 
+/*
+    The app handler is used as the initialization script,
+    it runs the server as a standalone app, it gets it's logs and errors
+    and in case it closes based on the exit code it will restart it automatically
+*/
 (async function () {
     await run();
 })();

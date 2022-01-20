@@ -1,21 +1,11 @@
 import { formOpinionAboutSpeaker } from "./formOpinionAboutSpeaker.js";
 import { summarizeAndStoreFactsAboutAgent } from "./summarizeAndStoreFactsAboutAgent.js";
 import { summarizeAndStoreFactsAboutSpeaker } from "./summarizeAndStoreFactsAboutSpeaker.js";
-import { discordPackerHandler } from '../connectors/discord.js';
-import { instagramPacketHandler } from '../connectors/instagram.js';
-import { handlePacketSend } from '../connectors/messenger.js';
-import { redditHandler } from '../connectors/reddit.js';
-import { telegramPacketHandler } from '../connectors/telegram.js';
-import { handleTwilio } from '../connectors/twilio.js';
-import { twitterPacketHandler } from '../connectors/twitter.js';
-import { checkThatFilesExist } from "../database/checkThatFilesExist.js";
 import { makeCompletionRequest } from "../utilities/makeCompletionRequest.js";
 import { evaluateTextAndRespondIfToxic } from "./profanityFilter.js";
-import { xrEnginePacketHandler } from '../connectors/xrengine.js';
 import keywordExtractor from '../utilities/keywordExtractor.js';
 import { database } from '../database/database.js';
 import { capitalizeFirstLetter } from "../connectors/utils.js";
-import customConfig from "../utilities/customConfig.js";
 
 function respondWithMessage(agent, text, res) {
         if (res) res.status(200).send(JSON.stringify({ result: text }));
@@ -23,6 +13,7 @@ function respondWithMessage(agent, text, res) {
         return text;
 }
 
+//handles the commands from the input (terminal, web or any client)
 async function evaluateTerminalCommands(message, speaker, agent, res, client, channel) {
         if (message === "/reset") { // If the user types /reset into the console...
                 // If there is a response (i.e. this came from a web client, not local terminal)
@@ -63,6 +54,7 @@ async function evaluateTerminalCommands(message, speaker, agent, res, client, ch
         }
 }
 
+//returns the agents' configs in json format
 async function getConfigurationSettingsForAgent(agent) {
         return JSON.parse((await database.instance.getAgentsConfig(agent)).toString());
 }
@@ -107,6 +99,7 @@ async function archiveFacts(speaker, agent) {
         }
 }
 
+//generates the context for the open ai request, it gets the default configration from the website and replaces it with the agent's specifics
 async function generateContext(speaker, agent, conversation, message) {
         const keywords = keywordExtractor(message, agent);
         const speakerFacts = (await database.instance.getSpeakersFacts(agent, speaker)).toString().trim().replaceAll('\n\n', '\n');
@@ -140,104 +133,16 @@ async function generateContext(speaker, agent, conversation, message) {
                 .replaceAll("$conversation", conversation);
 }
 
-// Todo fix me
-export async function handleDigitalBeingInput(data) {
-        console.log("Handling data.message", data);
-        const response = await handleInput(data.message.content, data.username, customConfig.instance.get('agent') ?? "Agent", null, data.clientName, data.channelId)
-        const message_id = data.message.id; // data.message_id
-        const channelId = data.message.channelId;
-        const addPing = data.addPing; // data.addPing
-        //     const args = data.args
-        const clientName = data.clientName;
-        if (clientName === 'Discord') {
-                await discordPackerHandler.instance.handlePing(message_id, channelId, response, addPing)
-        }
-        else if (clientName === 'Messenger') {
-                await handlePacketSend(channelId, response)
-        }
-        else if (clientName === 'Telegram') {
-                await telegramPacketHandler.instance.handleMessage(channelId, response, message_id, addPing, args)
-        }
-        else if (clientName === 'Twilio') {
-                await handleTwilio.instance.handleTwilioMsg(channelId, response)
-        }
-        else if (clientName === 'xr-engine') {
-                await xrEnginePacketHandler.instance.handleXREngineResponse(response, addPing, args)
-        }
-        else if (clientName === 'reddit') {
-                await redditHandler.instance.handleMessage(response, message_id, channelId, args);
-        }
-        else if (clientName === 'instagram') {
-                await instagramPacketHandler.instance.handle(channelId, response)
-        }
-        else if (clientName === 'twitter') {
-                await twitterPacketHandler.instance.handleMessage(response, message_id, channelId, args)
-        }
-
-
-        //     else if (packetId === 1) {
-        //     const response = resp[3]
-
-        //     if (clientName === 'Discord') {
-        //         await discordPackerHandler.instance.handleSlashCommand(channelId, response)
-        //     }
-        // }
-        // else if (packetId === 2) {
-        //     const response = resp[3]
-
-        //     if (clientName === 'Discord') {
-        //         await discordPackerHandler.instance.handleUserUpdateEvent(response)
-        //     }
-        // }
-        // else if (packetId === 3) {
-        //     const response = resp[3]
-
-        //     if (clientName === 'Discord') {
-        //         await discordPackerHandler.instance.handleGetAgents(channelId, response)
-        //     }
-        // } 
-        // else if (packetId === 4) {
-        //     const response = resp[3]
-
-        //     if (clientName === 'Discord') {
-        //         await discordPackerHandler.instance.handleSetAgentsFields(channelId, response)
-        //     }
-        // }
-        // else if (packetId === 5) {
-        //     const message_id = resp[3]
-        //     const response = resp[4]
-        //     const addPing = resp[5]
-
-        //     if (clientName === 'Discord') {
-        //         await discordPackerHandler.instance.handlePingSoloAgent(channelId, message_id, response, addPing)
-        //     }
-        // }
-        // else if (packetId === 6) {
-        //     const response = resp[3]
-
-        //     if (clientName === 'Discord') {
-        //         await discordPackerHandler.instance.handleMessageReactionAdd(response)
-        //     }
-        // }
-        // else if (packetId === 7) {
-        //     const message_id = resp[3]
-        //     const response = resp[4]
-        //     const addPing = resp[5]
-        //     const args = resp[6]
-
-        //     if (clientName === 'Discord') {
-        //         await discordPackerHandler.instance.handleMessageEdit(message_id, channelId, response, addPing)
-        //     }
-        //     else if (clientName === 'Telegram') {
-        //         await telegramPacketHandler.instance.handleEditMessage(channelId, message_id, response, args)
-        //     }
-        // }
-}
-
+//handles the input from a client according to a selected agent and responds
 export async function handleInput(message, speaker, agent, res, clientName, channelId) {
         console.log("Handling input: " + message);
+        //if the input is a command, it handles the command and doesn't respond according to the agent
         if (await evaluateTerminalCommands(message, speaker, agent, res, clientName, channelId)) return;
-        await checkThatFilesExist(speaker, agent);
+        
+        const _meta = await database.instance.getMeta(agent, speaker);
+        if (!_meta || _meta.length <= 0) {
+            database.instance.setMeta(agent, speaker, JSON.stringify({ messages: 0 }));
+        }
 
         // Get configuration settings for agent
         const { dialogFrequencyPenality,
@@ -260,7 +165,7 @@ export async function handleInput(message, speaker, agent, res, clientName, chan
         await database.instance.setConversation(agent, clientName, channelId, speaker, message, false);
 
         // Parse files into objects
-        const meta = JSON.parse((await database.instance.getMeta(agent, speaker)).toString());
+        const meta =  !_meta || _meta.length <= 0 ? { messages: 0 } : JSON.parse(_meta);
         const conversation = (await database.instance.getConversation(agent, speaker, clientName, channelId, false)).toString().replaceAll('\n\n', '\n');
 
         // Increment the agent's conversation count for this speaker
@@ -313,6 +218,7 @@ export async function handleInput(message, speaker, agent, res, clientName, chan
                 }
         }
 
+        //every some messages it gets the facts for the user and the agent
         if (meta.messages % factsUpdateInterval == 0) {
                 formOpinionAboutSpeaker(speaker, agent);
 
@@ -324,11 +230,11 @@ export async function handleInput(message, speaker, agent, res, clientName, chan
 
                 summarizeAndStoreFactsAboutSpeaker(speaker, agent, speakerConversationLines);
                 summarizeAndStoreFactsAboutAgent(speaker, agent, agentConversationLines + choice.text);
-
         }
+        
         database.instance.setMeta(agent, speaker, meta);
 
-        // Write to conversation file
+        // Write to conversation to the database
         database.instance.setConversation(agent, clientName, channelId, agent, choice.text, false);
         return respondWithMessage(agent, choice.text, res);
 }

@@ -16,7 +16,8 @@ const config = {
     "bot_name": "Cat"
   }  
 
-  export async function handleGuildMemberAdd(user) {
+//Event that is triggered when a new user is added to the server
+export async function handleGuildMemberAdd(user) {
     const userId = user.user.id
     const username = user.user.username
 
@@ -29,6 +30,7 @@ const config = {
     // MessageClient.instance.sendUserUpdateEvent('Discord', 'join', username, utcStr)
 };
 
+//Event that is triggered when a user is removed from the server
 export async function handleGuildMemberRemove(user) {
     const userId = user.user.id
     const username = user.user.username
@@ -41,7 +43,7 @@ export async function handleGuildMemberRemove(user) {
     // MessageClient.instance.sendUserUpdateEvent('Discord', 'leave', username, utcStr)
 };
 
-
+//Event that is triggered when a user reacts to a message
 export async function handleMessageReactionAdd(reaction, user) {
     const { message } = reaction
     const emojiName = emoji.getName(reaction.emoji)    
@@ -61,6 +63,7 @@ export async function agents (client, message, args, author, addPing, channel) {
     // MessageClient.instance.sendGetAgents('Discord', message.channel.id)
 }
 
+//ban command, it is used to ban a user from the agent so the agent doesn't respon to this user
 export async function ban (client, message, args, author, addPing, channel) {
     const pw = args.parsed_words
     if (pw === undefined || pw.length !== 1) {
@@ -82,6 +85,7 @@ export async function ban (client, message, args, author, addPing, channel) {
     message.channel.stopTyping();
 }
 
+//returns all the current commands for the bot
 export async function commands (client, message, args, author, addPing, channel) {
     let str = ''
     client.helpFields[0].commands.forEach(function (item, index) {
@@ -94,6 +98,7 @@ export async function commands (client, message, args, author, addPing, channel)
     message.channel.stopTyping();
 }
 
+//ping is used to send a message directly to the agent
 export async function ping(client, message, args, author, addPing, channel) {
     if ( args.grpc_args.message === undefined ||  args.grpc_args.message === '' || args.grpc_args.message.replace(/\s/g, '').length === 0) {
         client.embed.description = 'Wrong format, !ping message'
@@ -121,6 +126,7 @@ export async function ping(client, message, args, author, addPing, channel) {
     console.log(args.grpc_args['message'], message.id, 'Discord', args.grpc_args['chat_id'], utcStr, addPing, author.username, 'parentId:' + parentId)
 }
 
+//ping agent is used to ping a specific agent directly
 export async function pingagent (client, message, args, author, addPing, channel) {
     if (args.grpc_args.message === undefined || args.grpc_args.message === '' || args.grpc_args.message.replace(/\s/g, '').length === 0 
     || args.grpc_args.message.includes('agent=') || args.grpc_args.agent === undefined || args.grpc_args.agent === '' || args.grpc_args.agent.replace(/\s/g, '').length === 0) {
@@ -136,6 +142,7 @@ export async function pingagent (client, message, args, author, addPing, channel
     // MessageClient.instance.sendPingSoloAgent('Discord', message.channel.id, message.id, args.grpc_args['message'], args.grpc_args['agent'], addPing, author.username)
 }
 
+//setagent is used to update an agent
 export async function setagent (client, message, args, author, addPing, channel) {
     if (args.grpc_args.message === undefined || args.grpc_args.message === '') {
         client.embed.description = 'Wrong format, !setagent agent=agent context=value'
@@ -157,6 +164,7 @@ export async function setagent (client, message, args, author, addPing, channel)
     // MessageClient.instance.sendSetAgentsFields('Discord', message.channel.id, args.grpc_args['name'], args.grpc_args['context'])
 }
 
+//sets the name for an agent to respond for it
 export async function setname (client, message, args, author, addPing, channel) {
     if (args.parsed_words === undefined || args.parsed_words.length !== 1) {
         message.channel.send('Invalid format, !setname name')
@@ -173,6 +181,7 @@ export async function setname (client, message, args, author, addPing, channel) 
     message.channel.stopTyping()
 }
 
+//unbans a user from the agent's ban list
 export async function unban (client, message, args, author, addPing, channel) {
     const pw = args.parsed_words
     if (pw === undefined || pw.length !== 1) {  
@@ -201,8 +210,9 @@ export const channelTypes = {
     'thread': 'GUILD_PUBLIC_THREAD'
 }
 
+//Event that is trigger when a new message is created (sent)
 export const messageCreate = async (client, message) => {
-    console.log('received message');
+    //gets the emojis from the text and replaces to unix specific type
     const reg = emojiRegex();
     let match;
     let emojis = []
@@ -215,10 +225,12 @@ export const messageCreate = async (client, message) => {
 
     let { author, channel, content, mentions, id } = message;
 
+    //if the user is banned, the message is ignored
     if (database && database.instance && await database.instance.isUserBanned(author.id, 'discord')) {
         return
     }
 
+    //replaces the discord specific mentions (<!@id>) to the actual mention
     if (mentions !== null && mentions.members !== null && mentions.members.size > 0) {
         const data = content.split(' ')
         for (let i = 0; i < data.length; i++) {
@@ -236,29 +248,33 @@ export const messageCreate = async (client, message) => {
         }
     }
 
+    //if the message is empty it is ignored
     if (content === '') return 
     let _prev = undefined
+
+    //if the author is not a bot, it adds the message to the conversation simulation
     if (!author.bot) {
         _prev = prevMessage[channel.id]
         prevMessage[channel.id] = author
         if (prevMessageTimers[channel.id] !== undefined) clearTimeout(prevMessageTimers[channel.id])
         prevMessageTimers[channel.id] = setTimeout(() => prevMessage[channel.id] = '', 120000)
     }
+    //if there are many users in the conversation simulation or the previous message is from someone else, it adds a ping
     const addPing = (_prev !== undefined && _prev !== '' && _prev !== author) || moreThanOneInConversation()
     // Ignore all bots
     if (author.bot) return;
     addMessageToHistory(channel.id, id, author.username, content)
 
+    //checks if the message contains a direct mention to the bot, or if it is a DM, or if it mentions someone else
     const botMention = `<@!${client.user}>`;
     const isDM = channel.type === channelTypes['dm']
     const isMention = (channel.type === channelTypes['text'] && (mentions.has(client.user))) || isDM
     const otherMention = !isMention && mentions.members !== null && mentions.members.size > 0
-    // TODO someone should document this section. I guess it's about detecting a conversation start,
-    // but it ignores all the other starting words and I have no idea how it's used.
-    // As usual with DigitalBeing code.
     let startConv = false
     let startConvName = ''
-    if (!isMention && !otherMention) {
+    //if it isn't a mention to the bot or another mention or a DM
+    //it works with the word hi and the next word should either not exist or start with a lower letter to start the conversation
+    if (!isMention && !isDM && !otherMention) {
         const trimmed = content.trimStart()
         if (trimmed.toLowerCase().startsWith('hi')) {
             const parts = trimmed.split(' ')
@@ -278,6 +294,7 @@ export const messageCreate = async (client, message) => {
             }
         }
     }
+    //if it is a mention to another user, then the conversation with the bot is ended
     if (otherMention) {
         exitConversation(author.id)
         mentions.members.forEach(pinged => exitConversation(pinged.id))
@@ -288,6 +305,7 @@ export const messageCreate = async (client, message) => {
             exitConversation(startConvName)
         }
     }
+    //checks if the user is in discussion with the but, or includes !ping or started the conversation, if so it adds (if not exists) !ping in the start to handle the message the ping command
     const isDirectMethion = !content.startsWith('!') && content.toLowerCase().includes(client.bot_name.toLowerCase())
     const isUserNameMention = (channel.type === channelTypes['text'] || isDM) &&
         content.toLowerCase().replace(',', '')
@@ -303,6 +321,7 @@ export const messageCreate = async (client, message) => {
         else if (isInDiscussion || startConv) content = '!ping ' + content
     }
 
+    //if the message contains join word, it makes the bot to try to join a voice channel and listen to the users
     if (content.startsWith('!ping')) {
         sentMessage(author.id)
         const mention = `<@!${client.user.id}>`;
@@ -365,13 +384,13 @@ export const messageCreate = async (client, message) => {
 
     setTimeout(() => {
         channel.sendTyping();
-
     }, message.content.length)
 
     const response = await handleInput(message.content, message.author.username, customConfig.instance.get('agent') ?? "Agent", null, 'discord', channel.id);
     await discordPackerHandler.instance.handlePing(message.id, channel.id, response, addPing)
 };
 
+//Event that is triggered when a message is deleted
 export const messageDelete = async (client, message) => {
     const { author, channel, id } = message;
     await deleteMessageFromHistory(channel.id, id)
@@ -392,6 +411,7 @@ export const messageDelete = async (client, message) => {
     onMessageDeleted(channel.id, id)
 };
 
+//Event that is triggered when a message is updated (changed)
 export const messageUpdate = async (client, message) => {
     const { author, channel, id } = message;
     if (author === null || channel === null || id === null) return
@@ -436,6 +456,7 @@ export const messageUpdate = async (client, message) => {
     }).catch(err => console.log(err + ' - ' + err.stack))
 };
 
+//Event that is trigger when a user's presence is changed (offline, idle, online)
 export const presenceUpdate = async (client, oldMember, newMember) => {
     if (!oldMember || !newMember) {
         console.log("Cannot update presence, oldMember or newMember is null")
@@ -453,11 +474,13 @@ export const presenceUpdate = async (client, oldMember, newMember) => {
         }
 };
 
+//Event that is triggered when the discord client fully loaded
 export const ready = async (client) => {
     await client.users.fetch(customConfig.instance.get('logDMUserID')).then((user) => {
         client.log_user = user
     }).catch((error) => { console.log(error) });
 
+    //rgisters the slash commands to each server
     await client.guilds.cache.forEach((server) => {
         if (!server.deleted) {
             console.log('fetching messages from server: ' + server.name)
@@ -486,6 +509,7 @@ export const ready = async (client) => {
                 }
             });
 
+            //adds unread message to the chat history from each channel
             server.channels.cache.forEach(async (channel) => {
                 if (channel.type === channelTypes['text'] && channel.deleted === false && channel.permissionsFor(client.user.id).has(['SEND_MESSAGES', 'VIEW_CHANNEL'])) {
                     // TODO: Replace message with direct message handler
@@ -703,20 +727,6 @@ export class discordPackerHandler {
         this.client.channels.fetch(chat_id).then(channel => {
             channel.send(response)
             channel.stopTyping();
-
-            /*Object.keys(response.response).map(function(key, index) {
-                console.log('response: ' + response.response[key])
-                if (response.response[key] !== undefined && response.response[key].length > 0) {
-                    let text = response.response[key]
-                    while (text === undefined || text === '' || text.replace(/\s/g, '').length === 0) text = getRandomEmptyResponse()
-                    sendSlashCommandResponse(client, interaction, chatId, text)  
-               }
-                else {
-                    let emptyResponse = getRandomEmptyResponse()
-                    while (emptyResponse === undefined || emptyResponse === '' || emptyResponse.replace(/\s/g, '').length === 0) emptyResponse = getRandomEmptyResponse()
-                    sendSlashCommandResponse(client, interaction, chatId, emptyResponse)
-                }
-            });      */
         }).catch(err => console.log(err))
     }
 
@@ -1021,13 +1031,6 @@ export const createDiscordClient = () => {
     client.on('messageReactionAdd', async (reaction, user) => {
         handleMessageReactionAdd(reaction, user)
     });
-
-    // TODO: Move to the message create handler now that it's loading
-
-    //     client.on("message", async message => {
-    //       if(message.author.username.includes("GPTBot")) return;
-    //       handleDigitalBeingInput({ message, username: message.author.username, client_name: "Discord" });
-    // });
 
     client.commands = new Discord.Collection();
 

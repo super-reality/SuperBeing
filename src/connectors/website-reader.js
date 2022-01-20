@@ -3,6 +3,11 @@ const Browser = require('../../src/browser-launcher.js')
 import * as fs from 'fs';
 import { createWebsiteReader } from "./website-reader.js";
 
+/* 
+    Website Reader is used a standalone app in order to read the pages of a book
+    and return it as a txt from booksvooks.com which can be used for the agents to learn
+*/
+
 //npm run read_book --url https://booksvooks.com/scrolablehtml/pale-blue-dot-a-vision-of-the-human-future-in-space-pdf.html?page=1 --pages 210 --fileName test
 const params = process.argv.slice(2);
 createWebsiteReader(params[0], parseInt(params[1]), params[2]);
