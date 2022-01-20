@@ -1150,6 +1150,9 @@ export class database {
         const rows = await this.client.query(query, values);
         if (rows && rows.rows && rows.rows.length > 0) {
             const index = getRandomNumber(0, rows.rows.length);
+            if (rows.rows[index] === undefined || !rows.rows) {
+                return 'Hello there!';
+            }
             return rows.rows[index]._message;
         } else {
             return this.getRandomStartingMessage('common');
