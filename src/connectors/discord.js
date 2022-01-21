@@ -392,6 +392,8 @@ export const messageCreate = async (client, message) => {
 export const messageDelete = async (client, message) => {
     const { author, channel, id } = message;
     await deleteMessageFromHistory(channel.id, id)
+    if (!author) return;
+    if (!client || !client.user) return;
     if (author.id === client.user.id) return
 
     const oldResponse = getResponse(channel.id, id)
@@ -668,7 +670,7 @@ export async function handleSlashCommand(client, interaction) {
                         }).catch(console.error)
                     }
                 }
-                else if (responses.length >= 2000) {
+                else if (responses && responses.length >= 2000) {
                     let text = replacePlaceholders(responses)
                     if (addPing) {
                         message.reply(text).then(async function (msg) {
@@ -1026,7 +1028,6 @@ export const createDiscordClient = () => {
     client.commands.set("unban", unban);
 
     client.login(customConfig.instance.get('discord_api_token'));
-    console.log("Creating new discord packer handler");
 };
 
 export default createDiscordClient;

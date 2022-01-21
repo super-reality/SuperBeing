@@ -388,23 +388,36 @@ export class database {
         await this.client.query(query, values);
     }
     async getConversation(agent, sender, client, channel, archive) {
-        const query = 'SELECT * FROM conversation WHERE agent=$1 AND client=$2 AND channel=$3 AND (sender=$4 OR sender=$5) AND archive=$6'
-        const values = [ agent, client, channel, sender, agent, archive ];
+        const query = 'SELECT * FROM conversation WHERE agent=$1 AND client=$2 AND channel=$3 AND archive=$4';
+        const values = [ agent, client, channel, archive ];
 
         const row = await this.client.query(query, values);
+        console.log(row.rows.length);
         if (row && row.rows && row.rows.length > 0) {
-            /*row.rows.sort(function(a, b) {
+            row.rows.sort(function(a, b) {
                 return new Date(b.date) - new Date(a.date);
-            });*/
-            //row.rows = row.rows.reverse();
-            const max_length = parseInt(customConfig.instance.get('chatHistoryMessageCount'));
-            const length = row.rows.length > max_length ? max_length : row.rows.length;
+            });
+            const now = new Date();
+            const max_length = parseInt(customConfig.instance.get('chatHistoryMessagesCount'));
             let data = '';
-            for(let i = 0; i < length; i++) {
-                if (!row.rows[i].text || row.rows[i].text.length <= 0) continue;
+            let count = 0;
+            for(let i = 0; i < row.rows.length; i++) {
+                if (!row.rows[i].text || row.rows[i].text.length <= 0) { console.log('empty msg'); continue; }
+                const messageDate = new Date(row.rows[i].date);
+                let diffMs = (now - messageDate);
+                let diffMins = Math.round(((diffMs % 86400000) % 3600000) / 60000);
+                if (diffMins > 15) {
+                    break;
+                }
+
                 data += row.rows[i].sender + ': ' + row.rows[i].text + '\n';
+                count++;
+                console.log(count);
+                if (count >= max_length) {
+                    break;
+                }
             }
-            return data;
+            return data.split('\n').reverse().join('\n');;
         } else {
             return '';
         }

@@ -1,5 +1,6 @@
 import { config } from "dotenv";
 import fetch from "node-fetch";
+import { IsJsonString } from "../connectors/utils.js";
 import customConfig from "./customConfig.js";
 config();
 
@@ -11,7 +12,7 @@ export async function makeModelRequest(inputs, model, parameters = {}, options =
                         method: "POST",
                         body: JSON.stringify({ inputs, parameters, options })
                 });
-                return await response.json()
+                return IsJsonString(await response) ? await response.json() : await response;
         }
         catch (error) {
                 console.log("Error is", error);

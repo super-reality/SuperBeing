@@ -79,3 +79,22 @@ export async function wait(ms) {
     setTimeout(resolve, ms);
   });
 }
+
+export function clamp(value, min, max) {
+  if (value < min) {
+    return min;
+  } else if (value > max) {
+    return max;
+  } else {
+    return value;
+  }
+}
+
+export function IsJsonString(str) {
+  try {
+      JSON.parse(str);
+  } catch (e) {
+      return false;
+  }
+  return true;
+}
