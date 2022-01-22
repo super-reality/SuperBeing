@@ -4,7 +4,7 @@ import { database } from '../database/database.js';
 import { defaultAgent } from '../index.js';
 import customConfig from './customConfig.js';
 
-//Routes for the expres server
+//Routes for the express server
 
 export async function registerRoutes(app) {
     //a health check for the server
@@ -41,6 +41,7 @@ export async function registerRoutes(app) {
             startingPhrases: (await database.instance.getStartingPhrases(agent)).trim(),
             ignoredKeywords: (await database.instance.getIgnoredKeywordsData(agent)).trim(),
         };
+
         return res.send(data);
     });
 
@@ -48,12 +49,11 @@ export async function registerRoutes(app) {
     app.post('/update_agent', async function(req, res) {
         const agentName = req.body.agentName;
         const data = req.body.data;
-
         try {
             await database.instance.setActions(agentName, data.actions);
             await database.instance.setDialogue(agentName, data.dialogue);
             await database.instance.setEthics(agentName, data.ethics);
-            await database.instance.setAgentFacts(agentName, data.facts);
+            await database.instance.setAgentFacts(agentName, data.facts, true);
             await database.instance.setMonologue(agentName, data.monologue);
             await database.instance.setNeedsAndMotivations(agentName, data.needsAndMotivation);
             await database.instance.setPersonality(agentName, data.personality);
@@ -168,9 +168,7 @@ export async function registerRoutes(app) {
         const message = req.body.command
         const speaker = req.body.sender
         const agent = req.body.agent
-        console.log("executing for ", req.body)
         if (message.includes("/become")) {
-            console.log("becoming")
             const msg = database.instance.getRandomStartingMessage(agent)
             const out = await createWikipediaAgent("Speaker", agent, "", "");
             while (!out || out === undefined) {
@@ -178,7 +176,6 @@ export async function registerRoutes(app) {
             }
             out.startingMessage = (await msg);
             database.instance.setConversation(agent, 'web', '0', agent, out.startingMessage, false);
-            console.log("sending out", out)
             return res.send(out);
         }
         await handleInput(message, speaker, agent, res, 'web', '0')

@@ -510,16 +510,17 @@ export class database {
         }
         return '';
     }
-    async setAgentFacts(agent, facts) {
+    async setAgentFacts(agent, facts, reset) {
         const check = 'SELECT * FROM agent_facts WHERE agent=$1'
         const cvalues = [ agent ]
-
-        const test = await this.client.query(check, cvalues);
+        const res = await this.client.query(check, cvalues);
+        const test = res;
         let query = '';
         let values = [];
 
         if (test && test.rows && test.rows.length > 0) {
-            const newFacts = test.rows[0].facts + '\n' + facts;
+            const newFacts = test.rows[0].facts + !reset ? '\n' + facts : "";
+
             query = "UPDATE agent_facts SET facts=$1 WHERE agent=$2"
             values = [newFacts, agent];
         } else {
@@ -1176,7 +1177,6 @@ export class database {
         const values = [agent];
 
         const rows = await this.client.query(query, values);
-        console.log(rows.rows);
         if (rows && rows.rows && rows.rows.length > 0) {
             let res = '';
             for(let i = 0; i < rows.rows.length; i++) {
