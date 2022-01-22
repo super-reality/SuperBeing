@@ -53,7 +53,6 @@ export class database {
         for(let i = 0; i < this.bannedUsers.length; i++) {
             if (this.bannedUsers[i].user_id === user_id && this.bannedUsers[i].client === client) {
                 this.bannedUsers.splice(i, 1)
-                console.log('index: ' + i)
                 break
             }
         }
@@ -134,7 +133,6 @@ export class database {
         const global_message_id = client_name + '.' + chat_id + '.' + message_id
         const query = "INSERT INTO chat_history(client_name, chat_id, message_id, global_message_id, sender, content, createdAt) VALUES($1, $2, $3, $4, $5, $6, $7) RETURNING *"
         const values = [ client_name, chat_id, message_id, global_message_id, sender, content, date ]
-        console.log(values)
 
         this.client.query(query, values, (err, res) => {
             if (err) {
@@ -152,9 +150,7 @@ export class database {
             }
             const _res = []
             if (res !== undefined && res !== null && res.rows !== undefined) {
-                console.log(`length: ${res.length}`)
                 for(let i = 0; i < res.rows.length; i++) {
-                    console.log(res.rows[i])
                     _res.push({ author: res.rows[i].sender, content: res.rows[i].content })
 
                     if (i >= length) break
@@ -392,7 +388,6 @@ export class database {
         const values = [ agent, client, channel, archive ];
 
         const row = await this.client.query(query, values);
-        console.log(row.rows.length);
         if (row && row.rows && row.rows.length > 0) {
             row.rows.sort(function(a, b) {
                 return new Date(b.date) - new Date(a.date);
@@ -402,7 +397,7 @@ export class database {
             let data = '';
             let count = 0;
             for(let i = 0; i < row.rows.length; i++) {
-                if (!row.rows[i].text || row.rows[i].text.length <= 0) { console.log('empty msg'); continue; }
+                if (!row.rows[i].text || row.rows[i].text.length <= 0) continue;
                 const messageDate = new Date(row.rows[i].date);
                 let diffMs = (now - messageDate);
                 let diffMins = Math.round(((diffMs % 86400000) % 3600000) / 60000);
@@ -412,7 +407,6 @@ export class database {
 
                 data += row.rows[i].sender + ': ' + row.rows[i].text + '\n';
                 count++;
-                console.log(count);
                 if (count >= max_length) {
                     break;
                 }

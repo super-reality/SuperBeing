@@ -57,6 +57,7 @@
     "keyword-extractor": "^0.0.20",
     "lodash": "^4.17.21",
     "mustache": "^4.2.0",
+    "natural": "^5.1.13",
     "node-fetch": "^2.6.6",
     "node-telegram-bot-api": "0.56.0",
     "nodemon": "2.0.15",

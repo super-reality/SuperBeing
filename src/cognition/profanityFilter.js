@@ -5,6 +5,7 @@ import { makeCompletionRequest } from "../utilities/makeCompletionRequest.js";
 import { makeModelRequest } from "../utilities/makeModelRequest.js";
 import { database } from '../database/database.js';
 import customConfig from '../utilities/customConfig.js';
+import { classifyProfanityText } from '../utilities/textClassifier.js';
 
 //check if a text contains the n* word
 function nWord(text) {
@@ -132,6 +133,13 @@ export async function evaluateTextAndRespondIfToxic(speaker, agent, textIn, eval
     if (await filterByRating(speaker, agent, text).shouldFilter) {
         console.log("***** Filtered by rating: ", text);
         return { isProfane: true, response };
+    }
+
+    if (!isProfane) {
+        const r = classifyProfanityText(textInt);
+        if (r === 'profane') {
+            return { isProfane: true, response: await filterWithOpenAI(speaker, agent, textInt) };
+        }
     }
 
     return { isProfane: false, response: null };
