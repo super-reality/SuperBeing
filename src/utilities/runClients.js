@@ -14,6 +14,8 @@ export async function runClients() {
 
     //this can enable the terminal use of the AI, which is used to chat with the agent directly through the terminal
     if (process.env.TERMINAL) {
+      const agent = customConfig.instance.get('agents')?.replace('_', ' ') || process.env.AGENT;
+
         initTerminal(agent);
     }
 

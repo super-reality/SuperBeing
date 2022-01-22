@@ -181,7 +181,7 @@ export const searchWikipedia = async (keyword) => {
   // Make sure we're actually doing something with response in client to parse image and load it
   // Only load or send image for platforms where it matters
   
-  if(searchResults.results[0] .title.trim().toLowerCase() === keyword.trim().toLowerCase() ){
+  if(searchResults.results[0] ?.title?.trim().toLowerCase() === keyword.trim().toLowerCase() ){
     const result = await lookUpOnWikipedia(keyword);
     return {
       result,
