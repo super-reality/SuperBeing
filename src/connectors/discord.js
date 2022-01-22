@@ -975,7 +975,9 @@ export function moreThanOneInConversation() {
 export let client = undefined
 
 export const createDiscordClient = () => {
-    if (!customConfig.instance.get('discord_api_token')) return console.warn('No API token for Discord bot, skipping');
+    const t = customConfig.instance.get('discord_api_token');
+    const token = t != null && t != "" ? t :  process.env.DISCORD_API_TOKEN
+    if (!token) return console.warn('No API token for Discord bot, skipping');
     console.log("Creating Discord client");
     client = new Discord.Client({
         partials: ['MESSAGE', 'USER', 'REACTION'],
@@ -1026,8 +1028,7 @@ export const createDiscordClient = () => {
     client.commands.set("setagent", setagent);
     client.commands.set("setname", setname);
     client.commands.set("unban", unban);
-
-    client.login(customConfig.instance.get('discord_api_token'));
+    client.login(token);
 };
 
 export default createDiscordClient;

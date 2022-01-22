@@ -6,7 +6,6 @@ import { database } from '../database/database.js';
 import {
   makeCompletionRequest
 } from "../utilities/makeCompletionRequest.js";
-import { namedEntityRecognition } from '../utilities/namedEntityRecognition.js';
 import {
   rootDir
 } from "../utilities/rootDir.js";
@@ -37,10 +36,10 @@ export async function createWikipediaAgent(speaker, name, personality, facts) {
                   return console.log("Error, couldn't find anything on wikiedia about " + name);
           }
           
-          const factSourcePrompt = `The follow are facts about ${name}\n`;
+          const factSourcePrompt = `The following are facts about ${name}\n`;
           const factPrompt = factSourcePrompt + out.result.extract + "\n" + facts;
   
-          const personalitySourcePrompt = `Based on the above facts, the following is a description of the personality of an anthropomorphosized ${name}:`;
+          const personalitySourcePrompt = `Based on the above facts, the following is a description of the personality of an anthropomorphized ${name}:`;
 
           database.instance.setDefaultEthics(name);
           database.instance.setDefaultNeedsAndMotivations(name);
@@ -192,14 +191,17 @@ export const searchWikipedia = async (keyword) => {
   console.log("Making weaviate request");
    // if it's not immediately located, request from weaviate
   const weaviateResponse = await makeWeaviateRequest(keyword);
-
-  console.log("res is", weaviateResponse)
-  console.log("Looking up result on wikipedia", weaviateResponse.Paragraph[0].inArticle[0].title);
-  const result = await lookUpOnWikipedia(weaviateResponse.Paragraph[0].inArticle[0].title);
+  if(weaviateResponse?.Paragraph[0]?.inArticle[0]?.title){
+  const result = await lookUpOnWikipedia(weaviateResponse?.Paragraph[0]?.inArticle[0]?.title);
+  console.log("result", result);
   return {
     result,
     filePath
   }
+} else return {
+  result: keyword,
+  filePath: ""
+}
 }
 
 export const makeWeaviateRequest = async (keyword) => {
