@@ -3,7 +3,9 @@ import { database } from "./database/database.js";
 import cors_server from "./utilities/cors-server.js";
 import { customConfig } from './utilities/customConfig.js';
 import { createExpressServer } from './utilities/expressServer.js';
+import roomManager from "./utilities/roomManager.js";
 import { runClients } from "./utilities/runClients.js";
+import { classifyText, initClassifier, initProfanityClassifier } from "./utilities/textClassifier.js";
 
 new cors_server(process.env.CORS_PORT, '0.0.0.0');
 
@@ -14,6 +16,9 @@ export let defaultAgent = '';
 const db = new database();
 (async function(){  
     await db.connect()
+    await initClassifier();
+    await initProfanityClassifier();
+    new roomManager();
     const agent = customConfig.instance.get('agent')?.replace('_', ' ');
     defaultAgent = agent;
 

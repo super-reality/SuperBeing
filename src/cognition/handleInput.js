@@ -234,7 +234,13 @@ export async function handleInput(message, speaker, agent, res, clientName, chan
         
         database.instance.setMeta(agent, speaker, meta);
 
+        let respp = choice.text;
+        if (respp.endsWith('\n')) {
+                respp = respp.substring(0, respp.length - 2);
+        }
+        
         // Write to conversation to the database
-        database.instance.setConversation(agent, clientName, channelId, agent, choice.text, false);
-        return respondWithMessage(agent, choice.text, res);
+        database.instance.setConversation(agent, clientName, channelId, agent, respp, false);
+
+        return respondWithMessage(agent, respp, res);
 }

@@ -11,9 +11,6 @@ export async function formOpinionAboutSpeaker(speaker, agent, input) {
 
     // Ask some questions about the conversation
     const personalityQuestion = database.instance.getPersonalityQuestions();  
-
-    // console.log("******** meta")
-    // console.log(meta);
     
     
 // {

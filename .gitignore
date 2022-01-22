@@ -8,6 +8,7 @@ server/agents/openchat/base/envs/__pycache__/*
 server/agents/openchat/envs/__pycache__/*
 server/agents/openchat/utils/__pycache__/*
 data/wikipedia/*
+data/classifier/*.json
 
 server/grpc/__pycache__/*
 # Logs

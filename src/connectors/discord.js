@@ -5,6 +5,8 @@ import emojiRegex from 'emoji-regex'
 import { handleInput } from '../cognition/handleInput.js'
 import { database } from "../database/database.js"
 import customConfig from '../utilities/customConfig.js'
+import roomManager from '../utilities/roomManager.js'
+import { classifyText } from '../utilities/textClassifier.js'
 import { getRandomEmptyResponse, startsWithCapital } from "./utils.js"
 
 // TODO: Remove this
@@ -319,6 +321,37 @@ export const messageCreate = async (client, message) => {
         else if (isInDiscussion || startConv) content = '!ping ' + content
     }
 
+    if (otherMention) {
+        roomManager.instance.userPingedSomeoneElse(author.id);
+    } else if (content.startsWith('!ping')) {
+        roomManager.instance.userGotInConversationFromAgent(author.id);
+    } else if (!content.startsWith('!ping')) {
+        const msgs = await channel.messages.fetch({ limit: 10 }); 
+        if (msgs && msgs.size > 0) {
+            let values = '';
+            let agentTalked = false;
+            for (const [key, value] of msgs.entries()) {
+                values += value.content;
+                if (value.author.bot) {
+                    agentTalked = true;
+                }
+            }
+
+            if (agentTalked) {
+                const context = await classifyText(values);
+                const ncontext = await classifyText(content);
+                console.log('c1: ' + context + ' c2: ' + ncontext);
+
+                if (context == ncontext) {
+                    roomManager.instance.userTalkedSameTopic(author.id);
+                    if (roomManager.instance.agentCanResponse(author.id)) {
+                        content = '!ping ' + content;
+                    }
+                }
+            }
+        }
+    }
+
     //if the message contains join word, it makes the bot to try to join a voice channel and listen to the users
     if (content.startsWith('!ping')) {
         sentMessage(author.id)
@@ -467,6 +500,11 @@ export const presenceUpdate = async (client, oldMember, newMember) => {
             const utcStr = date.getDate() + '/' + (date.getMonth() + 1) + '/' + date.getFullYear() + ' ' + utc.getHours() + ':' + utc.getMinutes() + ':' + utc.getSeconds()
 
             client.users.fetch(newMember.userId).then(user => {
+                if (newMember.status === 'online') {
+                    roomManager.instance.addUser(user.id, 'discord');
+                } else {
+                    roomManager.instance.removeUser(user.id, 'discord');
+                }
                 // TODO: Replace message with direct message handler
                 console.log('Discord', newMember.status, user.username, utcStr)
                 // MessageClient.instance.sendUserUpdateEvent('Discord', newMember.status, user.username, utcStr)

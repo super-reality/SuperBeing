@@ -20,10 +20,12 @@ async function run() {
     });
 
     server.stdout.on('data', function(data) {
+        if (!data|| data === undefined || data.toString().length <= 0) return;
         console.log(data.toString());
     });
 
     server.stderr.on('data', function(data) {
-        console.log('error: ' + data);
+        if (!data|| data === undefined || data.toString().length <= 0) return;
+        console.log('error: ' + data.toString());
     });
 }
