@@ -1030,6 +1030,19 @@ export class database {
 
         await this.client.query(query, values);
     }
+    async badWordExists(word) {
+        const query = 'SELECT * FROM bad_words WHERE word=$1';
+        const values = [word];
+
+        const rows = await this.client.query(query, values);
+        return rows && rows.rows && rows.rows.length > 0;
+    }
+    async removeBadWord(word) {
+        const query = 'DELETE FROM bad_words WHERE word=$1';
+        const values = [word];
+
+        await this.client.query(query, values);
+    }
     async getBadWords() {
         const query = 'SELECT * FROM bad_words';
         
@@ -1045,6 +1058,19 @@ export class database {
 
     async addSensitiveWord(word) {
         const query = 'INSERT INTO sensitive_words(word) VALUES($1)';
+        const values = [word];
+
+        await this.client.query(query, values);
+    }
+    async sensitiveWordExists(word) {
+        const query = 'SELECT * FROM sensitive_words WHERE word=$1';
+        const values = [word];
+
+        const rows = await this.client.query(query, values);
+        return rows && rows.rows && rows.rows.length > 0;
+    }
+    async removeSensitiveWord(word) {
+        const query = 'DELETE FROM sensitive_words WHERE word=$1';
         const values = [word];
 
         await this.client.query(query, values);
@@ -1068,6 +1094,19 @@ export class database {
 
         await this.client.query(query, values);
     }
+    async sensitivePhraseExists(phrase) {
+        const query = 'SELECT * FROM sensitive_phrases WHERE phrase=$1';
+        const values = [phrase];
+
+        const rows = await this.client.query(query, values);
+        return rows && rows.rows && rows.rows.length > 0;
+    }
+    async removeSensitivePhrase(phrase) {
+        const query = 'DELETE FROM sensitive_phrases WHERE phrase=$1';
+        const values = [phrase];
+
+        await this.client.query(query, values);
+    }
     async getSensitivePhrases() {
         const query = 'SELECT * FROM sensitive_phrases';
         
@@ -1083,6 +1122,19 @@ export class database {
 
     async addLeadingStatement(phrase) {
         const query = 'INSERT INTO leading_statements(_statement) VALUES($1)';
+        const values = [phrase];
+
+        await this.client.query(query, values);
+    }
+    async leadingStatementExists(phrase) {
+        const query = 'SELECT * FROM leading_statements WHERE _statement=$1';
+        const values = [phrase];
+
+        const rows = await this.client.query(query, values);
+        return rows && rows.rows && rows.rows.length > 0;
+    }
+    async removeLeadingStatement(phrase) {
+        const query = 'DELETE FROM leading_statements WHERE _statement=$1';
         const values = [phrase];
 
         await this.client.query(query, values);
