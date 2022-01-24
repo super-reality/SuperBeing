@@ -12,6 +12,7 @@ new cors_server(process.env.CORS_PORT, '0.0.0.0');
 dotenv.config();
 
 export let defaultAgent = '';
+export let isInFastMode = false;
 
 const db = new database();
 (async function(){  
@@ -21,6 +22,7 @@ const db = new database();
     new roomManager();
     const agent = customConfig.instance.get('agent')?.replace('_', ' ');
     defaultAgent = agent;
+    isInFastMode = customConfig.instance.getBool('fastMode');
 
     const expectedServerDelta = 1000 / 60;
     let lastTime = 0;

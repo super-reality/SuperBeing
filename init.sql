@@ -381,6 +381,8 @@ INSERT INTO config
 		  ) union all 
 		 (SELECT  'instagramPassword' as _key, '' as _value
 		  ) union all 
+		 (SELECT  'fastMode' as _key, 'false' as _value
+		  ) union all 
 		 (SELECT  'enabledServices' as _key, 'Discord' as _value
 		  )
          ) t
