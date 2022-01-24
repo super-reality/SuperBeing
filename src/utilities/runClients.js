@@ -12,13 +12,6 @@ export async function runClients() {
         return enabled_services.indexOf(elem) == pos;
     });
 
-    //this can enable the terminal use of the AI, which is used to chat with the agent directly through the terminal
-    if (process.env.TERMINAL) {
-      const agent = customConfig.instance.get('agents')?.replace('_', ' ') || process.env.AGENT;
-
-        initTerminal(agent);
-    }
-
     if(process.env.BATTLEBOTS){
         const speaker = process.env.SPEAKER?.replace('_', ' ');
         const agent = customConfig.instance.get('agents')?.replace('_', ' ');
@@ -76,6 +69,11 @@ export async function runClients() {
     // XREngine support
    if (enabled_services.includes('xrengine')) {
        import('../connectors/xrengine.js').then(module => module.default());
+    }
+    // Terminal
+    if (enabled_services.includes('terminal')) {
+      const agent = customConfig.instance.get('agents')?.replace('_', ' ') || process.env.AGENT;
+      initTerminal(agent);
     }
     // Zoom support
     if (enabled_services.includes('zoom')) {

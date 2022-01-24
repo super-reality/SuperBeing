@@ -322,9 +322,9 @@ export const messageCreate = async (client, message) => {
     }
 
     if (otherMention) {
-        roomManager.instance.userPingedSomeoneElse(author.id);
+        roomManager.instance.userPingedSomeoneElse(author.id, 'discord');
     } else if (content.startsWith('!ping')) {
-        roomManager.instance.userGotInConversationFromAgent(author.id);
+        roomManager.instance.userGotInConversationFromAgent(author.id), 'discord';
     } else if (!content.startsWith('!ping')) {
         const msgs = await channel.messages.fetch({ limit: 10 }); 
         if (msgs && msgs.size > 0) {
@@ -343,8 +343,8 @@ export const messageCreate = async (client, message) => {
                 console.log('c1: ' + context + ' c2: ' + ncontext);
 
                 if (context == ncontext) {
-                    roomManager.instance.userTalkedSameTopic(author.id);
-                    if (roomManager.instance.agentCanResponse(author.id)) {
+                    roomManager.instance.userTalkedSameTopic(author.id, 'discord');
+                    if (roomManager.instance.agentCanResponse(author.id, 'discord')) {
                         content = '!ping ' + content;
                     }
                 }

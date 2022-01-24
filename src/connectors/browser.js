@@ -2,11 +2,8 @@ import puppeteer from 'puppeteer';
 import fs from 'fs';
 
 //The default browser class for puppeteer, it can be used to build other clients with puppeteer
-class Browser {
-    static async window(options) {
+export async function browserWindow(options) {
         console.log('Making new browser');
-        console.log(this._browser);
-        if (this._browser) return await this._browser
 
         if (fs.existsSync("/.dockerenv"))
         {
@@ -14,10 +11,9 @@ class Browser {
             options.args = (options.args || []).concat(['--no-sandbox', '--disable-setuid-sandbox'])
         }
 
-        const _browser = puppeteer.launch(options);
-        return await _browser
-    }
+        return await puppeteer.launch(options);
 }
+
 
 export class PageUtils {
     page;
@@ -114,5 +110,3 @@ export class PageUtils {
         }, selector);
     }
 }
-
-export default new Browser()

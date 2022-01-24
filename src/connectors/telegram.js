@@ -1,7 +1,10 @@
 import { handleInput } from "../cognition/handleInput.js"
 import { database } from "../database/database.js"
 import customConfig from "../utilities/customConfig.js"
+import roomManager from "../utilities/roomManager.js"
+import { classifyText } from "../utilities/textClassifier.js"
 import { getRandomEmptyResponse, startsWithCapital } from "./utils.js"
+import { defaultAgent } from "../index.js"
 
 async function handleMessage(chat_id, response, message_id, addPing, args, bot) { 
     let senderId = ''
@@ -199,17 +202,45 @@ export async function onMessage(bot, msg, botName, username_regex) {
         }
 
         if (!otherMention && content.startsWith('!ping')) sentMessage(_sender)
+
+        if (otherMention) {
+            roomManager.instance.userPingedSomeoneElse(_sender, 'telegram');
+        }
     }
     else {
         content = '!ping ' + content
     }
 
-    if (content === '!ping ' || !content.startsWith('!ping')) return
+    if (content === '!ping ' || !content.startsWith('!ping'))
+    {
+        if (roomManager.instance.agentCanResponse(user, 'telegram')) {
+            content = '!ping ' + content;
+            sentMessage(_sender)
+        }
+        else {
+            const oldChat = database.instance.getConversation(defaultAgent, _sender, 'telegram', msg.chat.id, false);
+            if (oldChat !== undefined && oldChat.length > 0) {
+                const context = await classifyText(values);
+                const ncontext = await classifyText(content);
+                console.log('c1: ' + context + ' c2: ' + ncontext);
 
-    const dateNow = new Date();
-    var utc = new Date(dateNow.getUTCFullYear(), dateNow.getUTCMonth(), dateNow.getUTCDate(), dateNow.getUTCHours(), dateNow.getUTCMinutes(), dateNow.getUTCSeconds());
-    const utcStr = dateNow.getDate() + '/' + (dateNow.getMonth() + 1) + '/' + dateNow.getFullYear() + ' ' + utc.getHours() + ':' + utc.getMinutes() + ':' + utc.getSeconds()
-
+                if (context == ncontext) {
+                    roomManager.instance.userTalkedSameTopic(_sender, 'telegram');
+                    if (roomManager.instance.agentCanResponse(_sender, 'telegram')) {
+                        content = '!ping ' + content;
+                        sentMessage(_sender)
+                    } else {
+                        return;
+                    }
+                } else {
+                    return;
+                }
+            }
+        }
+    } else {
+        roomManager.instance.userGotInConversationFromAgent(_sender);
+    }
+    
     const resp = handleInput(msg.text, msg.from.first_name, customConfig.instance.get('agent') ?? "Agent", null, 'telegram', msg.chat.id);
     await handleEditMessage(msg.chat.id, msg.message_id, resp,addPing ? '[ \''+ msg.from.id + '\', \'' + msg.from.first_name + '\' ]' : 'none', bot);
 }
@@ -321,3 +352,5 @@ export const createTelegramClient = () => {
     new telegramPacketHandler(bot, botName)
     console.log('telegram client loaded')
 }
+
+export default createTelegramClient;

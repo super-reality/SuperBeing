@@ -1,8 +1,11 @@
 import { handleInput } from "../cognition/handleInput.js";
 import { database } from "../database/database.js";
 import customConfig from "../utilities/customConfig.js";
-import Browser, { PageUtils } from './browser.js';
+import roomManager from "../utilities/roomManager.js";
+import { classifyText } from "../utilities/textClassifier.js";
+import { browserWindow, PageUtils } from './browser.js';
 import { detectOsOption, getRandomEmptyResponse, startsWithCapital } from "./utils.js";
+import { defaultAgent } from "../index.js";
 
 export const UsersInRange = {}
 export const UsersInHarassmentRange = {}
@@ -192,7 +195,37 @@ export async function handleMessages(messages, bot) {
             }
 
             if (content.startsWith('!ping')) sentMessage(_sender)
-            else return
+            else {
+                if (content === '!ping ' || !content.startsWith('!ping'))
+                {
+                    if (roomManager.instance.agentCanResponse(user, 'xrengine')) {
+                        content = '!ping ' + content;
+                        sentMessage(_sender)
+                    }
+                    else {
+                        const oldChat = database.instance.getConversation(defaultAgent, _sender, 'xrengine', msg.chat.id, false);
+                        if (oldChat !== undefined && oldChat.length > 0) {
+                            const context = await classifyText(values);
+                            const ncontext = await classifyText(content);
+                            console.log('c1: ' + context + ' c2: ' + ncontext);
+
+                            if (context == ncontext) {
+                                roomManager.instance.userTalkedSameTopic(_sender, 'xrengine');
+                                if (roomManager.instance.agentCanResponse(_sender, 'xrengine')) {
+                                    content = '!ping ' + content;
+                                    sentMessage(_sender)
+                                } else {
+                                    return;
+                                }
+                            } else {
+                                return;
+                            }
+                        }
+                    }
+                } else {
+                    roomManager.instance.userGotInConversationFromAgent(_sender);
+                }
+            }
             console.log('content: ' + content + ' sender: ' + _sender)
 
             const dateNow = new Date();
@@ -264,22 +297,8 @@ async function createXREngineClient() {
     xrengineBot.delay(Math.random() * 100000);
     console.log("Connecting to server...");
     await xrengineBot.launchBrowser();
+    const XRENGINE_URL = customConfig.instance.get('xrEngineURL') || 'https://localhost:3000/location/test';
     xrengineBot.enterRoom(XRENGINE_URL, { name: "TestBot" })
-
-    /*console.log('delay bot')
-    await xrengineBot.delay(10000)
-    console.log('bot delay done')*/
-
-    await xrenginexrengineBot.sendMessage("Hello World! I have connected.")
-    /*
-        await new Promise((resolve) => {
-            setTimeout(() => xrengineBot.enterRoom(XRENGINE_URL, { name: "TestBot" }), 1000);
-        });
-    
-    console.log('bot loaded')
-        await new Promise((resolve) => {
-            setTimeout(() => xrenginexrengineBot.sendMessage("Hello World! I have connected."), 5000);
-        });*/
     console.log('bot fully loaded')
 }
 
@@ -627,7 +646,7 @@ class XREngineBot {
             ...detectOsOption()
         };
 
-        this.browser = await Browser.window(options);
+        this.browser = await browserWindow(options);
         this.page = await this.browser.newPage();
         this.page.on('console', message => {
             if (message.text().startsWith('scene_metadata')) {
