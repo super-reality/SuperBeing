@@ -168,12 +168,12 @@ export async function handleInput(message, speaker, agent, res, clientName, chan
         }
 
         // Append the speaker's message to the conversation
-        await database.instance.setConversation(agent, clientName, channelId, speaker, message, false);
 
         // Parse files into objects
         const meta =  !_meta || _meta.length <= 0 ? { messages: 0 } : JSON.parse(_meta);
-        const conversation = (await database.instance.getConversation(agent, speaker, clientName, channelId, false)).toString().replaceAll('\n\n', '\n');
-
+        let conversation = (await database.instance.getConversation(agent, speaker, clientName, channelId, false)).toString().replaceAll('\n\n', '\n');
+        conversation += '\n' + speaker + ': ' + message;
+        
         // Increment the agent's conversation count for this speaker
         meta.messages = meta.messages + 1;
 
@@ -208,6 +208,7 @@ export async function handleInput(message, speaker, agent, res, clientName, chan
         // Call the transformer API
         const { success, choice } = await makeCompletionRequest(data, speaker, agent, "conversation");
 
+        database.instance.setConversation(agent, clientName, channelId, speaker, message, false);
         // If it fails, tell speaker they had an error
         if (!success) {
                 const error = "Sorry, I had an error";

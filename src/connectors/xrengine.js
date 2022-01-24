@@ -72,6 +72,7 @@ export function exitConversation(user) {
         conversation[user].timeOutFinished = true
         conversation[user].isInConversation = false
         delete conversation[user]
+        roomManager.instance.removeUser(user, 'discord');
     }
 }
 

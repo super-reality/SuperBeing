@@ -1,4 +1,3 @@
-import fs from 'fs';
 import glob from "glob";
 import weaviate from "weaviate-client";
 import wiki from 'wikipedia';
@@ -6,10 +5,6 @@ import { database } from '../database/database.js';
 import {
   makeCompletionRequest
 } from "../utilities/makeCompletionRequest.js";
-import { namedEntityRecognition } from '../utilities/namedEntityRecognition.js';
-import {
-  rootDir
-} from "../utilities/rootDir.js";
 
 const client = weaviate.client({
   scheme: "http",
@@ -224,13 +219,10 @@ export const makeWeaviateRequest = async (keyword) => {
 
 export async function lookUpOnWikipedia(subject) {
   try {
-    // check if file exists already, in the folder 'src/data/wikipedia/' with the filename 'subject.json'
-    const fileName = `${rootDir}/data/wikipedia/${subject}.json`;
-    // if it does, read it and return it
-    if (fs.existsSync(fileName)) {
-      return JSON.parse(fs.readFileSync(fileName, 'utf8'));
+    if (await database.instance.wikipediaDataExists(subject)) {
+      return JSON.parse(await database.instance.getWikipediaData(subject));
     } else {
-      console.log("Data doesn't yet exist");
+      console.log('Data doesn\'t yet exist');
     }
 
     // if it doesn't, fetch it from wikipedia and save it to the file
@@ -249,14 +241,8 @@ export async function lookUpOnWikipedia(subject) {
     };
     console.log("Summary is", summary)
     // create a directory recursively at data/wikipedia/ if it doesn't exist
-    const dir = rootDir + "/data/wikipedia/";
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, {
-        recursive: true
-      });
-    }
-    console.log("Writing JSON");
-    fs.writeFileSync(fileName, JSON.stringify(summary));
+
+    await database.instance.addWikipediaData(subject, JSON.stringify(summary));
 
     return summary;
 

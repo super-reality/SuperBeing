@@ -1298,6 +1298,32 @@ export class database {
         return true;
     }
 
+    async addWikipediaData(agent, data) {
+        const query = 'INSERT INTO wikipedia(agent, _data) VALUES($1, $2)';
+        const values = [agent, data];
+
+        await this.client.query(query, values);
+    }
+    async getWikipediaData(agent) {
+        const query = 'SELECT * FROM wikipedia WHERE agent=$1';
+        const values = [agent];
+
+        const rows = await this.client.query(query, values);
+        if (rows && rows.rows && rows.rows.length > 0) {
+            return rows.rows[0]._data;
+        }
+        else {
+            return '';
+        }
+    }
+    async wikipediaDataExists(agent) {
+        const query = 'SELECT * FROM wikipedia WHERE agent=$1';
+        const values = [agent];
+
+        const rows = await this.client.query(query, values);
+        return rows && rows.rows && rows.rows.length > 0;
+    }
+
     // async getChatFilterData(init) {
     //     const query = "SELECT * FROM chat_filter"
 
