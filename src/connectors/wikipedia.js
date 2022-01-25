@@ -96,6 +96,8 @@ export async function createWikipediaAgent(speaker, name, personality, facts) {
 
 export const searchWikipedia = async (keyword) => {
 
+  console.log("Searching wikipedia for ", keyword);
+
   // if keywords contains more than three words, summarize with GPT-3
   if (keyword.trim().split(" ").length > 3) {
     const data = {

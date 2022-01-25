@@ -5,7 +5,7 @@ import { customConfig } from './utilities/customConfig.js';
 import { createExpressServer } from './utilities/expressServer.js';
 import roomManager from "./utilities/roomManager.js";
 import { runClients } from "./utilities/runClients.js";
-import { classifyText, initClassifier, initProfanityClassifier } from "./utilities/textClassifier.js";
+import { initClassifier, initProfanityClassifier } from "./utilities/textClassifier.js";
 
 new cors_server(process.env.CORS_PORT, '0.0.0.0');
 
