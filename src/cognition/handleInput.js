@@ -6,6 +6,7 @@ import { evaluateTextAndRespondIfToxic } from "./profanityFilter.js";
 import keywordExtractor from '../utilities/keywordExtractor.js';
 import { database } from '../database/database.js';
 import { capitalizeFirstLetter } from "../connectors/utils.js";
+import { isInFastMode } from '../index.js';
 
 function respondWithMessage(agent, text, res) {
         if (res) res.status(200).send(JSON.stringify({ result: text }));
@@ -101,17 +102,22 @@ async function archiveFacts(speaker, agent) {
 
 //generates the context for the open ai request, it gets the default configration from the website and replaces it with the agent's specifics
 async function generateContext(speaker, agent, conversation, message) {
-        const keywords = keywordExtractor(message, agent);
+        let keywords = []
+        if (!isInFastMode) {
+                keywords = keywordExtractor(message, agent);
+        }
         const speakerFacts = (await database.instance.getSpeakersFacts(agent, speaker)).toString().trim().replaceAll('\n\n', '\n');
         const agentFacts = (await database.instance.getAgentFacts(agent)).toString().trim().replaceAll('\n\n', '\n');
 
         let kdata = '';
-        if ((await keywords).length > 0) {
-                kdata = "More context on the chat:\n";
-                for(let k in keywords) {
-                        kdata += 'Q: ' + capitalizeFirstLetter(keywords[k].word) + '\nA: ' + keywords[k].info + '\n\n';
+        if (!isInFastMode) {
+                if ((await keywords).length > 0) {
+                        kdata = "More context on the chat:\n";
+                        for(let k in keywords) {
+                                kdata += 'Q: ' + capitalizeFirstLetter(keywords[k].word) + '\nA: ' + keywords[k].info + '\n\n';
+                        }
+                        kdata += '\n';
                 }
-                kdata += '\n';
         }
 
         // Return a complex context (this will be passed to the transformer for completion)
@@ -155,7 +161,7 @@ export async function handleInput(message, speaker, agent, res, clientName, chan
                 useProfanityFilter } = await getConfigurationSettingsForAgent(agent);
 
         // If the profanity filter is enabled in the agent's config...
-        if (useProfanityFilter) {
+        if (useProfanityFilter && !isInFastMode) {
                 // Evaluate if the speaker's message is toxic
                 const { isProfane, isSensitive, response } = await evaluateTextAndRespondIfToxic(speaker, agent, message);
                 if ((isProfane || isSensitive) && response) {
@@ -166,12 +172,12 @@ export async function handleInput(message, speaker, agent, res, clientName, chan
         }
 
         // Append the speaker's message to the conversation
-        await database.instance.setConversation(agent, clientName, channelId, speaker, message, false);
 
         // Parse files into objects
         const meta =  !_meta || _meta.length <= 0 ? { messages: 0 } : JSON.parse(_meta);
-        const conversation = (await database.instance.getConversation(agent, speaker, clientName, channelId, false)).toString().replaceAll('\n\n', '\n');
-
+        let conversation = (await database.instance.getConversation(agent, speaker, clientName, channelId, false)).toString().replaceAll('\n\n', '\n');
+        conversation += '\n' + speaker + ': ' + message;
+        
         // Increment the agent's conversation count for this speaker
         meta.messages = meta.messages + 1;
 
@@ -206,12 +212,13 @@ export async function handleInput(message, speaker, agent, res, clientName, chan
         // Call the transformer API
         const { success, choice } = await makeCompletionRequest(data, speaker, agent, "conversation");
 
+        database.instance.setConversation(agent, clientName, channelId, speaker, message, false);
         // If it fails, tell speaker they had an error
         if (!success) {
                 const error = "Sorry, I had an error";
                 return respondWithMessage(agent, error, res);
         };
-        if (useProfanityFilter) {
+        if (useProfanityFilter && !isInFastMode) {
 
                 // Check agent isn't about to say something offensive
                 const { isProfane, response } = await evaluateTextAndRespondIfToxic(speaker, agent, choice.text, true);

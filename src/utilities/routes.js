@@ -5,7 +5,6 @@ import { defaultAgent } from '../index.js';
 import customConfig from './customConfig.js';
 
 //Routes for the express server
-
 export async function registerRoutes(app) {
     //a health check for the server
     app.get("/health", async function (req, res) {
@@ -95,6 +94,78 @@ export async function registerRoutes(app) {
         }
 
         return res.send('ok');
+    });
+
+    app.get('/get_profanity_data', async function(req, res) {
+        const editorId = req.query.editor_id;
+
+        if (editorId == 1) {
+            return res.send({data: (await database.instance.getBadWords()).toString().split("\n")});
+        } else if (editorId == 2) {
+            return res.send({data: (await database.instance.getSensitiveWords()).toString().split("\r\n")});
+        } else if (editorId == 3) {
+            return res.send({data: (await database.instance.getSensitivePhrases()).toString().split("\n")});
+        } else if (editorId == 4) {
+            return res.send({data: (await database.instance.getLeadingStatements()).toString().split("\n")});
+        }
+
+        return res.send('invalid editor id');
+    });
+    app.post('/add_profanity_word', async function(req, res) {
+        const word = req.body.word;
+        const editorId = req.body.editorId;
+
+        if (editorId == 1) {
+            if (await database.instance.badWordExists(word)) {
+                return res.send('already exists');
+            }
+
+            await database.instance.addBadWord(word);
+            return res.send('ok');
+        } else if (editorId == 2) {
+            if (await database.instance.sensitiveWordExists(word)) {
+                return res.send('already exists');
+            }
+
+            await database.instance.addSensitiveWord(word);
+            return res.send('ok');
+        } else if (editorId == 3) {
+            if (await database.instance.sensitivePhraseExists(word)) {
+                return res.send('already exists');
+            }
+
+            await database.instance.addSensitivePhrase(word);
+            return res.send('ok');
+        } else if (editorId == 4) {
+            if (await database.instance.leadingStatementExists(word)) {
+                console.log('already exists');
+            }
+
+            await database.instance.addLeadingStatement(word);
+            return res.send('ok');
+        }
+
+        return res.send('invalid editor id');
+    });
+    app.post('/remove_profanity_word', async function(req, res) {
+        const word = req.body.word;
+        const editorId = req.body.editorId;
+
+        if (editorId == 1) {
+            await database.instance.removeBadWord(word);
+            return res.send('ok');
+        } else if (editorId == 2) {
+            await database.instance.removeSensitiveWord(word);
+            return res.send('ok');
+        } else if (editorId == 3) {
+            await database.instance.removeSensitivePhrase(word);
+            return res.send('ok');
+        } else if (editorId == 4) {
+            await database.instance.removeLeadingStatement(word);
+            return res.send('ok');
+        }
+
+        return res.send('invalid editor id');
     });
 
     //creates an agent using the web editor's form

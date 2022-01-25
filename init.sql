@@ -381,6 +381,8 @@ INSERT INTO config
 		  ) union all 
 		 (SELECT  'instagramPassword' as _key, '' as _value
 		  ) union all 
+		 (SELECT  'fastMode' as _key, 'false' as _value
+		  ) union all 
 		 (SELECT  'enabledServices' as _key, 'Discord' as _value
 		  )
          ) t
@@ -403,3 +405,5 @@ INSERT INTO ignored_keywords
           )
          ) t
     WHERE NOT EXISTS (SELECT * FROM ignored_keywords);
+
+CREATE TABLE IF NOT EXISTS wikipedia(agent text, _data text);
