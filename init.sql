@@ -405,3 +405,5 @@ INSERT INTO ignored_keywords
           )
          ) t
     WHERE NOT EXISTS (SELECT * FROM ignored_keywords);
+
+CREATE TABLE IF NOT EXISTS wikipedia(agent text, _data text);
