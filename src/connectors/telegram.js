@@ -5,6 +5,7 @@ import roomManager from "../utilities/roomManager.js"
 import { classifyText } from "../utilities/textClassifier.js"
 import { getRandomEmptyResponse, startsWithCapital } from "./utils.js"
 import { defaultAgent } from "../index.js"
+import { log } from "../utilities/logger.js"
 
 async function handleMessage(chat_id, response, message_id, addPing, args, bot) { 
     let senderId = ''
@@ -14,7 +15,7 @@ async function handleMessage(chat_id, response, message_id, addPing, args, bot) 
         senderId = args[0]
         senderName = args[1]
     }
-        console.log('response: ' + response)
+        log('response: ' + response)
         if (response !== undefined && response.length > 0) {
             let text = response
             while (text === undefined || text === '' || text.replace(/\s/g, '').length === 0) text = getRandomEmptyResponse()
@@ -49,7 +50,7 @@ async function handleEditMessage(chat_id, message_id, response, args, bot) {
             senderId = args[0]
             senderName = args[1]
         }
-            console.log('response: ' + response)
+            log('response: ' + response)
             if (response !== undefined && response.length <= 2000 && response.length > 0) {
                 let text = response
                 while (text === undefined || text === '' || text.replace(/\s/g, '').length === 0) text = getRandomEmptyResponse()
@@ -94,7 +95,7 @@ async function handleEditMessage(chat_id, message_id, response, args, bot) {
 
 export async function onMessageEdit(bot, msg, botName) {
     if (await database.instance.isUserBanned(msg.from.id + '', 'telegram')) return
-    console.log('edited_message: ' + JSON.stringify(msg))
+    log('edited_message: ' + JSON.stringify(msg))
     const date = Date.now() / 1000
     const msgDate = msg.date
     const diff = date - msgDate
@@ -119,7 +120,7 @@ export async function onMessageEdit(bot, msg, botName) {
 
 export async function onMessage(bot, msg, botName, username_regex) {
     addMessageToHistory(msg.chat.id, msg.message_id, msg.from.username === undefined ? msg.from.first_name : msg.from.username, msg.text)
-    console.log(JSON.stringify(msg))
+    log(JSON.stringify(msg))
     const date = Date.now() / 1000
     const msgDate = msg.date
     const diff = date - msgDate
@@ -222,7 +223,7 @@ export async function onMessage(bot, msg, botName, username_regex) {
             if (oldChat !== undefined && oldChat.length > 0) {
                 const context = await classifyText(values);
                 const ncontext = await classifyText(content);
-                console.log('c1: ' + context + ' c2: ' + ncontext);
+                log('c1: ' + context + ' c2: ' + ncontext);
 
                 if (context == ncontext) {
                     roomManager.instance.userTalkedSameTopic(_sender, 'telegram');
@@ -281,7 +282,7 @@ export function sentMessage(user) {
         conversation[user] = { timeoutId: undefined, timeOutFinished: true, isInConversation: true }
         if (conversation[user].timeoutId !== undefined) clearTimeout(conversation[user].timeoutId)
         conversation[user].timeoutId = setTimeout(() => {
-            console.log('conversation for ' + user + ' ended')
+            log('conversation for ' + user + ' ended')
             if (conversation[user] !== undefined) {
                 conversation[user].timeoutId = undefined
                 conversation[user].timeOutFinished = true
@@ -289,7 +290,7 @@ export function sentMessage(user) {
         }, 720000)
     } else {
         conversation[user].timeoutId = setTimeout(() => {
-            console.log('conversation for ' + user + ' ended')
+            log('conversation for ' + user + ' ended')
             if (conversation[user] !== undefined) {
                 conversation[user].timeoutId = undefined
                 conversation[user].timeOutFinished = true
@@ -351,7 +352,7 @@ export const createTelegramClient = () => {
         await onMessageEdit(bot, msg, botName)
     });
     new telegramPacketHandler(bot, botName)
-    console.log('telegram client loaded')
+    log('telegram client loaded')
 }
 
 export default createTelegramClient;

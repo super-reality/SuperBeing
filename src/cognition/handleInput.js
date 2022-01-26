@@ -7,10 +7,11 @@ import keywordExtractor from '../utilities/keywordExtractor.js';
 import { database } from '../database/database.js';
 import { capitalizeFirstLetter } from "../connectors/utils.js";
 import { isInFastMode } from '../index.js';
+import { log } from "../utilities/logger.js";
 
 function respondWithMessage(agent, text, res) {
         if (res) res.status(200).send(JSON.stringify({ result: text }));
-        console.log(agent + ">>> " + text);
+        log(agent + ">>> " + text);
         return text;
 }
 
@@ -25,7 +26,7 @@ async function evaluateTerminalCommands(message, speaker, agent, res, client, ch
                                 // Send the message as JSON
                                 .send(JSON.stringify(result));
                 } else {
-                        console.log(`${agent} has been reset`);
+                        log(`${agent} has been reset`);
                 }
                 
                 await database.instance.clearConversations();
@@ -43,14 +44,14 @@ async function evaluateTerminalCommands(message, speaker, agent, res, client, ch
                                 // Send the message as JSON
                                 .send(JSON.stringify(result));
                 } else {
-                        console.log(conversation);
+                        log(conversation);
                 }
                 return true;
         }
 
         else if (message === "GET_AGENT_NAME") {
                 if (res) res.status(200).send(JSON.stringify({ result: agent }));
-                else console.log({ result: agent });
+                else log({ result: agent });
                 return true;
         }
 }
@@ -87,16 +88,16 @@ async function archiveFacts(speaker, agent) {
         const speakerFacts = existingSpeakerFacts == "" ? "" : existingSpeakerFacts; // If no facts, don't inject
         const speakerFactsLines = speakerFacts.split('\n');  // Slice the facts and store any more than the window size in the archive
         if (speakerFactsLines.length > speakerFactsWindowSize) {
-                await database.instance.updateSpeakersFactsArchive(agent, speaker, speakerFactsLines.slice(0, speakerFactsLines.length - speakerFactsWindowSize).join("\n"));
-                await database.instance.setSpeakersFacts(agent, speaker, speakerFactsLines.slice(speakerFactsLines.length - speakerFactsWindowSize).join("\n"));
+                database.instance.updateSpeakersFactsArchive(agent, speaker, speakerFactsLines.slice(0, speakerFactsLines.length - speakerFactsWindowSize).join("\n"));
+                database.instance.setSpeakersFacts(agent, speaker, speakerFactsLines.slice(speakerFactsLines.length - speakerFactsWindowSize).join("\n"));
         }
 
         const existingAgentFacts = (await database.instance.getAgentFacts(agent)).toString().trim();
         const agentFacts = existingAgentFacts == "" ? "" : existingAgentFacts + "\n"; // If no facts, don't inject
         const agentFactsLines = agentFacts.split('\n'); // Slice the facts and store any more than the window size in the archive
         if (agentFactsLines.length > agentFactsWindowSize) {
-                await database.instance.updateAgentFactsArchive(agent, agentFactsLines.slice(0, agentFactsLines.length - agentFactsWindowSize).join("\n"));
-                await database.instance.setAgentFacts(agent, agentFactsLines.slice(agentFactsLines.length - agentFactsWindowSize).join("\n"));;
+                database.instance.updateAgentFactsArchive(agent, agentFactsLines.slice(0, agentFactsLines.length - agentFactsWindowSize).join("\n"));
+                database.instance.setAgentFacts(agent, agentFactsLines.slice(agentFactsLines.length - agentFactsWindowSize).join("\n"));;
         }
 }
 
@@ -106,15 +107,28 @@ async function generateContext(speaker, agent, conversation, message) {
         if (!isInFastMode) {
                 keywords = keywordExtractor(message, agent);
         }
-        const speakerFacts = (await database.instance.getSpeakersFacts(agent, speaker)).toString().trim().replaceAll('\n\n', '\n');
-        const agentFacts = (await database.instance.getAgentFacts(agent)).toString().trim().replaceAll('\n\n', '\n');
+
+        const pr = await Promise.all([keywords, 
+                database.instance.getSpeakersFacts(agent, speaker), 
+                database.instance.getAgentFacts(agent),
+                database.instance.getRoom(agent),
+                database.instance.getMorals(),
+                database.instance.getEthics(agent),
+                database.instance.getPersonality(agent),
+                database.instance.getNeedsAndMotivations(agent),
+                database.instance.getDialogue(agent),
+                database.instance.getMonologue(agent),
+                database.instance.getFacts(agent)]);
+
+        pr[1] = pr[1].toString().trim().replaceAll('\n\n', '\n');
+        pr[2] = pr[2].toString().trim().replaceAll('\n\n', '\n');
 
         let kdata = '';
         if (!isInFastMode) {
-                if ((await keywords).length > 0) {
+                if (pr[0].length > 0) {
                         kdata = "More context on the chat:\n";
-                        for(let k in keywords) {
-                                kdata += 'Q: ' + capitalizeFirstLetter(keywords[k].word) + '\nA: ' + keywords[k].info + '\n\n';
+                        for(let k in pr[0]) {
+                                kdata += 'Q: ' + capitalizeFirstLetter(pr[0][k].word) + '\nA: ' + pr[0][k].info + '\n\n';
                         }
                         kdata += '\n';
                 }
@@ -122,17 +136,17 @@ async function generateContext(speaker, agent, conversation, message) {
 
         // Return a complex context (this will be passed to the transformer for completion)
         return (await database.instance.getContext()).toString()
-                .replaceAll('$room', await database.instance.getRoom(agent))
-                .replaceAll("$morals", await database.instance.getMorals())
-                .replaceAll("$ethics", await database.instance.getEthics(agent))
-                .replaceAll("$personality", await database.instance.getPersonality(agent))
-                .replaceAll("$needsAndMotivations", await database.instance.getNeedsAndMotivations(agent))
-                .replaceAll("$exampleDialog", await database.instance.getDialogue(agent))
-                .replaceAll("$monologue", await database.instance.getMonologue(agent))
-                .replaceAll("$facts", await database.instance.getFacts(agent))
+                .replaceAll('$room', pr[3])
+                .replaceAll("$morals", pr[4])
+                .replaceAll("$ethics", pr[5])
+                .replaceAll("$personality", pr[6])
+                .replaceAll("$needsAndMotivations", pr[7])
+                .replaceAll("$exampleDialog", pr[8])
+                .replaceAll("$monologue", pr[9])
+                .replaceAll("$facts", pr[10])
                 // .replaceAll("$actions", fs.readFileSync(rootAgent + 'actions.txt').toString())
-                .replaceAll("$speakerFacts", speakerFacts)
-                .replaceAll("$agentFacts", agentFacts)
+                .replaceAll("$speakerFacts", pr[1])
+                .replaceAll("$agentFacts", pr[2])
                 .replaceAll('$keywords', kdata)
                 .replaceAll("$agent", agent)
                 .replaceAll("$speaker", speaker)
@@ -143,8 +157,8 @@ const defaultAgent = process.env.AGENT
 
 //handles the input from a client according to a selected agent and responds
 export async function handleInput(message, speaker, agent, res, clientName, channelId) {
+        log("Handling input: " + message);
         agent = agent ?? defaultAgent
-
 
         //if the input is a command, it handles the command and doesn't respond according to the agent
         if (await evaluateTerminalCommands(message, speaker, agent, res, clientName, channelId)) return;
@@ -165,13 +179,11 @@ export async function handleInput(message, speaker, agent, res, clientName, chan
                 // Evaluate if the speaker's message is toxic
                 const { isProfane, isSensitive, response } = await evaluateTextAndRespondIfToxic(speaker, agent, message);
                 if ((isProfane || isSensitive) && response) {
-                        console.log(agent + ">>> " + response);
+                        log(agent + ">>> " + response);
                         if (res) res.status(200).send(JSON.stringify({ result: response }));
                         return response;
                 }
         }
-
-        // Append the speaker's message to the conversation
 
         // Parse files into objects
         const meta =  !_meta || _meta.length <= 0 ? { messages: 0 } : JSON.parse(_meta);
@@ -185,8 +197,8 @@ export async function handleInput(message, speaker, agent, res, clientName, chan
         archiveConversation(speaker, agent, conversation, clientName, channelId);
         archiveFacts(speaker, agent, conversation);
 
-        const context = await generateContext(speaker, agent, conversation, message);
-
+        const context = (await generateContext(speaker, agent, conversation, message)).replaceAll('\n\n', '\n');
+        log('Context: ' + context);
         // TODO: Wikipedia?
 
         // searchWikipedia(text.Input) .then( (out) => { console.log("**** WEAVIATE: " + JSON.stringify(out)); currentState = states.READY; });

@@ -2,6 +2,7 @@ import request from 'request';
 import { handleInput } from '../cognition/handleInput.js';
 import { database } from "../database/database.js";
 import customConfig from '../utilities/customConfig.js';
+import { error, log } from '../utilities/logger.js';
 import { getRandomEmptyResponse } from "./utils.js";
 
 export async function getChatHistory(chatId, length) {
@@ -15,7 +16,7 @@ export async function addMessageToHistory(chatId, senderName, content, messageId
 export async function handleMessage(senderPsid, receivedMessage) {
   if (await database.instance.isUserBanned(senderPsid, 'messenger')) return
   
-  console.log('receivedMessage: ' + receivedMessage.text + ' from: ' + senderPsid)
+  log('receivedMessage: ' + receivedMessage.text + ' from: ' + senderPsid)
 
   if (receivedMessage.text) {
     await database.instance.getNewMessageId('messenger', senderPsid, async (msgId) => {
@@ -33,7 +34,7 @@ export async function handleMessage(senderPsid, receivedMessage) {
 }
 
 export async function handlePacketSend(senderPsid, response) {
-    console.log('response: ' + response)
+    log('response: ' + response)
     if (response !== undefined && response.length <= 2000 && response.length > 0) {
         let text = response
         while (text === undefined || text === '' || text.replace(/\s/g, '').length === 0) text = getRandomEmptyResponse()
@@ -70,7 +71,7 @@ export async function handlePacketSend(senderPsid, response) {
 export async function callSendAPI(senderPsid, response, text) {
   await database.instance.getNewMessageId('messenger', senderPsid, async (msgId) => {
     addMessageToHistory(senderPsid, customConfig.instance.get('botName'), text, msgId)
-    console.log('sending response: ' + response)
+    log('sending response: ' + response)
     // The page access token we have generated in your app settings
     const PAGE_ACCESS_TOKEN = customConfig.instance.get('messengerToken')
 
@@ -90,9 +91,9 @@ export async function callSendAPI(senderPsid, response, text) {
       'json': requestBody
     }, (err, _res, _body) => {
       if (!err) {
-        console.log('Message sent!');
+        log('Message sent!');
       } else {
-        console.error('Unable to send message:' + err);
+        error('Unable to send message:' + err);
       }
     });
   })
@@ -111,16 +112,16 @@ export const createMessengerClient = async (app) => {
         let token = req.query['hub.verify_token'];
         let challenge = req.query['hub.challenge'];
       
-        console.log('get webhook - mode: ' + mode + ' - token: ' + token + ' challenge: ' + challenge + ' - ' + (VERIFY_TOKEN === token))
+        log('get webhook - mode: ' + mode + ' - token: ' + token + ' challenge: ' + challenge + ' - ' + (VERIFY_TOKEN === token))
         if (mode && token) {
       
           if (mode === 'subscribe' && token === VERIFY_TOKEN) {
       
-            console.log('WEBHOOK_VERIFIED');
+            log('WEBHOOK_VERIFIED');
             res.status(200).send(challenge);
       
           } else {
-            console.log('WEBHOOK_FORBIDDEN');
+            log('WEBHOOK_FORBIDDEN');
             res.sendStatus(403);
           }
         }
@@ -133,10 +134,10 @@ export const createMessengerClient = async (app) => {
             await body.entry.forEach(async function(entry) {
       
             let webhookEvent = entry.messaging[0];
-            console.log(webhookEvent);
+            log(webhookEvent);
       
             let senderPsid = webhookEvent.sender.id;
-            console.log('Sender PSID: ' + senderPsid);
+            log('Sender PSID: ' + senderPsid);
       
             if (webhookEvent.message) {
                await handleMessage(senderPsid, webhookEvent.message);
@@ -149,5 +150,5 @@ export const createMessengerClient = async (app) => {
           res.sendStatus(404);
         }
     });   
-    console.log('facebook client created')
+    log('facebook client created')
 }

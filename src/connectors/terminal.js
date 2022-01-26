@@ -68,7 +68,7 @@ export function initTerminal(agent) {
 
                                         prompt(creationQuestions).then(async (text) => {
                                                 //if not, create it
-                                                await createWikipediaAgent(speaker, newAgent, text.Personality, text.Facts);
+                                                let out = await createWikipediaAgent(speaker, newAgent, text.Personality, text.Facts);
                                                 let set = false;
                                                 while (out === null) {
                                                     out = await createWikipediaAgent('Speaker', defaultAgent, "", "");

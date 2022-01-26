@@ -4,6 +4,7 @@ import fs from 'fs';
 import { rootDir } from '../utilities/rootDir.js';
 import customConfig from '../utilities/customConfig.js';
 import { getRandomNumber } from '../connectors/utils.js';
+import { log } from '../utilities/logger.js';
 const { Client } = pg;
 
 export class database {
@@ -15,7 +16,7 @@ export class database {
 
     constructor(bannedUsers = []) {
         this.bannedUsers = bannedUsers
-        console.log('Loaded ' + this.bannedUsers.length + ' banned users!');
+        log('Loaded ' + this.bannedUsers.length + ' banned users!');
         database.instance = this
 
         setInterval(() => {
@@ -26,7 +27,7 @@ export class database {
     //checks if a user is banned
     isUserBanned(user_id, client) {
         for(let x in this.bannedUsers) {
-            console.log(x + ' - ' + this.bannedUsers[x].user_id + ' - ' + user_id + ' - ' + (this.bannedUsers[x].user_id === user_id))
+            log(x + ' - ' + this.bannedUsers[x].user_id + ' - ' + user_id + ' - ' + (this.bannedUsers[x].user_id === user_id))
             if (this.bannedUsers[x].user_id === user_id && this.bannedUsers[x].client === client) {
                 return true
             }
@@ -36,10 +37,10 @@ export class database {
     }
 
     async banUser(user_id, client) {
-        console.log('blocking user1: ' + user_id)
+        log('blocking user1: ' + user_id)
         if (this.isUserBanned(user_id, client)) return
 
-        console.log('blocking user: ' + user_id)
+        log('blocking user: ' + user_id)
         await database.instance.banUser(user_id, client)
         this.bannedUsers.push({ 
             user_id: user_id, 
@@ -56,12 +57,12 @@ export class database {
                 break
             }
         }
-        console.log('length: ' + olength + ' - ' + this.bannedUsers.length)
+        log('length: ' + olength + ' - ' + this.bannedUsers.length)
         await database.instance.unbanUser(user_id, client)
     }
 
     async connect() {
-        console.log('connect');
+        log('connect');
         //this.client = await this.pool.connect()
         this.client = new Client({
             user: process.env.PGUSER,
@@ -114,6 +115,12 @@ export class database {
             await this.client.query(query, values);
         }
     }
+    async deleteConfig(key) {
+        const query = 'DELETE FROM config WHERE _key=$1';
+        const values = [key];
+
+        await this.client.query(query, values);
+    }
 
     async addMessageInHistory(client_name, chat_id, message_id, sender, content) {  
         const date = new Date();
@@ -125,7 +132,7 @@ export class database {
 
         this.client.query(query, values, (err, res) => {
             if (err) {
-              console.log(`${err} ${err.stack}`)
+              log(`${err} ${err.stack}`)
             }
           })
     }
@@ -136,7 +143,7 @@ export class database {
 
         this.client.query(query, values, (err, res) => {
             if (err) {
-              console.log(`${err} ${err.stack}`)
+              log(`${err} ${err.stack}`)
             }
           })
     }
@@ -146,7 +153,7 @@ export class database {
         const values = [ client_name, chat_id ]
         return await this.client.query(query, values, (err, res) => {
             if (err) {
-                return console.log(`${err} ${err.stack}`)
+                return log(`${err} ${err.stack}`)
             }
             const _res = []
             if (res !== undefined && res !== null && res.rows !== undefined) {
@@ -166,7 +173,7 @@ export class database {
 
         await this.client.query(query, values, (err, res) => {
             if (err) {
-              console.log(`${err} ${err.stack}`)
+              log(`${err} ${err.stack}`)
             }
         })
     }
@@ -181,7 +188,7 @@ export class database {
 
             await this.client.query(query, values, (err, res) => {
                 if (err) {
-                console.log(`${err} ${err.stack}`)
+                log(`${err} ${err.stack}`)
                 }
             })
         }
@@ -191,7 +198,7 @@ export class database {
 
             await this.client.query(query, values, (err, res) => {
                 if (err) {
-                console.log(`${err} ${err.stack}`)
+                log(`${err} ${err.stack}`)
                 }
             })
         }
@@ -203,7 +210,7 @@ export class database {
 
         return await this.client.query(query, values, (err, res) => {
             if (err) {
-              console.log(`${err} ${err.stack}`)
+              log(`${err} ${err.stack}`)
             } else {
                 if (res.rows && res.rows.length) {
                     this.updateMessage(client_name, chat_id, message_id, content, false);
@@ -218,7 +225,7 @@ export class database {
             
                     this.client.query(query2, values2, (err, res) => {
                         if (err) {
-                          console.log(`${err} ${err.stack}`)
+                          log(`${err} ${err.stack}`)
                         }
                       })
                     return true
@@ -234,7 +241,7 @@ export class database {
 
         return await this.client.query(query, values, async (err, res) => {
             if (err) {
-              console.log(`${err} ${err.stack}`)
+              log(`${err} ${err.stack}`)
             } else {
                 if (res.rows && res.rows.length) {
                     this.updateMessage(client_name, chat_id, message_id, content, false);
@@ -249,7 +256,7 @@ export class database {
             
                     await this.client.query(query2, values2, (err, res) => {
                         if (err) {
-                          console.log(`${err} ${err.stack}`)
+                          log(`${err} ${err.stack}`)
                         }
                       })
                     return true
@@ -264,7 +271,7 @@ export class database {
 
         return await this.client.query(query, values, async (err, res) => {
             if (err) {
-              console.log(`${err} ${err.stack}`)
+              log(`${err} ${err.stack}`)
             } else {
                 if (res.rows && res.rows.length) {
                     this.updateMessage(client_name, chat_id, message_id, content, false);
@@ -279,7 +286,7 @@ export class database {
             
                     await this.client.query(query2, values2, (err, res) => {
                         if (err) {
-                          console.log(`${err} ${err.stack}`)
+                          log(`${err} ${err.stack}`)
                         }
                       })
                       callback()
@@ -293,7 +300,7 @@ export class database {
 
         return await this.client.query(query, values, async (err, res) => {
             if (err) {
-              console.log(`${err} ${err.stack}`)
+              log(`${err} ${err.stack}`)
             } else {
                 if (res.rows && res.rows.length) {
                 }
@@ -309,7 +316,7 @@ export class database {
 
         return await this.client.query(query, values, (err, res) => {
             if (err) {
-              console.log(`${err} ${err.stack}`)
+              log(`${err} ${err.stack}`)
               notFoundCallback()
             } else {
                 if (res && res.rows && res.rows.length > 0) foundCallback()
@@ -324,7 +331,7 @@ export class database {
 
         return await this.client.query(query, values, (err, res) => {
             if (err) {
-              console.log(`${err} ${err.stack}`)
+              log(`${err} ${err.stack}`)
             }
 
             if (res !== undefined && res !== null && res.rows !== undefined) {
@@ -340,7 +347,7 @@ export class database {
 
         if (this.client) {
             await this.client.query(query, (err, res) => {
-                if (err) console.log(`${err} ${err.stack}`)
+                if (err) log(`${err} ${err.stack}`)
                     else database.instance.bannedUsers = res.rows
             });
         }
@@ -351,7 +358,7 @@ export class database {
             
         this.client.query(query, values, (err, res) => {
             if (err) {
-              console.log(`${err} ${err.stack}`)
+              log(`${err} ${err.stack}`)
             }
           })
 
@@ -362,7 +369,7 @@ export class database {
 
         this.client.query(query, values, (err, res) => {
             if (err) {
-                console.log(`${err} ${err.stack}`)
+                log(`${err} ${err.stack}`)
             }
         });
     }
@@ -371,7 +378,7 @@ export class database {
         const values = [ user_id, client ]
 
         return await this.client.query(query, values, (err, res) => {
-            if (err) console.log(`${err} ${err.stack}`)
+            if (err) log(`${err} ${err.stack}`)
             else return res !== undefined && res.rows !== undefined && res.rows.length > 0
         });
     }
@@ -1380,7 +1387,7 @@ export class database {
     //     const query = "SELECT * FROM chat_filter"
 
     //     await this.client.query(query, async (err, res) => {
-    //         if (err) console.log(`${err} ${err.stack}`) 
+    //         if (err) log(`${err} ${err.stack}`) 
     //         else {
     //             const half = parseInt(res.rows[0].half)
     //             const max = parseInt(res.rows[0].max)
@@ -1388,7 +1395,7 @@ export class database {
     //             const query2 = "SELECT * FROM bad_words"
 
     //             await this.client.query(query2, (err2, res2) => {
-    //                 if (err2) console.log(err2 + ' ' + err2.stack)
+    //                 if (err2) log(err2 + ' ' + err2.stack)
     //                 else {
     //                     const words = []
     //                     if (res2 !== undefined && res2.rows !== undefined) {

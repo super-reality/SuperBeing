@@ -2,11 +2,12 @@ import Twilio from 'twilio';
 import { handleInput } from '../cognition/handleInput.js';
 import { database } from '../database/database.js';
 import customConfig from '../utilities/customConfig.js';
+import { log } from '../utilities/logger.js';
 import { getRandomEmptyResponse } from './utils.js';
 
 export async function message(req, res) {
     if (await database.instance.isUserBanned(req.body.From, 'twilio')) return
-    console.log('received message: ' + req.body.Body)
+    log('received message: ' + req.body.Body)
     await database.instance.getNewMessageId('twilio', req.body.From, async (msgId) => {
         addMessageToHistory(req.body.From, req.body.From, req.body.Body, msgId)   
         const message = '!ping ' + req.body.Body
@@ -46,7 +47,7 @@ export async function message(req, res) {
 
     async function handleTwilioMsg(chat_id, response, client) {
             await database.instance.getNewMessageId('twilio', chat_id, async (msgId) => {
-                console.log('response: ' + response)
+                log('response: ' + response)
                 if (response !== undefined && response.length <= 2000 && response.length > 0) {
                     let text = response
                     while (text === undefined || text === '' || text.replace(/\s/g, '').length === 0) text = getRandomEmptyResponse()
@@ -97,9 +98,9 @@ export const createTwilioClient = async (app, router) => {
     const accountSid = customConfig.instance.get('twilioAccountSID')
     const authToken = customConfig.instance.get('twilioAuthToken')
     const twilioNumber = customConfig.instance.get('twilioPhoneNumber')
-    console.log('init')
+    log('init')
     if (!accountSid || !authToken || !twilioNumber)  return console.warn("No API token for Twilio bot, skipping");
-    console.log('twilio client created, sid: ' + accountSid + ' auth token: ' + authToken)
+    log('twilio client created, sid: ' + accountSid + ' auth token: ' + authToken)
 
     client = new Twilio(accountSid, authToken);
 
@@ -110,10 +111,10 @@ export const createTwilioClient = async (app, router) => {
 }
 
 export function sendMessage(client, toNumber, body) {
-    console.log('sending sms: ' + body)
+    log('sending sms: ' + body)
     client.messages.create({from: customConfig.instance.get('twilioPhoneNumber'),
         to: toNumber,
         body: body
-    }).then((message) => console.log('sent message: ' + message.sid)).catch(console.error)
-    console.log('send message to: ' + toNumber + ' body: ' + body)
+    }).then((message) => log('sent message: ' + message.sid)).catch(console.error)
+    log('send message to: ' + toNumber + ' body: ' + body)
 }

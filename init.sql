@@ -383,6 +383,16 @@ INSERT INTO config
 		  ) union all 
 		 (SELECT  'fastMode' as _key, 'false' as _value
 		  ) union all 
+		 (SELECT  'discord_calendar_channel' as _key, '' as _value
+		  ) union all 
+		 (SELECT  'discussion_channel_topics' as _key, 'Apples|Trees|Space|Universe' as _value
+		  ) union all
+		 (SELECT  'use_logtail' as _key, 'false' as _value
+		  ) union all
+		 (SELECT  'logtail_key' as _key, '' as _value
+		  ) union all 
+		 (SELECT  'initCalendar' as _key, 'false' as _value
+		  ) union all 
 		 (SELECT  'enabledServices' as _key, 'Discord' as _value
 		  )
          ) t

@@ -2,6 +2,7 @@ import { detectOsOption } from "./utils.js";
 const Browser = require('../../src/browser-launcher.js')
 import * as fs from 'fs';
 import { createWebsiteReader } from "./website-reader.js";
+import { log } from "../utilities/logger.js";
 
 /* 
     Website Reader is used a standalone app in order to read the pages of a book
@@ -76,20 +77,20 @@ const navigate = async(url, searchParams) => {
     }
     const context = browser.defaultBrowserContext();
     context.overridePermissions(parsedUrl.origin, ['microphone', 'camera']);
-    console.log('navigating to: ' + parsedUrl)
+    log('navigating to: ' + parsedUrl)
     await page.goto(parsedUrl, { waitUntil: 'domcontentloaded' });
 }
 
 let counter = 0
 const catchScreenshot = async() => {
     counter++;
-    console.log('screenshot');
+    log('screenshot');
     const path = 'screenshot' + counter + '.png'
     await page.screenshot({ path })
 }
 
 const delay = async(timeout) => {
-    console.log(`Waiting for ${timeout} ms... `);
+    log(`Waiting for ${timeout} ms... `);
     await waitForTimeout(timeout);
 }
 

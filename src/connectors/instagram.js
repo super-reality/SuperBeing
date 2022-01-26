@@ -2,6 +2,7 @@ import { IgApiClient } from 'instagram-private-api';
 import { handleInput } from '../cognition/handleInput.js';
 import { database } from '../database/database.js';
 import customConfig from '../utilities/customConfig.js';
+import { log } from '../utilities/logger.js';
 
 
 export const createInstagramClient = async () => {
@@ -64,7 +65,7 @@ export const createInstagramClient = async () => {
                         const utc = new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds());
                         const utcStr = date.getDate() + '/' + (date.getMonth() + 1) + '/' + date.getFullYear() + ' ' + utc.getHours() + ':' + utc.getMinutes() + ':' + utc.getSeconds()
             
-                        console.log('got new message: ' + pending.last_permanent_item.text)
+                        log('got new message: ' + pending.last_permanent_item.text)
 
                         const resp = await handleInput(pending.last_permanent_item.text, pending.users[0].username,
                             customConfig.instance.get('agent') ?? "Agent", null, 'instagram', pending.last_permanent_item.item_id);

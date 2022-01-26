@@ -2,6 +2,7 @@ import { TwitterApi } from 'twitter-api-v2';
 import { handleInput } from '../cognition/handleInput.js';
 import { database } from '../database/database.js';
 import customConfig from '../utilities/customConfig.js';
+import { log } from '../utilities/logger.js';
 
     async function handleMessage(response, chat_id, args, twitter, twitterV1, localUser) {
             if (args === 'DM') {
@@ -57,11 +58,11 @@ export const createTwitterClient = async () => {
         const eventsPaginator = await tv1.v1.listDmEvents()
         for await (const event of eventsPaginator) {
             
-            console.log('Event: ' + JSON.stringify(event.message_create.message_data.text))
+            log('Event: ' + JSON.stringify(event.message_create.message_data.text))
             if (event.type == 'message_create') {
 
-                console.log('isMessage')
-                if (event.message_create.sender_id == localUser.data.id) { console.log('same sender'); return }
+                log('isMessage')
+                if (event.message_create.sender_id == localUser.data.id) { log('same sender'); return }
 
                 let authorName = 'unknown'
                 const author = await twitter.v2.user(event.message_create.sender_id)
@@ -95,7 +96,7 @@ export const createTwitterClient = async () => {
     const tweetRules = process.env.TWITTER_TWEET_RULES.split(',')
     const _rules = []
     for (let x in tweetRules) {
-        console.log('rule: ' + tweetRules[x])
+        log('rule: ' + tweetRules[x])
         _rules.push({value: tweetRules[x]})
     }
 
@@ -112,10 +113,10 @@ export const createTwitterClient = async () => {
     stream.on(ETwitterStreamEvent.Data, async twit => {
         const isARt = twit.data.referenced_tweets?.some(twit => twit.type === 'retweeted') ?? false
         if (isARt || (localUser !== undefined && twit.data.author_id == localUser.data.id)) {
-            console.log('isArt found')
+            log('isArt found')
         } else {
             if (/*!twit.data.text.match(regex) && *//*!twit.data.text.match(regex2)) {  
-             /*   console.log('regex doesnt match')
+             /*   log('regex doesnt match')
             } else {
                 let authorName = 'unknown'
                 const author = await twitter.v2.user(twit.data.author_id)
@@ -136,7 +137,7 @@ export const createTwitterClient = async () => {
                         false,
                         authorName,
                         'Twit')
-                        console.log('sending twit: ' + JSON.stringify(twit))
+                        log('sending twit: ' + JSON.stringify(twit))
 
                     
                     

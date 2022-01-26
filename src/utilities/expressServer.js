@@ -2,6 +2,7 @@ import { createServer } from "http";
 import express, { urlencoded, json } from 'express';
 import cors from "cors";
 import { registerRoutes } from "./routes.js";
+import { log } from "./logger.js";
 
 export let app;
 
@@ -15,7 +16,7 @@ export async function createExpressServer() {
     app.use(json());
 
     server.listen(process.env.SOCKETIO_PORT, () => {
-        console.log()
+        console.log();
     })
             
     app.use(function(req, res, next) {
@@ -31,7 +32,7 @@ export async function createExpressServer() {
     const dissalowedOrigins = [ /*'http://localhost:3001'*/ ]
     const corsOptions = {
         origin: function (origin, callback) {
-            console.log("Origin is", origin);
+            log("Origin is", origin);
             if (dissalowedOrigins.indexOf(origin) !== -1) {
                 callback(new Error('Not allowed by CORS'));
             }
@@ -53,5 +54,5 @@ export async function createExpressServer() {
     
     await registerRoutes(app);
     
-    app.listen(process.env.PORT, () => { console.log(`Server listening on http://localhost:${process.env.PORT}`); })
+    app.listen(process.env.PORT, () => { log(`Server listening on http://localhost:${process.env.PORT}`); })
 }
