@@ -26,9 +26,10 @@ export async function makeCompletionRequest(data, speaker, agent, type, engine, 
                 return await makeOpenAIGPT3Request(data, speaker, agent, type, engine);
         }
 }
-
+const useDebug = false;
 async function makeOpenAIGPT3Request(data, speaker, agent, type, engine, log = true) {
-        const API_KEY = customConfig.instance.get('openai_api_key')
+        if(useDebug) return { success: true, choice: { text: "Default response" } };
+        const API_KEY = process.env.OPENAI_API_KEY ?? customConfig.instance.get('openai_api_key')
         const headers = {
                 'Content-Type': 'application/json',
                 'Authorization': 'Bearer ' + API_KEY

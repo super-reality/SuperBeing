@@ -1024,8 +1024,10 @@ export function moreThanOneInConversation() {
 export let client = undefined
 
 export const createDiscordClient = () => {
-    if (!customConfig.instance.get('discord_api_token')) return console.warn('No API token for Discord bot, skipping');
-    log("Creating Discord client");
+    const t = customConfig.instance.get('discord_api_token');
+    const token = t != null && t != "" ? t :  process.env.DISCORD_API_TOKEN
+    if (!token) return console.warn('No API token for Discord bot, skipping');
+    console.log("Creating Discord client");
     client = new Discord.Client({
         partials: ['MESSAGE', 'USER', 'REACTION'],
         intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_PRESENCES, Intents.FLAGS.GUILD_MEMBERS, Intents.FLAGS.GUILD_MESSAGES]
@@ -1076,8 +1078,6 @@ export const createDiscordClient = () => {
     client.commands.set("setname", setname);
     client.commands.set("unban", unban);
 
-    client.login(customConfig.instance.get('discord_api_token'));
-
     setInterval(() => {
         client.channels.cache.forEach(async (channel) => {
             log(channel.topic + ' - ' + (channel.topic?.toLowerCase() === 'daily discussion'));
@@ -1095,6 +1095,8 @@ export const createDiscordClient = () => {
             }
         })
     }, 1000 * 3600 );
+  
+    client.login(token);
 };
 
 const discussionChannels = {}

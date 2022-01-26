@@ -33,10 +33,10 @@ export async function createWikipediaAgent(speaker, name, personality, facts) {
                   return log("Error, couldn't find anything on wikiedia about " + name);
           }
           
-          const factSourcePrompt = `The follow are facts about ${name}\n`;
+          const factSourcePrompt = `The following are facts about ${name}\n`;
           const factPrompt = factSourcePrompt + out.result.extract + "\n" + facts;
   
-          const personalitySourcePrompt = `Based on the above facts, the following is a description of the personality of an anthropomorphosized ${name}:`;
+          const personalitySourcePrompt = `Based on the above facts, the following is a description of the personality of an anthropomorphized ${name}:`;
 
           database.instance.setDefaultEthics(name);
           database.instance.setDefaultNeedsAndMotivations(name);
@@ -92,6 +92,8 @@ export async function createWikipediaAgent(speaker, name, personality, facts) {
   }
 
 export const searchWikipedia = async (keyword) => {
+
+  console.log("Searching wikipedia for ", keyword);
 
   // if keywords contains more than three words, summarize with GPT-3
   if (keyword.trim().split(" ").length > 3) {
@@ -189,13 +191,17 @@ export const searchWikipedia = async (keyword) => {
    // if it's not immediately located, request from weaviate
   const weaviateResponse = await makeWeaviateRequest(keyword);
 
-  log("res is", weaviateResponse)
-  log("Looking up result on wikipedia", weaviateResponse.Paragraph[0].inArticle[0].title);
-  const result = await lookUpOnWikipedia(weaviateResponse.Paragraph[0].inArticle[0].title);
+  if(weaviateResponse?.Paragraph[0]?.inArticle[0]?.title){
+  const result = await lookUpOnWikipedia(weaviateResponse?.Paragraph[0]?.inArticle[0]?.title);
+  log("result", result);
   return {
     result,
     filePath
   }
+} else return {
+  result: keyword,
+  filePath: ""
+}
 }
 
 export const makeWeaviateRequest = async (keyword) => {

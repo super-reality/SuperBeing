@@ -266,15 +266,20 @@ export async function registerRoutes(app) {
         const message = req.body.command
         const speaker = req.body.sender
         const agent = req.body.agent
+        const msg = database.instance.getRandomStartingMessage(agent)
         if (message.includes("/become")) {
-            const msg = database.instance.getRandomStartingMessage(agent)
-            let out = await createWikipediaAgent("Speaker", agent, "", "");
-            while (!out || out === undefined) {
-                out = createWikipediaAgent('Speaker', defaultAgent, "", "");
+            let out = {}
+            if (!(await database.instance.getAgentExists(agent))) {
+                out = await createWikipediaAgent("Speaker", agent, "", "");
+                // if (!out || out === undefined) {
+                //     out = createWikipediaAgent('Speaker', defaultAgent, "", "");
+                // }
             }
+
             out.startingMessage = (await msg);
             database.instance.setConversation(agent, 'web', '0', agent, out.startingMessage, false);
             return res.send(out);
+
         }
         await handleInput(message, speaker, agent, res, 'web', '0')
     });

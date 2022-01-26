@@ -153,9 +153,13 @@ async function generateContext(speaker, agent, conversation, message) {
                 .replaceAll("$conversation", conversation);
 }
 
+const defaultAgent = process.env.AGENT
+
 //handles the input from a client according to a selected agent and responds
 export async function handleInput(message, speaker, agent, res, clientName, channelId) {
         log("Handling input: " + message);
+        agent = agent ?? defaultAgent
+
         //if the input is a command, it handles the command and doesn't respond according to the agent
         if (await evaluateTerminalCommands(message, speaker, agent, res, clientName, channelId)) return;
         
@@ -253,13 +257,10 @@ export async function handleInput(message, speaker, agent, res, clientName, chan
         
         database.instance.setMeta(agent, speaker, meta);
 
-        let respp = choice.text;
-        if (respp.endsWith('\n')) {
-                respp = respp.substring(0, respp.length - 2);
-        }
+        let response = choice.text.split('\n')[0];
         
         // Write to conversation to the database
-        database.instance.setConversation(agent, clientName, channelId, agent, respp, false);
-
-        return respondWithMessage(agent, respp, res);
+        database.instance.setConversation(agent, clientName, channelId, agent, response, false);
+        console.log("responding with message", response);
+        return respondWithMessage(agent, response, res);
 }
