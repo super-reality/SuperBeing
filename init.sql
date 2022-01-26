@@ -390,7 +390,9 @@ INSERT INTO config
 		 (SELECT  'use_logtail' as _key, 'false' as _value
 		  ) union all
 		 (SELECT  'logtail_key' as _key, '' as _value
-		  ) union all
+		  ) union all 
+		 (SELECT  'initCalendar' as _key, 'false' as _value
+		  ) union all 
 		 (SELECT  'enabledServices' as _key, 'Discord' as _value
 		  )
          ) t

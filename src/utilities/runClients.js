@@ -35,7 +35,9 @@ export async function runClients() {
     // Discord support
     if (enabled_services.includes('discord')) {
         import('../connectors/discord.js').then(module => module.default());
-        await initCalendar();
+        if (customConfig.instance.getBool('initCalendar')) {
+         await initCalendar();
+        }
     }
        // Reddit support
     if (enabled_services.includes('reddit')) {
