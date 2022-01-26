@@ -7,7 +7,7 @@ import { database } from "../database/database.js"
 import customConfig from '../utilities/customConfig.js'
 import roomManager from '../utilities/roomManager.js'
 import { classifyText } from '../utilities/textClassifier.js'
-import { getRandomEmptyResponse, startsWithCapital } from "./utils.js"
+import { getRandomEmptyResponse, getRandomTopic, startsWithCapital } from "./utils.js"
 
 // TODO: Remove this
 const config = {
@@ -326,26 +326,35 @@ export const messageCreate = async (client, message) => {
     } else if (content.startsWith('!ping')) {
         roomManager.instance.userGotInConversationFromAgent(author.id), 'discord';
     } else if (!content.startsWith('!ping')) {
-        const msgs = await channel.messages.fetch({ limit: 10 }); 
-        if (msgs && msgs.size > 0) {
-            let values = '';
-            let agentTalked = false;
-            for (const [key, value] of msgs.entries()) {
-                values += value.content;
-                if (value.author.bot) {
-                    agentTalked = true;
-                }
+        if (discussionChannels[channel.id] !== undefined && discussionChannels[channel.id]) {
+            if (!discussionChannels[channel.id].responded) {
+                discussionChannels[channel.id].responded = true;
+                content = '!ping ' + content;
             }
+        }
 
-            if (agentTalked) {
-                const context = await classifyText(values);
-                const ncontext = await classifyText(content);
-                console.log('c1: ' + context + ' c2: ' + ncontext);
+        if (!content.startsWith('!ping')) {
+            const msgs = await channel.messages.fetch({ limit: 10 }); 
+            if (msgs && msgs.size > 0) {
+                let values = '';
+                let agentTalked = false;
+                for (const [key, value] of msgs.entries()) {
+                    values += value.content;
+                    if (value.author.bot) {
+                        agentTalked = true;
+                    }
+                }
 
-                if (context == ncontext) {
-                    roomManager.instance.userTalkedSameTopic(author.id, 'discord');
-                    if (roomManager.instance.agentCanResponse(author.id, 'discord')) {
-                        content = '!ping ' + content;
+                if (agentTalked) {
+                    const context = await classifyText(values);
+                    const ncontext = await classifyText(content);
+                    console.log('c1: ' + context + ' c2: ' + ncontext);
+
+                    if (context == ncontext) {
+                        roomManager.instance.userTalkedSameTopic(author.id, 'discord');
+                        if (roomManager.instance.agentCanResponse(author.id, 'discord')) {
+                            content = '!ping ' + content;
+                        }
                     }
                 }
             }
@@ -1067,6 +1076,33 @@ export const createDiscordClient = () => {
     client.commands.set("unban", unban);
 
     client.login(customConfig.instance.get('discord_api_token'));
+
+    setInterval(() => {
+        client.channels.cache.forEach(async (channel) => {
+            console.log(channel.topic + ' - ' + (channel.topic?.toLowerCase() === 'daily discussion'));
+            if (channel.topic?.toLowerCase() === 'daily discussion');
+            {
+                if (discussionChannels[channel.id] === undefined || !discussionChannels) {
+                    const resp = await handleInput('Tell me about ' + getRandomTopic(), 'bot', customConfig.instance.get('agent') ?? "Agent", null, 'discord', channel.id);
+                    channel.send(resp);
+                    discussionChannels[channel.id] = { timeout: setTimeout(() => {
+                        delete discussionChannels[channel.id]
+                    }, 1000 * 3600 * 4),
+                    responded: false };
+                }
+                
+            }
+        })
+    }, 1000 * 3600 );
 };
+
+const discussionChannels = {}
+
+export async function sendMessageToChannel(channelId, msg) {
+    const channel = await client.channels.fetch(channelId);
+    if (channel && channel !== undefined) {
+        channel.send(msg);
+    }
+}
 
 export default createDiscordClient;

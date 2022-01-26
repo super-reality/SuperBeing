@@ -1,6 +1,7 @@
 import customConfig from './customConfig.js';
 import { initTerminal } from "../connectors/terminal.js"
 import { handleInput } from '../cognition/handleInput.js';
+import { initCalendar } from './calendar.js';
 
 export async function runClients() {
     //reads the enabled services from the config and puts them in an array
@@ -33,6 +34,7 @@ export async function runClients() {
     // Discord support
     if (enabled_services.includes('discord')) {
         import('../connectors/discord.js').then(module => module.default());
+        await initCalendar();
     }
        // Reddit support
     if (enabled_services.includes('reddit')) {

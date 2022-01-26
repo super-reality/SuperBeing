@@ -1,4 +1,5 @@
 import { existsSync } from "fs";
+import customConfig from "../utilities/customConfig.js";
 
 export function getRandomNumber(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -97,4 +98,9 @@ export function IsJsonString(str) {
       return false;
   }
   return true;
+}
+
+export function getRandomTopic() {
+  const topics = customConfig.instance.get('discussion_channel_topics').split('|');
+  return topics[getRandomNumber(0, topics.length - 1)];
 }
