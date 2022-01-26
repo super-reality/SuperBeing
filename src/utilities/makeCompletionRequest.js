@@ -3,6 +3,7 @@ import { config } from "dotenv";
 import { makeModelRequest } from "./makeModelRequest.js";
 import { database } from '../database/database.js';
 import customConfig from './customConfig.js';
+import { error } from './logger.js';
 config();
 
 export async function makeCompletionRequest(data, speaker, agent, type, engine, log = true) {
@@ -46,8 +47,8 @@ async function makeOpenAIGPT3Request(data, speaker, agent, type, engine, log = t
 
                 }
         }
-        catch (error) {
-                console.log("Error is", error);
+        catch (err) {
+                error(err);
                 return { success: false };
         }
 }

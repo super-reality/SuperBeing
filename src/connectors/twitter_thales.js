@@ -4,6 +4,7 @@ import url from 'url';
 import { handleInput } from "./handleInput.js";
 import TwitterClient from 'twit';
 import customConfig from '../utilities/customConfig.js';
+import { log } from '../utilities/logger.js';
 
 let TwitClient;
 
@@ -21,10 +22,10 @@ const SendMessage = (id, twitterUserId, messageType, text) => {
           }
         }
       }
-    }, (error, data, response) => { if (error) console.log(error) });
+    }, (error, data, response) => { if (error) log(error) });
   } else {
     TwitClient.post('statuses/update', { status: '@' + twitterUserId + ' ' + text, id, in_reply_to_status_id: id }, function (err, data, response) {
-      console.log("Posted ", '@' + twitterUserId + ' ' + text)
+      log("Posted ", '@' + twitterUserId + ' ' + text)
     })
   }
 }
@@ -38,7 +39,7 @@ const HandleResponse = async (id, name, receivedMessage, messageType, event) => 
   }
 
   TwitClient.post('statuses/update', { status: reply }, function (err, data, response) {
-    if (err) console.log(err);
+    if (err) log(err);
   })
 
 
@@ -71,7 +72,7 @@ export const createTwitterClient = async (twitterId = customConfig.instance.get(
   webhook.on('event', event => {
     if (typeof (event.tweet_create_events) !== 'undefined' &&
       event.tweet_create_events[0].user.screen_name !== twitterId) {
-      console.log("************************** EVENT tweet_create_events")
+      log("************************** EVENT tweet_create_events")
       const id = event.tweet_create_events[0].user.id
       const screenName = event.tweet_create_events[0].user.screen_name
       const ReceivedMessage = event.tweet_create_events[0].text;
@@ -83,8 +84,8 @@ export const createTwitterClient = async (twitterId = customConfig.instance.get(
 
     if (typeof (event.direct_message_events) !== 'undefined') {
       if (event.users[event.direct_message_events[0].message_create.sender_id].screen_name !== twitterId) {
-        console.log("************************** EVENT direct_message_events")
-        console.log(event.direct_message_events[0])
+        log("************************** EVENT direct_message_events")
+        log(event.direct_message_events[0])
 
         const id = event.direct_message_events[0].message_create.sender_id;
         const name = event.users[event.direct_message_events[0].message_create.sender_id].screen_name;
@@ -107,8 +108,8 @@ export const createTwitterClient = async (twitterId = customConfig.instance.get(
     }
 
     if (route.query.crc_token) {
-      console.log("Validating webhook")
-      console.log(route.query.crc_token)
+      log("Validating webhook")
+      log(route.query.crc_token)
       const crc = validateWebhook(route.query.crc_token, customConfig.instance.get('twitterConsumerSecret'));
       res.writeHead(200, { 'content-type': 'application/json' });
       res.end(JSON.stringify(crc));
@@ -126,7 +127,7 @@ export const createTwitterClient = async (twitterId = customConfig.instance.get(
           reply = reply.substring(0, reply.lastIndexOf(".")) + ".";
         }
     TwitClient.post('statuses/update', { status: reply }, function (err, data, response) {
-      if (err) console.log(err);
+      if (err) log(err);
     })
   
   }, (1000 * 60 * 60));

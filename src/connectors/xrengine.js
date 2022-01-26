@@ -6,6 +6,7 @@ import { classifyText } from "../utilities/textClassifier.js";
 import { browserWindow, PageUtils } from './browser.js';
 import { detectOsOption, getRandomEmptyResponse, startsWithCapital } from "./utils.js";
 import { defaultAgent } from "../index.js";
+import { error, log, warn } from "../utilities/logger.js";
 
 export const UsersInRange = {}
 export const UsersInHarassmentRange = {}
@@ -48,7 +49,7 @@ export function sentMessage(user) {
         conversation[user] = { timeoutId: undefined, timeOutFinished: true, isInConversation: true }
         if (conversation[user].timeoutId !== undefined) clearTimeout(conversation[user].timeoutId)
         conversation[user].timeoutId = setTimeout(() => {
-            console.log('conversation for ' + user + ' ended')
+            log('conversation for ' + user + ' ended')
             if (conversation[user] !== undefined) {
                 conversation[user].timeoutId = undefined
                 conversation[user].timeOutFinished = true
@@ -56,7 +57,7 @@ export function sentMessage(user) {
         }, 720000)
     } else {
         conversation[user].timeoutId = setTimeout(() => {
-            console.log('conversation for ' + user + ' ended')
+            log('conversation for ' + user + ' ended')
             if (conversation[user] !== undefined) {
                 conversation[user].timeoutId = undefined
                 conversation[user].timeOutFinished = true
@@ -148,9 +149,9 @@ export async function handleMessages(messages, bot) {
 
             const _sender = messages[i].senderName !== undefined ? messages[i].senderName : messages[i].sender.name
             let content = messages[i].text
-            console.log('handling message: ' + content)
+            log('handling message: ' + content)
             await addMessageToHistory(messages[i].channelId, messages[i].id, _sender, content)
-            console.log("Message added to history")
+            log("Message added to history")
             let addPing = false
             let _prev = undefined
             _prev = prevMessage[messages[i].channelId]
@@ -191,7 +192,7 @@ export async function handleMessages(messages, bot) {
             const isUserNameMention = content.toLowerCase().replace(',', '').replace('.', '').replace('?', '').replace('!', '').match(bot.username_regex)
             const isInDiscussion = isInConversation(_sender)
             if (!content.startsWith('!')) {
-                if (isUserNameMention) { console.log('is user mention'); content = '!ping ' + content.replace(bot.username_regex, '').trim() }
+                if (isUserNameMention) { log('is user mention'); content = '!ping ' + content.replace(bot.username_regex, '').trim() }
                 else if (isInDiscussion || startConv) content = '!ping ' + content
             }
 
@@ -208,7 +209,7 @@ export async function handleMessages(messages, bot) {
                         if (oldChat !== undefined && oldChat.length > 0) {
                             const context = await classifyText(values);
                             const ncontext = await classifyText(content);
-                            console.log('c1: ' + context + ' c2: ' + ncontext);
+                            log('c1: ' + context + ' c2: ' + ncontext);
 
                             if (context == ncontext) {
                                 roomManager.instance.userTalkedSameTopic(_sender, 'xrengine');
@@ -227,16 +228,16 @@ export async function handleMessages(messages, bot) {
                     roomManager.instance.userGotInConversationFromAgent(_sender);
                 }
             }
-            console.log('content: ' + content + ' sender: ' + _sender)
+            log('content: ' + content + ' sender: ' + _sender)
 
             const dateNow = new Date();
             var utc = new Date(dateNow.getUTCFullYear(), dateNow.getUTCMonth(), dateNow.getUTCDate(), dateNow.getUTCHours(), dateNow.getUTCMinutes(), dateNow.getUTCSeconds());
             const utcStr = dateNow.getDate() + '/' + (dateNow.getMonth() + 1) + '/' + dateNow.getFullYear() + ' ' + utc.getHours() + ':' + utc.getMinutes() + ':' + utc.getSeconds()
 
-            console.log("Sending out input");
+            log("Sending out input");
 
             const response = await handleInput(content.replace('!ping', ''), _sender, customConfig.instance.get('agent') ?? "Agent", null, 'xr-engine', messages[i].channelId);
-            console.log("Handling response");
+            log("Handling response");
             await handleXREngineResponse(response, addPing, _sender)
 
         })
@@ -246,7 +247,7 @@ export async function handleMessages(messages, bot) {
 
 
     async function handleXREngineResponse(responses, addPing, _sender) {
-        console.log('response: ' + responses)
+        log('response: ' + responses)
         if (responses !== undefined && responses.length <= 2000 && responses.length > 0) {
             let text = responses
             while (text === undefined || text === '' || text.replace(/\s/g, '').length === 0) text = getRandomEmptyResponse()
@@ -291,16 +292,16 @@ let xrengineBot = null;
 
 async function createXREngineClient() {
     //generateVoice('hello there', (buf, path) => {}, false)
-    console.log('creating xr engine client')
+    log('creating xr engine client')
     xrengineBot = new XREngineBot({ headless: true });
 
-    console.log("Preparing to connect to ", customConfig.instance.get('xrEngineURL'));
+    log("Preparing to connect to ", customConfig.instance.get('xrEngineURL'));
     xrengineBot.delay(Math.random() * 100000);
-    console.log("Connecting to server...");
+    log("Connecting to server...");
     await xrengineBot.launchBrowser();
     const XRENGINE_URL = customConfig.instance.get('xrEngineURL') || 'https://localhost:3000/location/test';
     xrengineBot.enterRoom(XRENGINE_URL, { name: "TestBot" })
-    console.log('bot fully loaded')
+    log('bot fully loaded')
 }
 
 /**
@@ -333,7 +334,7 @@ class XREngineBot {
     }
 
     async sendMessage(message) {
-        console.log('sending message: ' + message)
+        log('sending message: ' + message)
         if (message === null || message === undefined) return;
 
         // TODO:
@@ -351,7 +352,7 @@ class XREngineBot {
 
     async sendMovementCommand(x, y, z) {
         if (x === undefined || y === undefined || z == undefined) {
-            console.log(`Invalid parameters! (${x},${y},${z})`)
+            log(`Invalid parameters! (${x},${y},${z})`)
             return
         }
 
@@ -362,7 +363,7 @@ class XREngineBot {
     }
     async _sendMovementCommand(x, y, z) {
         if (x === undefined || y === undefined || z === undefined) {
-            console.log(`Invalid parameters! (${x},${y},${z})`)
+            log(`Invalid parameters! (${x},${y},${z})`)
             return
         }
 
@@ -473,7 +474,7 @@ class XREngineBot {
         //#endregion
 
         await this.updateChannelState();
-        if (!this.activeChannel) return console.log("No active channel");
+        if (!this.activeChannel) return log("No active channel");
         const messages = this.activeChannel.messages;
         if (messages === undefined || messages === null) return;
 
@@ -515,7 +516,7 @@ class XREngineBot {
 
 
     async sendAudio(duration) {
-        console.log("Sending audio...");
+        log("Sending audio...");
 
         await this.evaluate((duration) => {
             var audio = document.createElement("audio");
@@ -541,33 +542,33 @@ class XREngineBot {
     }
 
     async stopAudio(bot) {
-        console.log("Stop audio...");
+        log("Stop audio...");
         await this.clickElementById('button', 'UserAudio');
     }
 
     async recvAudio(duration) {
-        console.log("Receiving audio...");
+        log("Receiving audio...");
         await this.waitForSelector('[class*=PartyParticipantWindow]', duration);
     }
 
     async sendVideo(duration) {
-        console.log("Sending video...");
+        log("Sending video...");
         await this.clickElementById('button', 'UserVideo');
         await this.waitForTimeout(duration);
     }
 
     async stopVideo(bot) {
-        console.log("Stop video...");
+        log("Stop video...");
         await this.clickElementById('button', 'UserVideo');
     }
 
     async recvVideo(duration) {
-        console.log("Receiving video...");
+        log("Receiving video...");
         await this.waitForSelector('[class*=PartyParticipantWindow]', duration);
     }
 
     async delay(timeout) {
-        console.log(`Waiting for ${timeout} ms... `);
+        log(`Waiting for ${timeout} ms... `);
         await this.waitForTimeout(timeout);
     }
 
@@ -592,10 +593,10 @@ class XREngineBot {
         }
         catch (e) {
             if (this.page) {
-                console.warn("Caught error. Trying to screenshot")
+                warn("Caught error. Trying to screenshot")
                 this.page.screenshot({ path })
             }
-            throw e
+            error(e);
         }
     }
 
@@ -618,7 +619,7 @@ class XREngineBot {
      */
     exec(fn) {
         this.catchAndScreenShot(() => fn(this)).catch((e) => {
-            console.error("Failed to run. Check botError.png if it exists. Error:", e)
+            error("Failed to run. Check botError.png if it exists. Error:", e)
             process.exit(-1)
         })
     }
@@ -627,7 +628,7 @@ class XREngineBot {
      *  directly in most cases. It will be done automatically when needed.
      */
     async launchBrowser() {
-        console.log('Launching browser');
+        log('Launching browser');
         const options = {
             headless: this.headless,
             ignoreHTTPSErrors: true,
@@ -654,36 +655,36 @@ class XREngineBot {
                 const data = message.text().split('|', 2)
                 if (data.length === 2) {
                     const _data = data[1]
-                    console.log(`Scene Metadata: Data:${_data}`)
+                    log(`Scene Metadata: Data:${_data}`)
                     // TODO: Replace me with metadata handler
                     // MessageClient.instance.sendMetadata('xr-engine', 'xr-engine', 'xr-engine', data || 'none')
                 }
                 else
-                    console.log(`invalid scene metadata length (${data.length}): ${data}`)
+                    log(`invalid scene metadata length (${data.length}): ${data}`)
             }
             else if (message.text().startsWith('metadata')) {
                 const data = message.text().split('|', 3)
                 if (data.length === 3) {
                     const xyz = data[1]
                     const _data = data[2]
-                    console.log(`Metadata: Position: ${xyz}, Data: ${_data}`)
+                    log(`Metadata: Position: ${xyz}, Data: ${_data}`)
                 }
                 else
-                    console.log(`invalid metadata length ${data.length}: ${data}`)
+                    log(`invalid metadata length ${data.length}: ${data}`)
             }
             else if (message.text().startsWith('players|')) {
                 const cmd = message.text().split('|')[0]
                 const data = message.text().substring(cmd.length + 1)
-                console.log(`Players: ${data}`)
+                log(`Players: ${data}`)
             }
             else if (message.text().startsWith('messages|')) {
                 const cmd = message.text().split('|')[0]
                 const data = message.text().substring(cmd.length + 1)
-                console.log(`Messages: ${data}`)
+                log(`Messages: ${data}`)
             }
             else if (message.text().startsWith('proximity|')) {
                 const data = message.text().split('|')
-                //console.log('Proximity Data: ' + data)
+                //log('Proximity Data: ' + data)
                 if (data.length === 4) {
                     const mode = data[1]
                     const player = data[2]
@@ -715,7 +716,7 @@ class XREngineBot {
             else if (message.text().startsWith('localId|')) {
                 const cmd = message.text().split('|')[0]
                 const data = message.text().substring(cmd.length + 1)
-                console.log('local user id: ' + data)
+                log('local user id: ' + data)
                 if (data !== undefined && data !== '') {
                     this.userId = data
                 }
@@ -724,7 +725,7 @@ class XREngineBot {
             }
 
             if (this.autoLog)
-                console.log(">> ", message.text())
+                log(">> ", message.text())
         })
 
         this.page.setViewport({ width: 0, height: 0 });
@@ -737,11 +738,11 @@ class XREngineBot {
         await this.setFocus('canvas');
         await this.clickElementById('canvas', 'engine-renderer-canvas');
         const interval = setInterval(() => {
-            console.log('Pressing', key);
+            log('Pressing', key);
             this.pressKey(key);
         }, 100);
         return new Promise((resolve) => setTimeout(() => {
-            console.log('Clearing button press for ' + key, numMilliSeconds);
+            log('Clearing button press for ' + key, numMilliSeconds);
             this.releaseKey(key);
             clearInterval(interval);
             resolve()
@@ -763,18 +764,18 @@ class XREngineBot {
 
         let parsedUrl = new URL(url.includes('https') ? url : `https://${url}`);
         parsedUrl.searchParams.set('bot', 'true')
-        console.log("parsed url is", parsedUrl);
+        log("parsed url is", parsedUrl);
         const context = this.browser.defaultBrowserContext();
-        console.log("permission allow for ", parsedUrl.origin);
+        log("permission allow for ", parsedUrl.origin);
         context.overridePermissions(parsedUrl.origin, ['microphone', 'camera']);
 
-        console.log(`Going to ${parsedUrl}`);
+        log(`Going to ${parsedUrl}`);
         await this.page.goto(parsedUrl, { waitUntil: 'domcontentloaded' });
 
         /* const granted = await this.page.evaluate(async () => {
              return (await navigator.permissions.query({ name: 'camera' })).state;
          });
-         console.log('Granted:', granted);*/
+         log('Granted:', granted);*/
     }
 
     /** Enters the room specified, enabling the first microphone and speaker found
@@ -812,7 +813,7 @@ class XREngineBot {
         await this.updateUsername(name)
         await this.delay(10000)
         const index = this.getRandomNumber(0, this.avatars.length - 1)
-        console.log(`avatar index: ${index}`)
+        log(`avatar index: ${index}`)
         await this.updateAvatar(this.avatars[index])
         await this.requestPlayers()
         await this.getUser()
@@ -827,13 +828,13 @@ class XREngineBot {
         this.activeChannel = await this.evaluate(() => {
             const chatState = globalThis.chatState;
             if (chatState === undefined) {
-                console.log('chat state is undefined');
+                log('chat state is undefined');
                 return;
             }
             const channelState = chatState.channels;
             const channels = channelState.channels.value;
             const activeChannelMatch = Object.entries(channels).find(([key, channel]) => channels[key].channelType === 'instance');
-            console.log("activeChannelMatch: ", activeChannelMatch);
+            log("activeChannelMatch: ", activeChannelMatch);
             if (activeChannelMatch && activeChannelMatch.length > 0) {
                 const res = deepCopy(activeChannelMatch[1]);
 
@@ -869,7 +870,7 @@ class XREngineBot {
 
                 return res
             } else {
-                console.warn("Couldn't get chat state");
+                warn("Couldn't get chat state");
                 return undefined;
             }
         })
@@ -887,7 +888,7 @@ class XREngineBot {
     }
 
     async updateAvatar(avatar) {
-        console.log(`updating avatar to: ${avatar}`)
+        log(`updating avatar to: ${avatar}`)
 
         await this.clickElementById('SPAN', 'Profile_0')
         await this.clickElementById('button', 'CreateIcon')

@@ -1,5 +1,6 @@
 import { launch } from "puppeteer-stream";
 import customConfig from "../utilities/customConfig.js";
+import { log } from "../utilities/logger.js";
 import { detectOsOption } from "./utils.js";
 let Xvfb  = require('xvfb')
 
@@ -8,13 +9,13 @@ export const createZoomClient = async (messageResponseHandler) => {
     var xvfb = new Xvfb ();
     await xvfb.start(async function(err, xvfbProcess) {
         if (err) {
-            console.log(err)
+            log(err)
             xvfb.stop(function(_err) {
-                if (_err) console.log(_err) 
+                if (_err) log(_err) 
             });
         }
 
-        console.log('started virtual window')
+        log('started virtual window')
         zoomObj = new zoom(messageResponseHandler)
         await zoomObj.init();
     });
@@ -51,11 +52,11 @@ export class zoom {
             },
             ...detectOsOption()
         };
-        console.log(JSON.stringify(options))
+        log(JSON.stringify(options))
 
         this.browser = await launch(options)
         this.page = await this.browser.newPage()
-        this.page.on('console', (log) => console.log(log._text));
+        this.page.on('console', (log) => log(log._text));
     
         this.page.setViewport({ width: 0, height: 0 })
         await this.page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36')
@@ -134,12 +135,12 @@ export class zoom {
             const video = document.getElementById('main-video');
             const stream = video.captureStream();
             const recorder = new MediaRecorder(stream)
-            recorder.addEventListener('error', (error) => {console.log('recorder error: ' + error);});
+            recorder.addEventListener('error', (error) => {log('recorder error: ' + error);});
             recorder.addEventListener('dataavailable', ({data}) => { 
-                console.log('data: ' + JSON.stringify(data))
+                log('data: ' + JSON.stringify(data))
             });
             recorder.start(5000);
-            console.log(stream.id);
+            log(stream.id);
         });
     }
 
@@ -173,7 +174,7 @@ export class zoom {
     }
 
     async clickSelectorId(selector, id) {
-        console.log(`Clicking for a ${selector} matching ${id}`)
+        log(`Clicking for a ${selector} matching ${id}`)
         
         await this.page.evaluate(
           (selector, id) => {
@@ -181,15 +182,15 @@ export class zoom {
             let singleMatch = matches.find((button) => button.id === id)
             let result
             if (singleMatch && singleMatch.click) {
-              console.log('normal click')
+              log('normal click')
               result = singleMatch.click()
             }
             if (singleMatch && !singleMatch.click) {
-              console.log('on click')
+              log('on click')
               result = singleMatch.dispatchEvent(new MouseEvent('click', { bubbles: true }))
             }
             if (!singleMatch) {
-              console.log('event click', matches.length)
+              log('event click', matches.length)
              if (matches.length > 0) {
                   const m = matches[0]
                   result = m.dispatchEvent(new MouseEvent('click', { bubbles: true }))
@@ -206,7 +207,7 @@ export class zoom {
     }
 
     async clickSelectorClassRegex(selector, classRegex) {
-        console.log(`Clicking for a ${selector} matching ${classRegex}`);
+        log(`Clicking for a ${selector} matching ${classRegex}`);
 
         await this.page.evaluate((selector, classRegex) => {
             classRegex = new RegExp(classRegex);
@@ -230,12 +231,12 @@ export class zoom {
         }
         const context = this.browser.defaultBrowserContext();
         context.overridePermissions(parsedUrl.origin, ['microphone', 'camera']);
-        console.log('navigating to: ' + parsedUrl)
+        log('navigating to: ' + parsedUrl)
         await this.page.goto(parsedUrl, { waitUntil: 'domcontentloaded' });
     }
 
     async delay(timeout) {
-        console.log(`Waiting for ${timeout} ms... `);
+        log(`Waiting for ${timeout} ms... `);
         await this.waitForTimeout(timeout);
     }
 
@@ -250,7 +251,7 @@ export class zoom {
     counter = 0
     async catchScreenshot() {
         this.counter++;
-        console.log('screenshot');
+        log('screenshot');
         const path = 'screenshot' + this.counter + '.png'
         await this.page.screenshot({ path })
     }

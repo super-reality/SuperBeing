@@ -1,6 +1,7 @@
 import natural from 'natural';
 import { rootDir } from './rootDir.js';
 import fs from 'fs';
+import { log } from './logger.js';
 
 let classifier;
 let profanityClassifier
@@ -34,11 +35,11 @@ export async function trainClassifier() {
     classifier.train();
     classifier.save(rootDir + '/data/classifier/classifier.json', function (err, classifier) {
         if (err) {
-            console.log(err);
+            log(err);
             return;
         }
 
-        console.log('saved classifier');
+        log('saved classifier');
     });
 }
 export async function trainProfanityClassifier() {
@@ -50,11 +51,11 @@ export async function trainProfanityClassifier() {
     profanityClassifier.train();
     profanityClassifier.save(rootDir + '/data/classifier/profanity_classifier.json', function (err, classifier) {
         if (err) {
-            console.log(err);
+            log(err);
             return;
         }
 
-        console.log('saved profanity classifier');
+        log('saved profanity classifier');
     });
 }
 
@@ -62,13 +63,13 @@ export async function initClassifier() {
     if (fs.existsSync(rootDir + '/data/classifier/classifier.json')) {
         await natural.BayesClassifier.load(rootDir + '/data/classifier/classifier.json', null, async function (err, _classifier) {
             if (err) {
-                console.log(err);
+                log(err);
                 classifier = new natural.BayesClassifier();
                 await trainClassifier();
                 return;
             }
 
-            console.log('loaded classifier');
+            log('loaded classifier');
             classifier = _classifier;
         });
     } else {
@@ -80,13 +81,13 @@ export async function initProfanityClassifier() {
     if (fs.existsSync(rootDir + '/data/classifier/profanity_classifier.json')) {
         await natural.BayesClassifier.load(rootDir + '/data/classifier/profanity_classifier.json', null, async function (err, _classifier) {
             if (err) {
-                console.log(err);
+                log(err);
                 profanityClassifier = new natural.BayesClassifier();
                 await trainProfanityClassifier();
                 return;
             }
 
-            console.log('loaded profanity classifier');
+            log('loaded profanity classifier');
             profanityClassifier = _classifier;
         });
     } else {

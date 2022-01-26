@@ -5,10 +5,11 @@ import { getRandomEmptyResponse, startsWithCapital } from "../../utils.js"
 import { addMessageToHistory, exitConversation, getChatHistory, isInConversation, onMessageResponseUpdated, prevMessage, prevMessageTimers, sentMessage } from "../chatHistory.js"
 import { botName, username_regex } from "../whatsapp-client.js"
 import customConfig from '../utilities/customConfig.js'
+import { log } from '../utilities/logger.js'
 
 //TODO: Needs tests - misses API key (needs request from whatsapp)
 export async function onMessage(msg, messageResponseHandler) {
-    console.log(JSON.stringify(msg))
+    log(JSON.stringify(msg))
     const date = Date.now() / 1000
     const msgDate = msg.date
     const diff = date - msgDate
@@ -118,9 +119,9 @@ export async function onMessage(msg, messageResponseHandler) {
 
     args['chat_history'] = await getChatHistory(msg.chat.id, 10)
     await messageResponseHandler(args, (response) => {
-        console.log(JSON.stringify(response))
+        log(JSON.stringify(response))
         Object.keys(response.response).map(function(key, index) {
-            console.log('response: ' + response.response[key])
+            log('response: ' + response.response[key])
             if (response.response[key] !== undefined && response.response[key].length <= 2000 && response.response[key].length > 0) {
                 let text = response.response[key]
                 while (text === undefined || text === '' || text.replace(/\s/g, '').length === 0) text = getRandomEmptyResponse()
@@ -174,7 +175,7 @@ export async function onMessage(msg, messageResponseHandler) {
                     }).catch(console.error)
             }
         });          
-    }).catch(err => console.log(err))
+    }).catch(err => log(err))
 }
 
 export const prevMessage = {}
@@ -240,7 +241,7 @@ export const createWhatsappClient = async (messageResponseHandler) => {
     const bot = new WhatsAppBot(token)
 
     bot.on('message', async (msg) => {
-        console.log(JSON.stringify(msg))
+        log(JSON.stringify(msg))
         await onMessage(msg, messageResponseHandler)
     });
     bot.launch()

@@ -6,6 +6,7 @@ import { makeModelRequest } from "../utilities/makeModelRequest.js";
 import { database } from '../database/database.js';
 import customConfig from '../utilities/customConfig.js';
 import { classifyProfanityText } from '../utilities/textClassifier.js';
+import { log } from '../utilities/logger.js';
 
 //check if a text contains the n* word
 function nWord(text) {
@@ -62,7 +63,7 @@ function getWordCount(text) {
 async function testIfIsToxic(text, threshold) {
     if (customConfig.instance.get('hf_api_token')) {
         const result = await makeModelRequest(text, "unitary/toxic-bert");
-        console.log(result);
+        log(result);
         result[0].forEach((sentence) => {
             if (sentence.score > threshold) {
                 return true;
@@ -92,7 +93,7 @@ export async function evaluateTextAndRespondIfToxic(speaker, agent, textIn, eval
 
     // The user said something profane
     if (isProfane) {
-        console.log("*** isProfane");
+        log("*** isProfane");
         const response = profaneResponses[Math.floor(Math.random() * profaneResponses.length)];
         return { isProfane: true, response };
     }
@@ -109,7 +110,7 @@ export async function evaluateTextAndRespondIfToxic(speaker, agent, textIn, eval
     const isSensitive = hasSensitiveWords || (sensitiveWordsLength > 0 && hasSensitivePhrases) || (hasSensitiveWords && isLeadingStatement) || (isLeadingStatement && hasSensitivePhrases);
 
     if (isSensitive) {
-        console.log("***** Sensitive");
+        log("***** Sensitive");
         const response = sensitiveResponses[Math.floor(Math.random() * sensitiveResponses.length)];
         return { isProfane: true, response };
     }
@@ -121,17 +122,17 @@ export async function evaluateTextAndRespondIfToxic(speaker, agent, textIn, eval
     // Check if text is overall toxic
     const isToxic = await testIfIsToxic(text, isLeadingStatement ? toxicityThreshold : leadingToxicityThreshold);
     if (isToxic) {
-        console.log("***** Toxic", text);
+        log("***** Toxic", text);
         return { isProfane: true, response };
     }
 
     if (await filterWithOpenAI(speaker, agent, text).shouldFilter) {
-        console.log("***** Filtered by OpenAI:", text);
+        log("***** Filtered by OpenAI:", text);
         return { isProfane: true, response };
     }
 
     if (await filterByRating(speaker, agent, text).shouldFilter) {
-        console.log("***** Filtered by rating: ", text);
+        log("***** Filtered by rating: ", text);
         return { isProfane: true, response };
     }
 
@@ -174,12 +175,12 @@ async function filterWithOpenAI(speaker, agent, text) {
 
     // If it succeeds and is sensitive, filter it
     if (success && filterSensitive && choice.text === "1") {
-        console.log("*** SENSITIVE ", choice.text);
+        log("*** SENSITIVE ", choice.text);
         return { shouldFilter: true };
     }
     // If it's harmful, always filter it
     else if (success && choice.text === "2") {
-        console.log("*** HARMFUL ", choice.text);
+        log("*** HARMFUL ", choice.text);
         return { shouldFilter: true };
     }
 

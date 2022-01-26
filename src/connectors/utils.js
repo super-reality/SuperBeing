@@ -1,5 +1,6 @@
 import { existsSync } from "fs";
 import customConfig from "../utilities/customConfig.js";
+import { warn } from "../utilities/logger.js";
 
 export function getRandomNumber(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -61,7 +62,7 @@ export function detectOsOption() {
           options.executablePath = chromePath;
       }
       else {
-          console.warn("Warning! Please install Google Chrome to make bot workiing correctly in headless mode.\n");
+          warn("Warning! Please install Google Chrome to make bot workiing correctly in headless mode.\n");
       }
   }
   return options;

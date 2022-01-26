@@ -1,4 +1,5 @@
 import cors_proxy from 'cors-anywhere';
+import { log } from './logger.js';
 
 //CORs server that is used for the web client to request an agent's image from wikipedia
 export class cors_server {
@@ -20,7 +21,7 @@ export class cors_server {
               xfwd: false,
             }
         }).listen(port, host, function() {
-            console.log('Running CORS Anywhere on: ' + host + ':' + port);
+            log('Running CORS Anywhere on: ' + host + ':' + port);
         });
     }
 }

@@ -7,10 +7,11 @@ import keywordExtractor from '../utilities/keywordExtractor.js';
 import { database } from '../database/database.js';
 import { capitalizeFirstLetter } from "../connectors/utils.js";
 import { isInFastMode } from '../index.js';
+import { log } from "../utilities/logger.js";
 
 function respondWithMessage(agent, text, res) {
         if (res) res.status(200).send(JSON.stringify({ result: text }));
-        console.log(agent + ">>> " + text);
+        log(agent + ">>> " + text);
         return text;
 }
 
@@ -25,7 +26,7 @@ async function evaluateTerminalCommands(message, speaker, agent, res, client, ch
                                 // Send the message as JSON
                                 .send(JSON.stringify(result));
                 } else {
-                        console.log(`${agent} has been reset`);
+                        log(`${agent} has been reset`);
                 }
                 
                 await database.instance.clearConversations();
@@ -43,14 +44,14 @@ async function evaluateTerminalCommands(message, speaker, agent, res, client, ch
                                 // Send the message as JSON
                                 .send(JSON.stringify(result));
                 } else {
-                        console.log(conversation);
+                        log(conversation);
                 }
                 return true;
         }
 
         else if (message === "GET_AGENT_NAME") {
                 if (res) res.status(200).send(JSON.stringify({ result: agent }));
-                else console.log({ result: agent });
+                else log({ result: agent });
                 return true;
         }
 }
@@ -154,7 +155,7 @@ async function generateContext(speaker, agent, conversation, message) {
 
 //handles the input from a client according to a selected agent and responds
 export async function handleInput(message, speaker, agent, res, clientName, channelId) {
-        console.log("Handling input: " + message);
+        log("Handling input: " + message);
         //if the input is a command, it handles the command and doesn't respond according to the agent
         if (await evaluateTerminalCommands(message, speaker, agent, res, clientName, channelId)) return;
         
@@ -174,7 +175,7 @@ export async function handleInput(message, speaker, agent, res, clientName, chan
                 // Evaluate if the speaker's message is toxic
                 const { isProfane, isSensitive, response } = await evaluateTextAndRespondIfToxic(speaker, agent, message);
                 if ((isProfane || isSensitive) && response) {
-                        console.log(agent + ">>> " + response);
+                        log(agent + ">>> " + response);
                         if (res) res.status(200).send(JSON.stringify({ result: response }));
                         return response;
                 }
@@ -192,8 +193,8 @@ export async function handleInput(message, speaker, agent, res, clientName, chan
         archiveConversation(speaker, agent, conversation, clientName, channelId);
         archiveFacts(speaker, agent, conversation);
 
-        const context = await generateContext(speaker, agent, conversation, message);
-
+        const context = (await generateContext(speaker, agent, conversation, message)).replaceAll('\n\n', '\n');
+        log('Context: ' + context);
         // TODO: Wikipedia?
 
         // searchWikipedia(text.Input) .then( (out) => { console.log("**** WEAVIATE: " + JSON.stringify(out)); currentState = states.READY; });

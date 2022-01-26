@@ -1,9 +1,10 @@
 import puppeteer from 'puppeteer';
 import fs from 'fs';
+import { log } from '../utilities/logger';
 
 //The default browser class for puppeteer, it can be used to build other clients with puppeteer
 export async function browserWindow(options) {
-        console.log('Making new browser');
+        log('Making new browser');
 
         if (fs.existsSync("/.dockerenv"))
         {
@@ -33,7 +34,7 @@ export class PageUtils {
 //clicks a selector using the class name's regex
     async clickSelectorClassRegex(selector, classRegex) {
         if (this.autoLog)
-            console.log(`Clicking for a ${selector} matching ${classRegex}`);
+            log(`Clicking for a ${selector} matching ${classRegex}`);
 
         await this.page.evaluate((selector, classRegex) => {
             classRegex = new RegExp(classRegex);
@@ -45,7 +46,7 @@ export class PageUtils {
     }
     //clicks a selector based on their id
     async clickSelectorId(selector, id) {
-        if (this.autoLog) console.log(`Clicking for a ${selector} matching ${id}`)
+        if (this.autoLog) log(`Clicking for a ${selector} matching ${id}`)
         
         await this.page.evaluate(
           (selector, id) => {
@@ -53,15 +54,15 @@ export class PageUtils {
             let singleMatch = matches.find((button) => button.id === id)
             let result
             if (singleMatch && singleMatch.click) {
-              console.log('normal click')
+              log('normal click')
               result = singleMatch.click()
             }
             if (singleMatch && !singleMatch.click) {
-              console.log('on click')
+              log('on click')
               result = singleMatch.dispatchEvent(new MouseEvent('click', { bubbles: true }))
             }
             if (!singleMatch) {
-              console.log('event click', matches.length)
+              log('event click', matches.length)
              if (matches.length > 0) {
                   const m = matches[0]
                   result = m.dispatchEvent(new MouseEvent('click', { bubbles: true }))
@@ -74,22 +75,22 @@ export class PageUtils {
       }
     //clicks a selector based on their alt value
     async clickSelectorByAlt(selector, title) {
-        if (this.autoLog) console.log(`Clicking for a ${selector} matching ${title}`)
+        if (this.autoLog) log(`Clicking for a ${selector} matching ${title}`)
 
         await this.page.evaluate((selector, title) => {
             let matches = Array.from(document.querySelectorAll(selector))
             let singleMatch = matches.find((btn) => btn.alt === title)
             let result
             if (singleMatch && singleMatch.click) {
-              console.log('normal click')
+              log('normal click')
               result = singleMatch.click()
             }
             if (singleMatch && !singleMatch.click) {
-              console.log('on click')
+              log('on click')
               result = singleMatch.dispatchEvent(new MouseEvent('click', { bubbles: true }))
             }
             if (!singleMatch) {
-              console.log('event click', matches.length)
+              log('event click', matches.length)
              if (matches.length > 0) {
                   const m = matches[0]
                   result = m.dispatchEvent(new MouseEvent('click', { bubbles: true }))
@@ -100,7 +101,7 @@ export class PageUtils {
     //clicks the first selector it finds of the given type 
     async clickSelectorFirstMatch(selector) {
         if (this.autoLog)
-            console.log(`Clicking for first ${selector}`);
+            log(`Clicking for first ${selector}`);
 
         await this.page.evaluate((selector) => {
             let matches = Array.from(document.querySelectorAll(selector));

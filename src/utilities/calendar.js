@@ -3,6 +3,7 @@ import { rootDir } from './rootDir.js';
 import { google } from 'googleapis';
 import customConfig from './customConfig.js';
 import { sendMessageToChannel } from '../connectors/discord.js';
+import { log } from './logger.js';
 
 //to generate a google token you can use https://developers.google.com/oauthplayground/
 const TOKEN_PATH = rootDir + '/credentials/token.json';
@@ -14,7 +15,7 @@ export async function initCalendar() {
     }
 
     fs.readFile(rootDir + '/credentials/google.json', (err, content) => {
-        if (err) return console.log('Error loading client secret file:', err);
+        if (err) return log('Error loading client secret file:', err);
         authorize(JSON.parse(content));
     });
 }
@@ -41,7 +42,7 @@ function listEvents() {
         singleEvents: true,
         orderBy: 'startTime',
       }, async (err, res) => {
-        if (err) return console.log('The API returned an error: ' + err);
+        if (err) return log('The API returned an error: ' + err);
         const events = res.data.items;
         if (events.length) {
           events.map((event, i) => {

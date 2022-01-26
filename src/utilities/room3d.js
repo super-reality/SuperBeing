@@ -1,4 +1,5 @@
 import { clamp } from '../connectors/utils.js';
+import { log } from './logger.js';
 
 export class room3d {
     users = {};
@@ -72,7 +73,7 @@ export class room3d {
 
     print() {
         for(let i in this.users) {
-            console.log('user: ' + i + ' - distance: ' + this.users[i]);
+            log('user: ' + i + ' - distance: ' + this.users[i]);
         }
     }
 }

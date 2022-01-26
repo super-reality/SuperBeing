@@ -3,6 +3,7 @@ import { createWikipediaAgent } from '../connectors/wikipedia.js';
 import { database } from '../database/database.js';
 import { defaultAgent } from '../index.js';
 import customConfig from './customConfig.js';
+import { error } from './logger.js';
 
 //Routes for the express server
 export async function registerRoutes(app) {
@@ -61,7 +62,7 @@ export async function registerRoutes(app) {
             await database.instance.setStartingPhrases(agentName, data.startingPhrases);
             await database.instance.setIgnoredKeywords(agentName, data.ignoredKeywords);
         } catch (e) {
-            console.log(e + '\n' + e.stack);
+            error(e);
             return res.send('internal error');
         }
 
@@ -89,7 +90,7 @@ export async function registerRoutes(app) {
                 return res.send('invalid sql format');
             }
         } catch (e) {
-            console.log(e);
+            error(e);
             return res.send('internal error');
         }
 
@@ -138,7 +139,7 @@ export async function registerRoutes(app) {
             return res.send('ok');
         } else if (editorId == 4) {
             if (await database.instance.leadingStatementExists(word)) {
-                console.log('already exists');
+                return res.send('already exists');
             }
 
             await database.instance.addLeadingStatement(word);
@@ -201,7 +202,7 @@ export async function registerRoutes(app) {
             if (!data.ignoredKeywords || data.ignoredKeywords === undefined) data.ignoredKeywords = '';
             await database.instance.setIgnoredKeywords(agentName, data.ignoredKeywords);
         } catch (e) {
-            console.log(e + '\n' + e.stack);
+            error(e);
             return res.send('internal error');
         }
 
@@ -229,7 +230,33 @@ export async function registerRoutes(app) {
             res.send('ok');
             process.exit(1);
         } catch (e) {
-            console.log(e + '\n' + e.stack);
+            error(e);
+            return res.send('internal error');
+        }
+    });
+
+    app.post('/delete_config', async function(req, res) {
+        const data = req.body.data;
+
+        try {
+            await customConfig.instance.delete(data.key);
+            res.send('ok');
+            process.exit(1);
+        } catch (e) {
+            error(e);
+            return res.send('internal error');
+        }
+    });
+
+    app.post('/add_config', async function(req, res) {
+        const data = req.body.data;
+
+        try {
+            await customConfig.instance.set(data.key, data.value);
+            res.send('ok');
+            process.exit(1);
+        } catch (e) {
+            error(e);
             return res.send('internal error');
         }
     });
@@ -241,7 +268,7 @@ export async function registerRoutes(app) {
         const agent = req.body.agent
         if (message.includes("/become")) {
             const msg = database.instance.getRandomStartingMessage(agent)
-            const out = await createWikipediaAgent("Speaker", agent, "", "");
+            let out = await createWikipediaAgent("Speaker", agent, "", "");
             while (!out || out === undefined) {
                 out = createWikipediaAgent('Speaker', defaultAgent, "", "");
             }

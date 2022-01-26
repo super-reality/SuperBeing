@@ -3,6 +3,7 @@ import * as snoowrap from 'snoowrap';
 import { handleInput } from '../cognition/handleInput.js';
 import { database } from '../database/database.js';
 import customConfig from '../utilities/customConfig.js';
+import { log } from '../utilities/logger.js';
 
 export let reddit;
 
@@ -119,7 +120,7 @@ export const createRedditClient = async () => {
     });
     reddit.config(snooWrapOpptions);
     const stream = new SnooStream(reddit)
-    console.log('loaded reddit client')
+    log('loaded reddit client')
 
     const regex = new RegExp('((?:carl|sagan)(?: |$))', 'ig')
 
@@ -133,7 +134,7 @@ export const createRedditClient = async () => {
         }
     
         if (_match) {
-            console.log('got new commend')// - ' + JSON.stringify(post))
+            log('got new commend')// - ' + JSON.stringify(post))
             const id = post.id
             const chat_id = post.link_url.split('/')[6]
             const senderId = post.author_fullname
@@ -149,7 +150,7 @@ export const createRedditClient = async () => {
             database.instance.addMessageInHistoryWithDate('reddit', chat_id, id, author, body, utcStr)
         } else {
             await database.instance.messageExistsAsyncWitHCallback2('reddit', post.link_url.split('/')[6], post.id, post.author.name, post.body, post.timestamp, () => {
-                console.log('got new commend')// - ' + JSON.stringify(post))
+                log('got new commend')// - ' + JSON.stringify(post))
                 const id = post.id
                 const chat_id = post.link_url.split('/')[6]
                 const senderId = post.author_fullname
@@ -176,7 +177,7 @@ export const createRedditClient = async () => {
         }
         
         if (_match) {
-            console.log('got new post' + JSON.stringify(post))
+            log('got new post' + JSON.stringify(post))
             const id = post.id
             const chat_id = post.id
             const senderId = post.author_fullname
@@ -192,7 +193,7 @@ export const createRedditClient = async () => {
             database.instance.addMessageInHistoryWithDate('reddit', chat_id, id, author, body, utcStr)
         } else {
             await database.instance.messageExistsAsyncWitHCallback2('reddit', post.id, post.id, post.author.name, post.body, post.timestamp, () => {
-                console.log('got new post')// - ' + JSON.stringify(post))
+                log('got new post')// - ' + JSON.stringify(post))
                 const id = post.id
                 const chat_id = post.id
                 const senderId = post.author_fullname
@@ -218,9 +219,9 @@ export const createRedditClient = async () => {
             const body = message.body;
             const timestamp = message.created_utc
             if (!author.includes('reddit')) {
-                //console.log('current message: ' + body)
+                //log('current message: ' + body)
                 await database.instance.messageExistsAsyncWitHCallback('reddit', senderId, id, author, body, timestamp, () => {
-                    console.log('got new message: ' + body)
+                    log('got new message: ' + body)
                     const resp = await handleInput(body, author, customConfig.instance.get('agent') ?? "Agent", null, 'reddit', chat_id);
                     await handleMessage(resp, id, chat_id, 'isChat', reddit);
                     const date = new Date(timestamp)

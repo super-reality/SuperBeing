@@ -2,6 +2,7 @@ import glob from "glob";
 import weaviate from "weaviate-client";
 import wiki from 'wikipedia';
 import { database } from '../database/database.js';
+import { error, log } from "../utilities/logger.js";
 import {
   makeCompletionRequest
 } from "../utilities/makeCompletionRequest.js";
@@ -19,7 +20,7 @@ export async function createWikipediaAgent(speaker, name, personality, facts) {
           try {
             out = await searchWikipedia(name);
           } catch (e) {
-            console.log(e);
+            error(e);
             return null;
           }
 
@@ -27,9 +28,9 @@ export async function createWikipediaAgent(speaker, name, personality, facts) {
 
           // create a constant called name which uses the value of nameRaw but removes all punctuation
           // const name = nameRaw.replace(/[^\w\s]/gi, '');
-          console.log("out is ", out);
+          log("out is ", out);
           if (out.result.extract == "" || out.result.extract == null) {
-                  return console.log("Error, couldn't find anything on wikiedia about " + name);
+                  return log("Error, couldn't find anything on wikiedia about " + name);
           }
           
           const factSourcePrompt = `The follow are facts about ${name}\n`;
@@ -54,11 +55,11 @@ export async function createWikipediaAgent(speaker, name, personality, facts) {
           let res = await makeCompletionRequest(data, speaker, name, "personality_generation", "davinci", false);
   
           if (!res.success) {
-                  return console.log("Error: Failed to generate personality, check GPT3 keys");
+                  return log("Error: Failed to generate personality, check GPT3 keys");
           }
   
-          console.log("res.choice.text")
-          console.log(res);
+          log("res.choice.text")
+          log(res);
   
           database.instance.setPersonality(name, personalitySourcePrompt + '\n' + personality + '\n' + res.choice.text);
   
@@ -75,16 +76,16 @@ export async function createWikipediaAgent(speaker, name, personality, facts) {
           };
   
           res = await makeCompletionRequest(data, speaker, name, "dialog_generation", "davinci", false);
-          console.log("res.choice.text (2)")
-          console.log(res);
+          log("res.choice.text (2)")
+          log(res);
   
           await database.instance.setDialogue(name, dialogPrompt + res.choice?.text);
           await database.instance.setAgentFacts(name, factPrompt); 
           await database.instance.setAgentExists(name); 
   
           return out;
-  } catch (error) {
-          console.log("Error: ", error);
+  } catch (err) {
+    error(err);
   }
           return {}
   
@@ -115,7 +116,7 @@ export const searchWikipedia = async (keyword) => {
 
   // Search for it, and accept suggestion if there is one
   const searchResults = await wiki.search(keyword);
-  console.log(searchResults);
+  log(searchResults);
   // If the first result contains the keyword or vice versa, probably just go with it
   if (searchResults.results[0] && (searchResults.results[0] .title.toLowerCase().includes(keyword.toLowerCase()) ||
     keyword.toLowerCase().includes(searchResults.results[0] .title.toLowerCase()))) {
@@ -133,35 +134,35 @@ export const searchWikipedia = async (keyword) => {
 
   glob(keyword + '.*', (err, files) => {
     if (err) {
-      console.log(err);
+      log(err);
     } else {
       // a list of paths to javaScript files in the current working directory
-      console.log(files);
+      log(files);
       filePath = files[0];
     }
   });
 
   // if (!filePath) {
-  //   console.log("Trying to load file");
+  //   log("Trying to load file");
   //   try {
   //     const response = await axios.get(`https://en.wikipedia.org/w/api.php?action=query&format=json&formatversion=2&prop=pageimages&piprop=original&titles=${keyword}`);
   //     if (response && response.data.query.pages.filter(page => page.original)[0]) {
   //       const page = response.data.query.pages.filter(page => page.original)[0];
-  //       console.log("Getting file");
+  //       log("Getting file");
   //       const file = await axios.get(page.original.source, {
   //         responseType: 'stream'
   //       });
   //       // store the image from the response in /images as <keyword>.jpg using fs
   //       const newFilePath = path.resolve(rootDir, "images", keyword + "." + page.original.source.split('.').pop());
-  //       console.log("New file path is", newFilePath);
+  //       log("New file path is", newFilePath);
   //       // const writer = fs.createWriteStream(path.resolve(rootDir, "images", newFilePath));
-  //       console.log("Created writer");
+  //       log("Created writer");
   //       // file.data.pipe(writer)
   //       filePath = newFilePath;
   //       // {"batchcomplete":true,"query":{"pages":[{"pageid":210458,"ns":0,"title":"Waffle","original":{"source":"https://upload.wikimedia.org/wikipedia/commons/5/5b/Waffles_with_Strawberries.jpg","width":2592,"height":1944}}]}}
   //     }
   //   } catch (error) {
-  //     console.log("Error is " + error);
+  //     log("Error is " + error);
   //   }
   // }
   // Get wikipedia article for first result and cache
@@ -184,12 +185,12 @@ export const searchWikipedia = async (keyword) => {
     }
   }
 
-  console.log("Making weaviate request");
+  log("Making weaviate request");
    // if it's not immediately located, request from weaviate
   const weaviateResponse = await makeWeaviateRequest(keyword);
 
-  console.log("res is", weaviateResponse)
-  console.log("Looking up result on wikipedia", weaviateResponse.Paragraph[0].inArticle[0].title);
+  log("res is", weaviateResponse)
+  log("Looking up result on wikipedia", weaviateResponse.Paragraph[0].inArticle[0].title);
   const result = await lookUpOnWikipedia(weaviateResponse.Paragraph[0].inArticle[0].title);
   return {
     result,
@@ -208,7 +209,7 @@ export const makeWeaviateRequest = async (keyword) => {
     .withFields("title content inArticle { ... on Article {  title } }")
     .withLimit(3)
     .do();
-  // console.log("res is", res.data.Get.Paragraph[0]);
+  // log("res is", res.data.Get.Paragraph[0]);
 
   if (res.data.Get !== undefined) {
     return res.data.Get;
@@ -222,7 +223,7 @@ export async function lookUpOnWikipedia(subject) {
     if (await database.instance.wikipediaDataExists(subject)) {
       return JSON.parse(await database.instance.getWikipediaData(subject));
     } else {
-      console.log('Data doesn\'t yet exist');
+      log('Data doesn\'t yet exist');
     }
 
     // if it doesn't, fetch it from wikipedia and save it to the file
@@ -232,22 +233,22 @@ export async function lookUpOnWikipedia(subject) {
       description,
       extract
     } = await wiki.summary(subject);
-    console.log("Got summary", title)
+    log("Got summary", title)
     const summary = {
       title,
       displaytitle,
       description,
       extract
     };
-    console.log("Summary is", summary)
+    log("Summary is", summary)
     // create a directory recursively at data/wikipedia/ if it doesn't exist
 
     await database.instance.addWikipediaData(subject, JSON.stringify(summary));
 
     return summary;
 
-  } catch (error) {
-    console.log(error);
+  } catch (err) {
+    error(err);
   }
-  console.log("Finished looking up on wikipedia")
+  log("Finished looking up on wikipedia")
 }

@@ -1,3 +1,4 @@
+import { log } from "./logger.js";
 import room3d from "./room3d.js";
 
 export class roomManager {
@@ -16,7 +17,6 @@ export class roomManager {
                     continue;
                 } 
                 this.rooms[client][i].addUser(user);
-                this.print();
                 return;
             }
             rooms[clients].push(new room3d([ user ]));
@@ -24,7 +24,6 @@ export class roomManager {
             this.rooms[client] = [];
             this.rooms[client].push(new room3d([ user ]));
         }
-        this.print();
     }
     removeUser(user, client) {
         if (this.rooms[client] !== undefined) {
@@ -37,7 +36,6 @@ export class roomManager {
                             delete this.rooms[client];
                         }
                     }
-                    this.print();
                     return;
                 }
             }
@@ -111,15 +109,15 @@ export class roomManager {
 
     print() {
         for (const client in this.rooms) {
-            console.log(client + ' rooms:');
+            log(client + ' rooms:');
             if (this.rooms[client] && this.rooms[client] !== undefined) {
                 for (let i = 0; i < this.rooms[client].length; i++) {
                     this.rooms[client][i].print();
                 }
             } else {
-                console.log('no rooms');
+                log('no rooms');
             }
-            console.log('----------------');
+            log('----------------');
         }
     }
 }

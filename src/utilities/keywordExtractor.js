@@ -43,7 +43,6 @@ export async function keywordExtractor(input, agent) {
 
         if (weaviateResponse.Paragraph.length > 0) {
             const sum = await makeModelRequest(weaviateResponse.Paragraph[0].content, "facebook/bart-large-cnn");
-            console.log(sum);
             if (sum && sum.length > 0) {
                 totalLength += sum[0].summary_text.length;
                 if (totalLength > 1000) {

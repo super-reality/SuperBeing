@@ -5,6 +5,7 @@ import emojiRegex from 'emoji-regex'
 import { handleInput } from '../cognition/handleInput.js'
 import { database } from "../database/database.js"
 import customConfig from '../utilities/customConfig.js'
+import { error, log } from '../utilities/logger.js'
 import roomManager from '../utilities/roomManager.js'
 import { classifyText } from '../utilities/textClassifier.js'
 import { getRandomEmptyResponse, getRandomTopic, startsWithCapital } from "./utils.js"
@@ -26,7 +27,7 @@ export async function handleGuildMemberAdd(user) {
     const utcStr = dateNow.getDate() + '/' + (dateNow.getMonth() + 1) + '/' + dateNow.getFullYear() + ' ' + utc.getHours() + ':' + utc.getMinutes() + ':' + utc.getSeconds()
     
     // TODO: Replace me with direct message handler
-    console.log('Discord', 'join', username, utcStr);
+    log('Discord', 'join', username, utcStr);
     // MessageClient.instance.sendUserUpdateEvent('Discord', 'join', username, utcStr)
 };
 
@@ -39,7 +40,7 @@ export async function handleGuildMemberRemove(user) {
     var utc = new Date(dateNow.getUTCFullYear(), dateNow.getUTCMonth(), dateNow.getUTCDate(), dateNow.getUTCHours(), dateNow.getUTCMinutes(), dateNow.getUTCSeconds());
     const utcStr = dateNow.getDate() + '/' + (dateNow.getMonth() + 1) + '/' + dateNow.getFullYear() + ' ' + utc.getHours() + ':' + utc.getMinutes() + ':' + utc.getSeconds()
     // TODO: Replace me with direct message handler
-    console.log('Discord', 'leave', username, utcStr);
+    log('Discord', 'leave', username, utcStr);
     // MessageClient.instance.sendUserUpdateEvent('Discord', 'leave', username, utcStr)
 };
 
@@ -53,12 +54,12 @@ export async function handleMessageReactionAdd(reaction, user) {
     const utcStr = dateNow.getDate() + '/' + (dateNow.getMonth() + 1) + '/' + dateNow.getFullYear() + ' ' + utc.getHours() + ':' + utc.getMinutes() + ':' + utc.getSeconds()
     
     // TODO: Replace me with direct message handler
-    console.log('Discord', message.channel.id, message.id, message.content, user.username, emojiName, utcStr);
+    log('Discord', message.channel.id, message.id, message.content, user.username, emojiName, utcStr);
     // MessageClient.instance.sendMessageReactionAdd('Discord', message.channel.id, message.id, message.content, user.username, emojiName, utcStr)
 };
 
 export async function agents (client, message, args, author, addPing, channel) {
-    console.log('Discord', message.channel.id)
+    log('Discord', message.channel.id)
         // TODO: Replace me with direct message handler
     // MessageClient.instance.sendGetAgents('Discord', message.channel.id)
 }
@@ -73,7 +74,7 @@ export async function ban (client, message, args, author, addPing, channel) {
     }
     
     const { mentions } = message
-    console.log(JSON.stringify(mentions))
+    log(JSON.stringify(mentions))
     if (mentions === undefined || mentions.users === undefined || mentions.users.size !== 1) {
         message.channel.send('invalid command structure!')
         message.channel.stopTyping();
@@ -123,7 +124,7 @@ export async function ping(client, message, args, author, addPing, channel) {
 
     // TODO: Replace me with direct message handler
     // MessageClient.instance.sendMessage(args.grpc_args['message'], message.id, 'Discord', args.grpc_args['chat_id'], utcStr, addPing, author.username, 'parentId:' + parentId)
-    console.log(args.grpc_args['message'], message.id, 'Discord', args.grpc_args['chat_id'], utcStr, addPing, author.username, 'parentId:' + parentId)
+    log(args.grpc_args['message'], message.id, 'Discord', args.grpc_args['chat_id'], utcStr, addPing, author.username, 'parentId:' + parentId)
 }
 
 //ping agent is used to ping a specific agent directly
@@ -138,7 +139,7 @@ export async function pingagent (client, message, args, author, addPing, channel
     }
 
         // TODO: Replace me with direct message handler
-        console.log('Discord', message.channel.id, message.id, args.grpc_args['message'], args.grpc_args['agent'], addPing, author.username);
+        log('Discord', message.channel.id, message.id, args.grpc_args['message'], args.grpc_args['agent'], addPing, author.username);
     // MessageClient.instance.sendPingSoloAgent('Discord', message.channel.id, message.id, args.grpc_args['message'], args.grpc_args['agent'], addPing, author.username)
 }
 
@@ -160,7 +161,7 @@ export async function setagent (client, message, args, author, addPing, channel)
     }
 
     // TODO: Replace me with direct message handler
-    console.log('Discord', message.channel.id, args.grpc_args['name'], args.grpc_args['context']);
+    log('Discord', message.channel.id, args.grpc_args['name'], args.grpc_args['context']);
     // MessageClient.instance.sendSetAgentsFields('Discord', message.channel.id, args.grpc_args['name'], args.grpc_args['context'])
 }
 
@@ -176,7 +177,7 @@ export async function setname (client, message, args, author, addPing, channel) 
     client.bot_name = name
     client.name_regex = new RegExp(name, 'ig')
     config.bot_name = name
-    console.log(client.bot_name + ' - ' + client.name_regex)
+    log(client.bot_name + ' - ' + client.name_regex)
     message.channel.send('Updated bot name to: ' + name)
     message.channel.stopTyping()
 }
@@ -191,7 +192,7 @@ export async function unban (client, message, args, author, addPing, channel) {
     }
     
     const { mentions } = message
-    console.log(JSON.stringify(mentions))
+    log(JSON.stringify(mentions))
     if (mentions === undefined || mentions.users === undefined || mentions.users.size !== 1) {
         message.channel.send('invalid command structure!')
         message.channel.stopTyping();
@@ -243,7 +244,7 @@ export const messageCreate = async (client, message) => {
                         const u = user.id == client.user ? customConfig.instance.get('botName') : user.username
                         content = content.replace(data[i], u)
                     }
-                } catch (err) { console.log(err) }
+                } catch (err) { error(err); }
             }
         }
     }
@@ -348,7 +349,7 @@ export const messageCreate = async (client, message) => {
                 if (agentTalked) {
                     const context = await classifyText(values);
                     const ncontext = await classifyText(content);
-                    console.log('c1: ' + context + ' c2: ' + ncontext);
+                    log('c1: ' + context + ' c2: ' + ncontext);
 
                     if (context == ncontext) {
                         roomManager.instance.userTalkedSameTopic(author.id, 'discord');
@@ -380,23 +381,23 @@ export const messageCreate = async (client, message) => {
                         const buffer = []
                         userStream.on('data', (chunk) => {
                             buffer.push(chunk)
-                            console.log(chunk)
+                            log(chunk)
                             userStream.pipe(writeStream)
                         });
-                        writeStream.on('pipe', console.log)
+                        writeStream.on('pipe', log)
                         userStream.on('finish', () => {
                             channel.leave()
                             /*const cmd = 'ffmpeg -i recording.pcm recording.wav';
                             exec(cmd, (error, stdout, stderr) => {
                                 if (error) {
-                                    console.log(`error: ${error.message}`);
+                                    log(`error: ${error.message}`);
                                     return;
                                 }
                                 if (stderr) {
-                                    console.log(`stderr: ${stderr}`);
+                                    log(`stderr: ${stderr}`);
                                     return;
                                 }
-                                console.log(`stdout: ${stdout}`);
+                                log(`stdout: ${stdout}`);
                             });*/
                         });
                         return false
@@ -448,7 +449,7 @@ export const messageDelete = async (client, message) => {
                 resp.delete()
             }
         })
-    }).catch(err => console.log(err))
+    }).catch(err => log(err))
 
     onMessageDeleted(channel.id, id)
 };
@@ -460,10 +461,10 @@ export const messageUpdate = async (client, message) => {
     if (await database.instance.isUserBanned(author.id, 'discord')) return
     if (author.id === client.user.id) {
         await channel.messages.fetch(id).then(async msg => {
-            console.log('updating local msg to db')
+            log('updating local msg to db')
             await updateMessage(channel.id, id, msg.content)
         });
-        console.log('same author')
+        log('same author')
         return
     }
 
@@ -472,7 +473,7 @@ export const messageUpdate = async (client, message) => {
         await channel.messages.fetch(id).then(async msg => {
             await updateMessage(channel.id, id, msg.content)
         });
-        console.log('message not found')
+        log('message not found')
         return
     }
 
@@ -490,18 +491,18 @@ export const messageUpdate = async (client, message) => {
                     }
 
                     // TODO: Replace message with direct message handler
-                    console.log (edited.content, edited.id, 'Discord', edited.channel.id, utcStr, false, 'parentId:' + parentId)
+                    log (edited.content, edited.id, 'Discord', edited.channel.id, utcStr, false, 'parentId:' + parentId)
                     // MessageClient.instance.sendMessageEdit(edited.content, edited.id, 'Discord', edited.channel.id, utcStr, false, 'parentId:' + parentId)
                 }
             })
         })
-    }).catch(err => console.log(err + ' - ' + err.stack))
+    }).catch(err => log(err + ' - ' + err.stack))
 };
 
 //Event that is trigger when a user's presence is changed (offline, idle, online)
 export const presenceUpdate = async (client, oldMember, newMember) => {
     if (!oldMember || !newMember) {
-        console.log("Cannot update presence, oldMember or newMember is null")
+        log("Cannot update presence, oldMember or newMember is null")
     } else
         if (oldMember.status !== newMember.status) {
             const date = new Date();
@@ -515,7 +516,7 @@ export const presenceUpdate = async (client, oldMember, newMember) => {
                     roomManager.instance.removeUser(user.id, 'discord');
                 }
                 // TODO: Replace message with direct message handler
-                console.log('Discord', newMember.status, user.username, utcStr)
+                log('Discord', newMember.status, user.username, utcStr)
                 // MessageClient.instance.sendUserUpdateEvent('Discord', newMember.status, user.username, utcStr)
             })
         }
@@ -525,12 +526,12 @@ export const presenceUpdate = async (client, oldMember, newMember) => {
 export const ready = async (client) => {
     await client.users.fetch(customConfig.instance.get('logDMUserID')).then((user) => {
         client.log_user = user
-    }).catch((error) => { console.log(error) });
+    }).catch((error) => { log(error) });
 
     //rgisters the slash commands to each server
     await client.guilds.cache.forEach((server) => {
         if (!server.deleted) {
-            console.log('fetching messages from server: ' + server.name)
+            log('fetching messages from server: ' + server.name)
             client.api.applications(client.user.id).guilds(server.id).commands.post({
                 data: {
                     name: "continue",
@@ -560,14 +561,14 @@ export const ready = async (client) => {
             server.channels.cache.forEach(async (channel) => {
                 if (channel.type === channelTypes['text'] && channel.deleted === false && channel.permissionsFor(client.user.id).has(['SEND_MESSAGES', 'VIEW_CHANNEL'])) {
                     // TODO: Replace message with direct message handler
-                    console.log(channel.name, 'Discord', channel.id, channel.topic || 'none');
+                    log(channel.name, 'Discord', channel.id, channel.topic || 'none');
                     // MessageClient.instance.sendMetadata(channel.name, 'Discord', channel.id, channel.topic || 'none')
                     channel.messages.fetch({ limit: 100 }).then(async messages => {
                         messages.forEach(async function (msg) {
                             let _author = msg.author.username
                             if (msg.author.isBot || msg.author.username.toLowerCase().includes('digital being')) _author = customConfig.instance.get('botName')
 
-                            if (msg.deleted === true) { await deleteMessageFromHistory(channel.id, msg.id); console.log('deleted message: ' + msg.content) }
+                            if (msg.deleted === true) { await deleteMessageFromHistory(channel.id, msg.id); log('deleted message: ' + msg.content) }
                             else await wasHandled(channel.id, msg.id, _author, msg.content, msg.createdTimestamp)
                         })
                     })
@@ -576,7 +577,7 @@ export const ready = async (client) => {
         }
     });
 
-    console.log('client is ready')
+    log('client is ready')
 }
 
 export const embedColor = '#000000';
@@ -691,7 +692,7 @@ export async function handleSlashCommand(client, interaction) {
     var utc = new Date(dateNow.getUTCFullYear(), dateNow.getUTCMonth(), dateNow.getUTCDate(), dateNow.getUTCHours(), dateNow.getUTCMinutes(), dateNow.getUTCSeconds());
     const utcStr = dateNow.getDate() + '/' + (dateNow.getMonth() + 1) + '/' + dateNow.getFullYear() + ' ' + utc.getHours() + ':' + utc.getMinutes() + ':' + utc.getSeconds()
     // TODO: Replace message with direct message handler
-    console.log(sender, command, command === 'say' ? interaction.data.options[0].value : 'none', 'Discord', chatId, utcStr)
+    log(sender, command, command === 'say' ? interaction.data.options[0].value : 'none', 'Discord', chatId, utcStr)
     // MessageClient.instance.sendSlashCommand(sender, command, command === 'say' ? interaction.data.options[0].value : 'none', 'Discord', chatId, utcStr)
 }
 
@@ -699,7 +700,7 @@ export async function handleSlashCommand(client, interaction) {
         client.channels.fetch(chat_id).then(channel => {
             channel.messages.fetch(message_id).then(message => {
 
-                console.log('response: ' + responses)
+                log('response: ' + responses)
                 if (responses !== undefined && responses.length <= 2000 && responses.length > 0) {
                     let text = replacePlaceholders(responses)
                     if (addPing) {
@@ -710,7 +711,7 @@ export async function handleSlashCommand(client, interaction) {
 
                     } else {
                         while (text === undefined || text === '' || text.replace(/\s/g, '').length === 0) text = getRandomEmptyResponse()
-                        console.log('response1: ' + text)
+                        log('response1: ' + text)
                         message.channel.send(text).then(async function (msg) {
                             onMessageResponseUpdated(channel.id, message.id, msg.id)
                             addMessageToHistory(channel.id, msg.id, customConfig.instance.get('botName'), text,)
@@ -726,7 +727,7 @@ export async function handleSlashCommand(client, interaction) {
                         })
                     } else {
                         while (text === undefined || text === '' || text.replace(/\s/g, '').length === 0) text = getRandomEmptyResponse()
-                        console.log('response2: ' + text)
+                        log('response2: ' + text)
                     }
                     if (text.length > 0) {
                         message.channel.send(text, { split: true }).then(async function (msg) {
@@ -737,7 +738,7 @@ export async function handleSlashCommand(client, interaction) {
                 }
                 else {
                     const emptyResponse = getRandomEmptyResponse()
-                    console.log('sending empty response: ' + emptyResponse)
+                    log('sending empty response: ' + emptyResponse)
                     if (emptyResponse !== undefined && emptyResponse !== '' && emptyResponse.replace(/\s/g, '').length !== 0) {
                         let text = emptyResponse
                         if (addPing) {
@@ -747,7 +748,7 @@ export async function handleSlashCommand(client, interaction) {
                             }).catch(console.error)
                         } else {
                             while (text === undefined || text === '' || text.replace(/\s/g, '').length === 0) text = getRandomEmptyResponse()
-                            console.log('response4: ' + text)
+                            log('response4: ' + text)
                             message.channel.send(text).then(async function (msg) {
                                 onMessageResponseUpdated(channel.id, message.id, msg.id)
                                 addMessageToHistory(channel.id, msg.id, customConfig.instance.get('botName'), text,)
@@ -756,7 +757,7 @@ export async function handleSlashCommand(client, interaction) {
                     }
                 }
 
-            }).catch(err => console.log(err))
+            }).catch(err => log(err))
         });
     }
 
@@ -764,32 +765,32 @@ export async function handleSlashCommandResponse(chat_id, response) {
         client.channels.fetch(chat_id).then(channel => {
             channel.send(response)
             channel.stopTyping();
-        }).catch(err => console.log(err))
+        }).catch(err => log(err))
     }
 
     export async function handleUserUpdateEvent(response) {
-        console.log('handleUserUpdateEvent: ' + response)
+        log('handleUserUpdateEvent: ' + response)
     }
 
     export async function handleGetAgents(chat_id, response) {
         client.channels.fetch(chat_id).then(channel => {
             channel.send(response)
             channel.stopTyping();
-        }).catch(err => console.log(err))
+        }).catch(err => log(err))
     }
 
     export async function handleSetAgentsFields(chat_id, response) {
         client.channels.fetch(chat_id).then(channel => {
             channel.send(response)
             channel.stopTyping();
-        }).catch(err => console.log(err))
+        }).catch(err => log(err))
     }
 
     export async function handlePingSoloAgent(chat_id, message_id, responses, addPing) {
         client.channels.fetch(chat_id).then(channel => {
             channel.messages.fetch(message_id).then(message => {
                 Object.keys(responses).map(function (key, index) {
-                    console.log('response: ' + responses)
+                    log('response: ' + responses)
                     if (responses !== undefined && responses.length <= 2000 && responses.length > 0) {
                         let text = replacePlaceholders(responses)
                         if (addPing) {
@@ -800,7 +801,7 @@ export async function handleSlashCommandResponse(chat_id, response) {
 
                         } else {
                             while (text === undefined || text === '' || text.replace(/\s/g, '').length === 0) text = getRandomEmptyResponse()
-                            console.log('response1: ' + text)
+                            log('response1: ' + text)
                             message.channel.send(text).then(async function (msg) {
                                 onMessageResponseUpdated(channel.id, message.id, msg.id)
                                 addMessageToHistory(channel.id, msg.id, customConfig.instance.get('botName'), text,)
@@ -816,7 +817,7 @@ export async function handleSlashCommandResponse(chat_id, response) {
                             })
                         } else {
                             while (text === undefined || text === '' || text.replace(/\s/g, '').length === 0) text = getRandomEmptyResponse()
-                            console.log('response2: ' + text)
+                            log('response2: ' + text)
                         }
                         if (text.length > 0) {
                             message.channel.send(text, { split: true }).then(async function (msg) {
@@ -827,7 +828,7 @@ export async function handleSlashCommandResponse(chat_id, response) {
                     }
                     else {
                         const emptyResponse = getRandomEmptyResponse()
-                        console.log('sending empty response: ' + emptyResponse)
+                        log('sending empty response: ' + emptyResponse)
                         if (emptyResponse !== undefined && emptyResponse !== '' && emptyResponse.replace(/\s/g, '').length !== 0) {
                             let text = emptyResponse
                             if (addPing) {
@@ -837,7 +838,7 @@ export async function handleSlashCommandResponse(chat_id, response) {
                                 }).catch(console.error)
                             } else {
                                 while (text === undefined || text === '' || text.replace(/\s/g, '').length === 0) text = getRandomEmptyResponse()
-                                console.log('response4: ' + text)
+                                log('response4: ' + text)
                                 message.channel.send(text).then(async function (msg) {
                                     onMessageResponseUpdated(channel.id, message.id, msg.id)
                                     addMessageToHistory(channel.id, msg.id, customConfig.instance.get('botName'), text,)
@@ -848,7 +849,7 @@ export async function handleSlashCommandResponse(chat_id, response) {
                 });
 
             })
-        }).catch(err => console.log(err))
+        }).catch(err => log(err))
     }
 
     async function handleMessageEdit(message_id, chat_id, responses, addPing) {
@@ -877,11 +878,11 @@ export async function handleSlashCommandResponse(chat_id, response) {
                             await updateMessage(channel.id, edited.id, edited.content)
 
                             Object.keys(responses).map(async function (key, index) {
-                                console.log('response: ' + responses)
+                                log('response: ' + responses)
                                 if (responses !== undefined && responses.length <= 2000 && responses.length > 0) {
                                     let text = replacePlaceholders(responses)
                                     while (text === undefined || text === '' || text.replace(/\s/g, '').length === 0) text = getRandomEmptyResponse()
-                                    console.log('response1: ' + text)
+                                    log('response1: ' + text)
                                     msg.edit(text)
                                     onMessageResponseUpdated(channel.id, edited.id, msg.id)
                                     await updateMessage(channel.id, msg.id, msg.content)
@@ -889,7 +890,7 @@ export async function handleSlashCommandResponse(chat_id, response) {
                                 else if (responses.length >= 2000) {
                                     let text = replacePlaceholders(responses)
                                     while (text === undefined || text === '' || text.replace(/\s/g, '').length === 0) text = getRandomEmptyResponse()
-                                    console.log('response2: ' + text)
+                                    log('response2: ' + text)
 
                                     if (text.length > 0) {
                                         edited.channel.send(text, { split: true }).then(async function (msg) {
@@ -900,11 +901,11 @@ export async function handleSlashCommandResponse(chat_id, response) {
                                 }
                                 else {
                                     const emptyResponse = getRandomEmptyResponse()
-                                    console.log('sending empty response: ' + emptyResponse)
+                                    log('sending empty response: ' + emptyResponse)
                                     if (emptyResponse !== undefined && emptyResponse !== '' && emptyResponse.replace(/\s/g, '').length !== 0) {
                                         let text = emptyResponse
                                         while (text === undefined || text === '' || text.replace(/\s/g, '').length === 0) text = getRandomEmptyResponse()
-                                        console.log('response4: ' + text)
+                                        log('response4: ' + text)
                                         msg.edit(text)
                                         onMessageResponseUpdated(channel.id, edited.id, msg.id)
                                         await updateMessage(channel.id, msg.id, msg.content)
@@ -914,7 +915,7 @@ export async function handleSlashCommandResponse(chat_id, response) {
                             edited.channel.stopTyping();
                         }
                     })
-                }).catch(err => console.log(err))
+                }).catch(err => log(err))
             })
         })
     }
@@ -986,27 +987,27 @@ export function getResponse(channel, message) {
 }
 
 export function addMessageToHistory(chatId, messageId, senderName, content) {
-    if (!database || !database.instance) return // console.log("Postgres not inited");
+    if (!database || !database.instance) return // log("Postgres not inited");
     database.instance.addMessageInHistory('discord', chatId, messageId, senderName, content)
 }
 
 export async function addMessageInHistoryWithDate(chatId, messageId, senderName, content, timestamp) {
-    if (!database || !database.instance) return // console.log("Postgres not inited");
+    if (!database || !database.instance) return // log("Postgres not inited");
     await database.instance.addMessageInHistoryWithDate('discord', chatId, messageId, senderName, content, timestamp)
 }
 
 export async function deleteMessageFromHistory(chatId, messageId) {
-    if (!database || !database.instance) return // console.log("Postgres not inited");
+    if (!database || !database.instance) return // log("Postgres not inited");
     await database.instance.deleteMessage('discord', chatId, messageId)
 }
 
 export async function updateMessage(chatId, messageId, newContent) {
-    if (!database || !database.instance) return // console.log("Postgres not inited");
+    if (!database || !database.instance) return // log("Postgres not inited");
     await database.instance.updateMessage('discord', chatId, messageId, newContent, true)
 }
 
 export async function wasHandled(chatId, messageId, sender, content, timestamp) {
-    if (!database || !database.instance) return // console.log("Postgres not inited");
+    if (!database || !database.instance) return // log("Postgres not inited");
     return await database.instance.messageExists('discord', chatId, messageId, sender, content, timestamp)
 }
 
@@ -1024,7 +1025,7 @@ export let client = undefined
 
 export const createDiscordClient = () => {
     if (!customConfig.instance.get('discord_api_token')) return console.warn('No API token for Discord bot, skipping');
-    console.log("Creating Discord client");
+    log("Creating Discord client");
     client = new Discord.Client({
         partials: ['MESSAGE', 'USER', 'REACTION'],
         intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_PRESENCES, Intents.FLAGS.GUILD_MEMBERS, Intents.FLAGS.GUILD_MESSAGES]
@@ -1051,7 +1052,7 @@ export const createDiscordClient = () => {
     client.on("presenceUpdate", presenceUpdate.bind(null, client));
 
     client.on('interactionCreate', async interaction => {
-        console.log("Handling interaction", interaction);
+        log("Handling interaction", interaction);
         handleSlashCommand(client, interaction)
     });
     client.on('guildMemberAdd', async user => {
@@ -1079,7 +1080,7 @@ export const createDiscordClient = () => {
 
     setInterval(() => {
         client.channels.cache.forEach(async (channel) => {
-            console.log(channel.topic + ' - ' + (channel.topic?.toLowerCase() === 'daily discussion'));
+            log(channel.topic + ' - ' + (channel.topic?.toLowerCase() === 'daily discussion'));
             if (channel.topic?.toLowerCase() === 'daily discussion');
             {
                 if (discussionChannels[channel.id] === undefined || !discussionChannels) {

@@ -12,20 +12,38 @@ export class customConfig {
     }
 
     get(key) {
-        return this.configs[key];
+        return this.configs[key].trim();
     }
     getInt(key) {
-        return parseInt(this.configs[key]);
+        const value = this.configs[key];
+        if (!value || value === undefined || value.length <= 0) {
+            return undefined;
+        }
+        return parseInt(value);
     }
     getFloat(key) { 
-        return parseFloat(this.configs[key]);
+        const value = this.configs[key].trim();
+        if (!value || value === undefined || value.length <= 0) {
+            return undefined;
+        }
+        return parseFloat(value);
     }
     getBool(key) {
-        return this.configs[key].toLowerCase() === 'true';
+        const value = this.configs[key].trim();
+        if (!value || value === undefined || value.length <= 0) {
+            return false;
+        }
+        return value.toLowerCase() === 'true';
     }
     async set(key, value) {
-        this.configs[key] = value;
+        this.configs[key] = value.trim();
         await database.instance.setConfig(key, value);
+    }
+    async delete(key) {
+        if (this.configs[key] && this.configs[key] !== undefined) {
+            delete this.configs[key];
+            await database.instance.deleteConfig(key);
+        }
     }
 
     getAll() {
