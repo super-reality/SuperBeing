@@ -12,7 +12,7 @@ export class customConfig {
     }
 
     get(key) {
-        return this.configs[key].trim();
+        return this.configs[key]?.trim();
     }
     getInt(key) {
         const value = this.configs[key];
@@ -29,7 +29,7 @@ export class customConfig {
         return parseFloat(value);
     }
     getBool(key) {
-        const value = this.configs[key].trim();
+        const value = this.configs[key]?.trim();
         if (!value || value === undefined || value.length <= 0) {
             return false;
         }
