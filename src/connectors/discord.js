@@ -1079,20 +1079,25 @@ export const createDiscordClient = () => {
     client.commands.set("unban", unban);
 
     setInterval(() => {
+        const channelIds = [];
+
         client.channels.cache.forEach(async (channel) => {
-            log(channel.topic + ' - ' + (channel.topic?.toLowerCase() === 'daily discussion'));
-            if (channel.topic?.toLowerCase() === 'daily discussion');
-            {
-                if (discussionChannels[channel.id] === undefined || !discussionChannels) {
-                    const resp = await handleInput('Tell me about ' + getRandomTopic(), 'bot', customConfig.instance.get('agent') ?? "Agent", null, 'discord', channel.id);
-                    channel.send(resp);
-                    discussionChannels[channel.id] = { timeout: setTimeout(() => {
-                        delete discussionChannels[channel.id]
-                    }, 1000 * 3600 * 4),
-                    responded: false };
-                }
-                
+            if (!channel || !channel.topic) return;
+            if (channel === undefined || channel.topic === undefined) return;
+            if (channel.topic.length < 0 || channel.topic.toLowerCase() !== 'daily discussion') return;
+            if (channelIds.includes(channel.id)) return; 
+            
+            console.log('sending to channel with topic: ' + channel.topic);
+            channelIds.push(channel.id);
+            if (discussionChannels[channel.id] === undefined || !discussionChannels) {
+                discussionChannels[channel.id] = { timeout: setTimeout(() => {
+                    delete discussionChannels[channel.id]
+                }, 1000 * 3600 * 4),
+                responded: false };
+                const resp = await handleInput('Tell me about ' + getRandomTopic(), 'bot', customConfig.instance.get('agent') ?? "Agent", null, 'discord', channel.id);
+                channel.send(resp);
             }
+            
         })
     }, 1000 * 3600 );
   
