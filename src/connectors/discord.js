@@ -2,6 +2,7 @@
 import Discord, { Intents } from 'discord.js'
 import emoji from "emoji-dictionary"
 import emojiRegex from 'emoji-regex'
+import { EventEmitter } from 'events';
 import { handleInput } from '../cognition/handleInput.js'
 import { database } from "../database/database.js"
 import customConfig from '../utilities/customConfig.js'
@@ -428,7 +429,7 @@ export const messageCreate = async (client, message) => {
     }, message.content.length)
 
     const response = await handleInput(message.content, message.author.username, customConfig.instance.get('agent') ?? "Agent", null, 'discord', channel.id);
-    await handlePing(message.id, channel.id, response, addPing)
+    messageEvent.emit('new_message', message.id, channel.id, response, addPing);
 };
 
 //Event that is triggered when a message is deleted
@@ -1022,6 +1023,7 @@ export function moreThanOneInConversation() {
 }
 
 export let client = undefined
+export let messageEvent = undefined;
 
 export const createDiscordClient = () => {
     const t = customConfig.instance.get('discord_api_token');
@@ -1052,6 +1054,11 @@ export const createDiscordClient = () => {
     client.on("messageDelete", messageDelete.bind(null, client));
     client.on("messageUpdate", messageUpdate.bind(null, client));
     client.on("presenceUpdate", presenceUpdate.bind(null, client));
+
+    messageEvent = new EventEmitter();
+    messageEvent.on('new_message', async function(messageId, channelId, response, addPing) {  
+        handlePing(messageId, channelId, response, addPing);
+    });
 
     client.on('interactionCreate', async interaction => {
         log("Handling interaction", interaction);
