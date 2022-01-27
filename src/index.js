@@ -49,5 +49,5 @@ const db = new database();
 })();
 
 process.on('unhandledRejection', err => {
-    error('Unhandled Rejection at:', err.stack || err);
+    error('Unhandled Rejection:' + err);
 });

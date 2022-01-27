@@ -266,6 +266,7 @@ export async function registerRoutes(app) {
         const message = req.body.command
         const speaker = req.body.sender
         const agent = req.body.agent
+        const id = req.body.id;
         const msg = database.instance.getRandomStartingMessage(agent)
         if (message.includes("/become")) {
             let out = {}
@@ -277,10 +278,10 @@ export async function registerRoutes(app) {
             }
 
             out.startingMessage = (await msg);
-            database.instance.setConversation(agent, 'web', '0', agent, out.startingMessage, false);
+            database.instance.setConversation(agent, 'web', id, agent, out.startingMessage, false);
             return res.send(out);
 
         }
-        await handleInput(message, speaker, agent, res, 'web', '0')
+        await handleInput(message, speaker, agent, res, 'web', id)
     });
 }
