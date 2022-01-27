@@ -15,6 +15,7 @@ const client = weaviate.client({
 //Creates a new agent based on its Wikipedia article
 export async function createWikipediaAgent(speaker, name, personality, facts) {
   try {   
+          let start = Date.now()
           //gets the info from the wikipedia article, if the agent name can't be found it returns null, in order to send the default agent
           let out = null;
           try {
@@ -23,6 +24,10 @@ export async function createWikipediaAgent(speaker, name, personality, facts) {
             error(e);
             return null;
           }
+          
+          let stop = Date.now()
+          log(`Time Taken to execute loaded data from wikipedia = ${(stop - start)/1000} seconds`);
+          start = Date.now()
 
           //const type = await namedEntityRecognition(out.result.title);
 
@@ -42,6 +47,10 @@ export async function createWikipediaAgent(speaker, name, personality, facts) {
           database.instance.setDefaultNeedsAndMotivations(name);
           database.instance.setRelationshipMatrix(name, await database.instance.getRelationshipMatrix('common'));
           
+        stop = Date.now()
+        log(`Time Taken to execute save data = ${(stop - start)/1000} seconds`);
+        start = Date.now()
+
           let data = {
                   "prompt": factPrompt + "\n" + personalitySourcePrompt,
                   "temperature": 0.9,
@@ -54,8 +63,13 @@ export async function createWikipediaAgent(speaker, name, personality, facts) {
   
           let res = await makeCompletionRequest(data, speaker, name, "personality_generation", "davinci", false);
   
+        stop = Date.now()
+        log(`Time Taken to execute openai request = ${(stop - start)/1000} seconds`);
+        start = Date.now()
+
           if (!res.success) {
-                  return log("Error: Failed to generate personality, check GPT3 keys");
+                  log("Error: Failed to generate personality, check GPT3 keys");
+                  return undefined;
           }
   
           log("res.choice.text")
@@ -75,14 +89,21 @@ export async function createWikipediaAgent(speaker, name, personality, facts) {
                   "stop": ["\"\"\"", `${speaker}:`, '\n']
           };
   
-          res = await makeCompletionRequest(data, speaker, name, "dialog_generation", "davinci", false);
+          res = makeCompletionRequest(data, speaker, name, "dialog_generation", "davinci", false);
+          
+        stop = Date.now()
+        log(`Time Taken to execute openai request 2 = ${(stop - start)/1000} seconds`);
+        start = Date.now()
           log("res.choice.text (2)")
           log(res);
   
-          await database.instance.setDialogue(name, dialogPrompt + res.choice?.text);
-          await database.instance.setAgentFacts(name, factPrompt); 
-          await database.instance.setAgentExists(name); 
+          database.instance.setDialogue(name, dialogPrompt + (await res).choice?.text);
+          database.instance.setAgentFacts(name, factPrompt); 
+          database.instance.setAgentExists(name); 
   
+          stop = Date.now()
+          log(`Time Taken to execute save data = ${(stop - start)/1000} seconds`);
+          start = Date.now()
           return out;
   } catch (err) {
     error(err);
@@ -93,7 +114,7 @@ export async function createWikipediaAgent(speaker, name, personality, facts) {
 
 export const searchWikipedia = async (keyword) => {
 
-  console.log("Searching wikipedia for ", keyword);
+  log("Searching wikipedia for ", keyword);
 
   // if keywords contains more than three words, summarize with GPT-3
   if (keyword.trim().split(" ").length > 3) {

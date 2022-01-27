@@ -19,8 +19,6 @@ export class room3d {
         for (let i = 0; i < users.length; i++) {
             this.users[users[i]] = this.distances['default']
         }
-
-        setInterval(() => { this.print() }, 10000);
     }
 
     addUser(user) {
