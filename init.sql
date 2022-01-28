@@ -417,3 +417,8 @@ INSERT INTO ignored_keywords
     WHERE NOT EXISTS (SELECT * FROM ignored_keywords);
 
 CREATE TABLE IF NOT EXISTS wikipedia(agent text, _data text);
+
+CREATE TABLE IF NOT EXISTS _3d_world_understanding_prompt(_prompt text);
+CREATE TABLE IF NOT EXISTS fact_summarization_prompt(_prompt text);
+CREATE TABLE IF NOT EXISTS opinion_form_prompt(_prompt text);
+CREATE TABLE IF NOT EXISTS xr_engine_room_prompt(_prompt text);
