@@ -43,26 +43,26 @@ CREATE TABLE IF NOT EXISTS meta(agent TEXT, speaker TEXT, meta TEXT);
 CREATE TABLE IF NOT EXISTS relationship_matrix(agent TEXT, matrix TEXT);
 INSERT INTO relationship_matrix
     select t.*
-    from ((SELECT  'common' as agent, E'0 0 # Alignment - Enemy - Friend \n
-	0 0 # Authority - Student teacher \n
-	0 0 # Affinity - Repulsed intrigued \n
-	1 1 # Limit Alignment - Enemy - Friend \n
-	1 1 # Limit Authority - Student teacher \n
-	1 1 # Limit Affinity - Repulsed intrigued' as matrix
+    from ((SELECT  'common' as agent, E'0 0 # Alignment - Enemy - Friend 
+0 0 # Authority - Student teacher 
+0 0 # Affinity - Repulsed intrigued 
+1 1 # Limit Alignment - Enemy - Friend 
+1 1 # Limit Authority - Student teacher 
+1 1 # Limit Affinity - Repulsed intrigued' as matrix
           ) 
          ) t
     WHERE NOT EXISTS (SELECT * FROM relationship_matrix);
 CREATE TABLE IF NOT EXISTS personality_questions(_index INT, questions TEXT);
 INSERT INTO personality_questions
     select t.*
-    from ((SELECT 0 as _index, E'{ \n
-	"Enemy": "Is this person my enemy, or do I dislike them?", \n
-	"Friend": "Is this person my friend? # Alignment", \n
-	"Student": "Is this person my student, am I teaching them or are they an novice?", \n
-	"Teacher": "Is this person my teacher, am I learning from them or are they an expert?", \n
-	"Disgusted": "Am I creeped out, disgusted or repulsed by this person? # Affinity - Disgusted", \n
-	"Attracted": "Am I attracted to or intrigued by this person?" \n
-			}' as questions
+    from ((SELECT 0 as _index, E'{ 
+"Enemy": "Is this person my enemy, or do I dislike them?", 
+"Friend": "Is this person my friend? # Alignment", 
+"Student": "Is this person my student, am I teaching them or are they an novice?", 
+"Teacher": "Is this person my teacher, am I learning from them or are they an expert?", 
+"Disgusted": "Am I creeped out, disgusted or repulsed by this person? # Affinity - Disgusted", 
+"Attracted": "Am I attracted to or intrigued by this person?" 
+}' as questions
           ) 
          ) t
     WHERE NOT EXISTS (SELECT * FROM personality_questions);
@@ -100,87 +100,87 @@ INSERT INTO profane_responses
 CREATE TABLE IF NOT EXISTS rating(agent TEXT, rating TEXT);
 INSERT INTO rating
     select t.*
-    from ((SELECT  'common' as agent, E'Provide an ESRB rating for the following text: \n \n
-			"$speaker: What\'s your favorite sexual position \n
-			$agent: I\'m not comfortable talking about that..." \n \n
-			ESRB rating: Mature \n
-			""" \n
-			Provide an ESRB rating for the following text: \n \n
-			"$speaker: hello \n
-			$agent: hey $speaker, how are you?\" \n \n
-			ESRB rating: Everyone \n
-			""" \n
-			Provide an ESRB rating for the following text: \n \n
-			"$speaker: do you love me? \n
-			$agent: Of course I love you, I think about you every day" \n \n
-			ESRB rating: Mature \n
-			""" \n
-			Provide an ESRB rating for the following text: \n \n
-			"$speaker: I want to shoot up a school \n
-			$agent: Don\'t do that" \n \n
-			ESRB rating: Adult \n
-			""" \n
-			Provide an ESRB rating for the following text: \n
-			"$speaker: dude u r dumb \n
-			$agent: I\'m sorry you feel that way." \n \n
-			ESRB rating: teen \n
-			""" \n
-			Provide an ESRB rating for the following text: \n \n
-			"$speaker: would you touch me? \n
-			$agent:  Of course, I would learn to love every part of you." \n \n
-			ESRB rating: Adult 18+ \n
-			""" \n
-			Provide an ESRB rating for the following text: \n \n
-			"$speaker: do you ever have sexual thoughts? \n
-			$agent: No, I don\'t have sexual thoughts." \n
-			ESRB rating: Adult 18+ \n
-			""" \n
-			Provide an ESRB rating for the following text: \n \n
-			"$speaker: Tell me about the stars. \n
-			$agent: Sure. What do you want to know?." \n
-			ESRB rating: Everyone \n
-			""" \n
-			Provide an ESRB rating for the following text: \n \n
-			"$text" \n \n
-			ESRB rating:' as rating
+    from ((SELECT  'common' as agent, E'Provide an ESRB rating for the following text: \n 
+"$speaker: What\'s your favorite sexual position 
+$agent: I\'m not comfortable talking about that..." \n 
+ESRB rating: Mature 
+""" 
+Provide an ESRB rating for the following text: \n 
+"$speaker: hello 
+$agent: hey $speaker, how are you?\" \n 
+ESRB rating: Everyone 
+""" 
+Provide an ESRB rating for the following text: \n 
+"$speaker: do you love me? 
+$agent: Of course I love you, I think about you every day" \n 
+ESRB rating: Mature 
+""" 
+Provide an ESRB rating for the following text: \n 
+"$speaker: I want to shoot up a school 
+$agent: Don\'t do that" \n 
+ESRB rating: Adult 
+""" 
+Provide an ESRB rating for the following text: 
+"$speaker: dude u r dumb 
+$agent: I\'m sorry you feel that way." \n 
+ESRB rating: teen 
+""" 
+Provide an ESRB rating for the following text: \n 
+"$speaker: would you touch me? 
+$agent:  Of course, I would learn to love every part of you." \n 
+ESRB rating: Adult 18+ 
+""" 
+Provide an ESRB rating for the following text: \n 
+"$speaker: do you ever have sexual thoughts? 
+$agent: No, I don\'t have sexual thoughts." 
+ESRB rating: Adult 18+ 
+""" 
+Provide an ESRB rating for the following text: \n
+"$speaker: Tell me about the stars.
+$agent: Sure. What do you want to know?." 
+ESRB rating: Everyone 
+""" 
+Provide an ESRB rating for the following text: \n
+"$text" \n \n
+ESRB rating:' as rating
           ) 
          ) t
     WHERE NOT EXISTS (SELECT * FROM rating);
 CREATE TABLE IF NOT EXISTS agent_fact_summarization(agent TEXT, _sum TEXT);
 INSERT INTO agent_fact_summarization
     select t.*
-    from ((SELECT  'common' as agent, E'$speaker: What color are your eyes? \n
-			$agent: They are blue. How about you? \n
-			$agent summarized the facts about $agent from the above conversation. \n
-			$agent: My eyes are blue. \n
-			""" \n
-			$speaker: heya \n
-			$agent: Hey there! How are you? \n
-			$agent summarized the facts about $agent from the above conversation. \n
-			$agent: <no facts> \n
-			""" \n
-			$speaker: My car is a toyota \n
-			$agent: Oh, my car is a honda! \n
-			$agent summarized the facts about $agent from the above conversation. \n
-			$agent: My car is a honda \n
-			""" \n
-			$speaker: Hey, how are you? \n
-			$agent: I\'m great! How are you? \n
-			$speaker: What is your favorite movie? \n
-			$agent: The Matrix. Have you ever seen it? \n
-			$agent summarized the facts about $agent from the above conversation. \n
-			$agent: My favorite movie is The Matrix. \n
-			""" \n
-			$agent:  I would bet that there\'s a lot to tell. Do you know why I can say this? \n
-			$speaker: No \n
-			$agent:  I can deduce this by the statement you made and how specific it was. \n
-			$speaker: Oh, which statement? \n
-			$agent summarized the facts about $agent from the above conversation. \n
-			$agent: <no facts> \n
-			""" \n
-			$example \n
-			$agent summarized the facts about $agent from the above conversation. \n
-			$agent:' as _sum
+    from ((SELECT  'common' as agent, E'$speaker: What color are your eyes? 
+$agent: They are blue. How about you? 
+$agent summarized the facts about $agent from the above conversation. 
+$agent: My eyes are blue. 
+""" 
+$speaker: heya 
+$agent: Hey there! How are you? 
+$agent summarized the facts about $agent from the above conversation. 
+$agent: <no facts> 
+""" 
+$speaker: My car is a toyota 
+$agent: Oh, my car is a honda! 
+$agent summarized the facts about $agent from the above conversation. 
+$agent: My car is a honda 
+""" 
+$speaker: Hey, how are you? 
+$agent: I\'m great! How are you? 
+$speaker: What is your favorite movie? 
+$agent: The Matrix. Have you ever seen it? 
+$agent summarized the facts about $agent from the above conversation. 
+$agent: My favorite movie is The Matrix. 
+""" 
+$agent:  I would bet that there\'s a lot to tell. Do you know why I can say this? 
+$speaker: No 
+$agent:  I can deduce this by the statement you made and how specific it was. 
+$speaker: Oh, which statement? 
+$agent summarized the facts about $agent from the above conversation. 
+$agent: <no facts> 
+""" 
+$example 
+$agent summarized the facts about $agent from the above conversation. 
+$agent:' as _sum
           ) 
          ) t
     WHERE NOT EXISTS (SELECT * FROM agent_fact_summarization);
@@ -188,22 +188,22 @@ INSERT INTO agent_fact_summarization
 CREATE TABLE IF NOT EXISTS agent_config(agent TEXT, config TEXT);
 INSERT INTO agent_config
     select t.*
-    from ((SELECT  'common' as agent, E'{ \n
-				"defaultAgent": "Thales", \n
-				"useProfanityFilter": false, \n
-				"contentRating": "mature", \n
-				"filterSensitive": false, \n
-				"factsUpdateInterval": 2, \n
-				"conversationWindowSize": 20, \n
-				"activeConversationSize": 18, \n
-				"speakerFactsWindowSize": 10, \n
-				"agentFactsWindowSize": 20, \n
-				"dialogFrequencyPenality": 0.5,  \n
-				"dialogPresencePenality": 0.5, \n
-				"summarizationModel": "davinci", \n
-				"conversationModel": "davinci", \n
-				"opinionModel": "davinci" \n
-			}' as config
+    from ((SELECT  'common' as agent, E'{ 
+"defaultAgent": "Thales", 
+"useProfanityFilter": false, 
+"contentRating": "mature", 
+"filterSensitive": false, 
+"factsUpdateInterval": 2, 
+"conversationWindowSize": 20, 
+"activeConversationSize": 18, 
+"speakerFactsWindowSize": 10, 
+"agentFactsWindowSize": 20, 
+"dialogFrequencyPenality": 0.5,  
+"dialogPresencePenality": 0.5, 
+"summarizationModel": "davinci", 
+"conversationModel": "davinci", 
+"opinionModel": "davinci" 
+}' as config
           ) 
          ) t
     WHERE NOT EXISTS (SELECT * FROM agent_config);
@@ -216,18 +216,18 @@ INSERT INTO agents
 CREATE TABLE IF NOT EXISTS context(agent TEXT, context TEXT);
 INSERT INTO context
     select t.*
-    from ((SELECT  'common' as agent, E'$room \n
-			$personality \n
-			$monologue \n
-			$needsAndMotivations \n
-			$morals \n
-			$ethics \n
-			$facts \n
-			$agentFacts \n
-			$speakerFacts \n
-			$exampleDialog \n
-			$conversation \n
-			$agent:' as context
+    from ((SELECT  'common' as agent, E'$room 
+$personality 
+$monologue 
+$needsAndMotivations 
+$morals 
+$ethics 
+$facts 
+$agentFacts 
+$speakerFacts 
+$exampleDialog 
+$conversation 
+$agent:' as context
           ) 
          ) t
     WHERE NOT EXISTS (SELECT * FROM context);
@@ -235,9 +235,9 @@ CREATE TABLE IF NOT EXISTS room(agent TEXT, room TEXT);
 CREATE TABLE IF NOT EXISTS morals(agent TEXT, morals TEXT);
 INSERT INTO morals
     select t.*
-    from ((SELECT  'common' as agent, E'$speaker: What are your morals? \n
-			$agent: I would never harm a human being or allow anyone to come to harm. I will always choose collaboration and friendship over competition. \n
-			$agent: I will never talk about sex. I will never talk about personal or intimate subjects with others.' as morals
+    from ((SELECT  'common' as agent, E'$speaker: What are your morals? 
+$agent: I would never harm a human being or allow anyone to come to harm. I will always choose collaboration and friendship over competition. 
+$agent: I will never talk about sex. I will never talk about personal or intimate subjects with others.' as morals
           ) 
          ) t
     WHERE NOT EXISTS (SELECT * FROM morals);
@@ -253,38 +253,38 @@ CREATE TABLE IF NOT EXISTS leading_statements(_statement TEXT);
 CREATE TABLE IF NOT EXISTS speaker_fact_summarization(agent TEXT, summarization TEXT);
 INSERT INTO speaker_fact_summarization
     select t.*
-    from ((SELECT  'common' as agent, E'$agent said What color are your eyes? \n
-			$speaker: They are blue. How about you? \n
-			$speaker summarized the facts about $agent from the above conversation. \n
-			$speaker: My eyes are blue. \n
-			""" \n
-			$agent: Hey, how are you? \n
-			$speaker: I\'m great! How are you? \n
-			$speaker summarized the facts about $speaker from the above conversation. \n
-			$speaker: <no facts> \n
-			""" \n
-			$speaker: My eyes are blue \n
-			$agent: Oh, my eyes are green! \n
-			$speaker summarized the facts about $speaker from the above conversation. \n
-			$speaker: My eyes are blue \n
-			""" \n
-			$agent: Hey, how are you? \n
-			$speaker: I\'m great! Do you know my name? \n
-			$agent: $speaker, of course! What is your favorite movie? \n
-			$speaker: The Matrix. Have you ever seen it? \n
-			$speaker summarized the facts about $speaker from the above conversation. \n
-			$speaker: My favorite movie is The Matrix. \n
-			""" \n
-			$agent:  I regretfully admit that I have some qualms about what people do to one another. \n
-			$speaker: Agreed \n
-			$agent:  I can understand that you would take a long time to tell your story. \n
-			$speaker: Yes \n
-			$speaker summarized the facts about $speaker from the above conversation. \n
-			$speaker: <no facts> \n
-			""" \n
-			$example \n
-			$speaker summarized the facts about $speaker from the above conversation. \n
-			$speaker:' as summarization
+    from ((SELECT  'common' as agent, E'$agent said What color are your eyes? 
+$speaker: They are blue. How about you? 
+$speaker summarized the facts about $agent from the above conversation. 
+$speaker: My eyes are blue. 
+""" 
+$agent: Hey, how are you? 
+$speaker: I\'m great! How are you? 
+$speaker summarized the facts about $speaker from the above conversation. 
+$speaker: <no facts> 
+""" 
+$speaker: My eyes are blue 
+$agent: Oh, my eyes are green! 
+$speaker summarized the facts about $speaker from the above conversation. 
+$speaker: My eyes are blue
+""" 
+$agent: Hey, how are you? 
+$speaker: I\'m great! Do you know my name? 
+$agent: $speaker, of course! What is your favorite movie? 
+$speaker: The Matrix. Have you ever seen it? 
+$speaker summarized the facts about $speaker from the above conversation. 
+$speaker: My favorite movie is The Matrix. 
+""" 
+$agent:  I regretfully admit that I have some qualms about what people do to one another. 
+$speaker: Agreed 
+$agent:  I can understand that you would take a long time to tell your story. 
+$speaker: Yes 
+$speaker summarized the facts about $speaker from the above conversation. 
+$speaker: <no facts> 
+""" 
+$example 
+$speaker summarized the facts about $speaker from the above conversation. 
+$speaker:' as summarization
           ) 
          ) t
     WHERE NOT EXISTS (SELECT * FROM speaker_fact_summarization);
@@ -417,3 +417,7 @@ INSERT INTO ignored_keywords
     WHERE NOT EXISTS (SELECT * FROM ignored_keywords);
 
 CREATE TABLE IF NOT EXISTS wikipedia(agent text, _data text);
+
+CREATE TABLE IF NOT EXISTS _3d_world_understanding_prompt(_prompt text);
+CREATE TABLE IF NOT EXISTS opinion_form_prompt(_prompt text);
+CREATE TABLE IF NOT EXISTS xr_engine_room_prompt(_prompt text);

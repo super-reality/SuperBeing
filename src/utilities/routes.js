@@ -266,6 +266,7 @@ export async function registerRoutes(app) {
         const message = req.body.command
         const speaker = req.body.sender
         const agent = req.body.agent
+        const id = req.body.id;
         const msg = database.instance.getRandomStartingMessage(agent)
         if (message.includes("/become")) {
             let out = {}
@@ -277,10 +278,61 @@ export async function registerRoutes(app) {
             }
 
             out.startingMessage = (await msg);
-            database.instance.setConversation(agent, 'web', '0', agent, out.startingMessage, false);
+            database.instance.setConversation(agent, 'web', id, agent, out.startingMessage, false);
             return res.send(out);
 
         }
-        await handleInput(message, speaker, agent, res, 'web', '0')
+        await handleInput(message, speaker, agent, res, 'web', id)
+    });
+
+    app.get('/get_agents_config', async function (req, res) {
+        try {
+        return res.send(await database.instance.getAgentsConfig('common'));
+        } catch (e) {
+            error(e);
+            return res.send('internal error');
+        }
+    });
+    app.post('/set_agents_config', async function (req, res) {
+        const data = req.body.data;
+
+        try {
+            await database.instance.setAgentsConfig('common', data);
+            return res.send('ok');
+        } catch (e) {
+            error(e);
+            return res.send('internal error');
+        }
+    });
+
+    app.get('/get_prompts', async function (req, res) { 
+        try {
+            const data = {
+                _3d_world: await database.instance.get3dWorldUnderstandingPrompt(),
+                fact: await database.instance.getAgentsFactsSummarization(),
+                opinion: await database.instance.getOpinionFormPrompt(),
+                xr: await database.instance.getXrEngineRoomPrompt(),
+            }
+
+            return res.send(data);
+        } catch (e) {
+            error(e);
+            return res.send('internal error');
+        }
+    });
+    app.post('/set_prompts', async function (req, res) {
+        const data = req.body.data;
+
+        try {
+            await database.instance.set3dWorldUnderstandingPrompt(data._3d_world);
+            await database.instance.setAgentsFactsSummarization(data.fact);
+            await database.instance.setOpinionFormPrompt(data.opinion);
+            await database.instance.setXrEngineRoomPrompt(data.xr);
+
+            return res.send('ok');
+        } catch (e) {
+            error(e);
+            return res.send('internal error');
+        }
     });
 }
