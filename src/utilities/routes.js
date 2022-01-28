@@ -309,7 +309,7 @@ export async function registerRoutes(app) {
         try {
             const data = {
                 _3d_world: await database.instance.get3dWorldUnderstandingPrompt(),
-                fact: await database.instance.getFactSummarizationPrompt(),
+                fact: await database.instance.getAgentsFactsSummarization(),
                 opinion: await database.instance.getOpinionFormPrompt(),
                 xr: await database.instance.getXrEngineRoomPrompt(),
             }
@@ -325,7 +325,7 @@ export async function registerRoutes(app) {
 
         try {
             await database.instance.set3dWorldUnderstandingPrompt(data._3d_world);
-            await database.instance.setFactSummarizationPrompt(data.fact);
+            await database.instance.setAgentsFactsSummarization(data.fact);
             await database.instance.setOpinionFormPrompt(data.opinion);
             await database.instance.setXrEngineRoomPrompt(data.xr);
 

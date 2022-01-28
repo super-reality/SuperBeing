@@ -737,11 +737,23 @@ export class database {
             return '';
         }
     }
+    async setAgentsFactsSummarization(facts) {   
+        const check = 'SELECT * FROM agent_fact_summarization WHERE agent=$1';
+        const cvalues = [ 'common' ];
+
+        const test = await this.client.query(check, cvalues);
+        if (test && test.rows && test.rows.length > 0) {
+            await this.client.query('UPDATE agent_fact_summarization SET _sum=$1 WHERE agent=$2', [facts, 'common']);
+        } else {
+            await this.client.query('INSERT INTO agent_fact_summarization(agent, _sum) VALUES($1, $2)', ['common', facts]);
+        }
+    }
     async getAgentsFactsSummarization() {
-        const query = 'SELECT * FROM agent_fact_summarization';
+        const query = 'SELECT * FROM agent_fact_summarization WHERE agent=$1';
+        const values = [ 'common' ];
         
-        const rows = await this.client.query(query);
-        if (rows && rows.length > 0) {
+        const rows = await this.client.query(query, values);
+        if (rows && rows.rows && rows.rows.length > 0) {
             return rows.rows[0]._sum;
         } else {
             return '';
