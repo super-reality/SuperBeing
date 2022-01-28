@@ -18,14 +18,25 @@ export let isInFastMode = false;
 
 const db = new database();
 (async function(){  
+    console.log("Connect to DB")
     await db.connect()
+    console.log("initClassifier")
+
     await initClassifier();
+    console.log("initProfanityClassifier")
+
     await initProfanityClassifier();
+    console.log("initLogger")
+
     await initLogger();
+    console.log("roomManager")
+
     new roomManager();
+    console.log("agent")
+
     const agent = customConfig.instance.get('agent')?.replace('_', ' ');
     defaultAgent = agent;
-    isInFastMode = customConfig.instance.getBool('fastMode');
+    isInFastMode = false; //customConfig.instance.getBool('fastMode');
 
     const expectedServerDelta = 1000 / 60;
     let lastTime = 0;
