@@ -393,6 +393,8 @@ INSERT INTO config
 		  ) union all 
 		 (SELECT  'initCalendar' as _key, 'false' as _value
 		  ) union all 
+		 (SELECT  'fps' as _key, '60' as _value
+		  ) union all 
 		 (SELECT  'enabledServices' as _key, 'Discord' as _value
 		  )
          ) t
@@ -421,3 +423,72 @@ CREATE TABLE IF NOT EXISTS wikipedia(agent text, _data text);
 CREATE TABLE IF NOT EXISTS _3d_world_understanding_prompt(_prompt text);
 CREATE TABLE IF NOT EXISTS opinion_form_prompt(_prompt text);
 CREATE TABLE IF NOT EXISTS xr_engine_room_prompt(_prompt text);
+
+CREATE TABLE IF NOT EXISTS agent_instance(id INT, personality TEXT, clients TEXT, _enabled BOOLEAN);
+CREATE TABLE IF NOT EXISTS client_settings(client TEXT, _name TEXT, _type TEXT, _defaultValue TEXT);
+INSERT INTO client_settings
+    select t.*
+    from ((SELECT 'discord' as client, 'discord_api_token' as _name, 'string' as  _type, '' as _defaultValue
+		  ) union all 
+		 (SELECT 'twitter' as client, 'twitterConsumerKey' as _name, 'string' as  _type, '' as _defaultValue
+		  ) union all 
+		 (SELECT 'twitter' as client, 'twitterConsumerSecret' as _name, 'string' as  _type, '' as _defaultValue
+		  ) union all 
+		 (SELECT 'twitter' as client, 'twitterAccessToken' as _name, 'string' as  _type, '' as _defaultValue
+		  ) union all 
+		 (SELECT 'twitter' as client, 'twitterAccessTokenSecret' as _name, 'string' as  _type, '' as _defaultValue
+		  ) union all 
+		 (SELECT 'twitter' as client, 'ngrokToken' as _name, 'string' as  _type, '' as _defaultValue
+		  ) union all 
+		 (SELECT 'twitter' as client, 'twitterWebhookPort' as _name, 'string' as  _type, '3002' as _defaultValue
+		  ) union all 
+		 (SELECT 'twitter' as client, 'twitterID' as _name, 'string' as  _type, '' as _defaultValue
+		  ) union all 
+		 (SELECT 'twitter' as client, 'twitterBearerToken' as _name, 'string' as  _type, '' as _defaultValue
+		  ) union all 
+		 (SELECT 'twitter' as client, 'twitterBearerToken' as _name, 'string' as  _type, '' as _defaultValue
+		  ) union all 
+		 (SELECT 'twitter' as client, 'twitterTweetRules' as _name, 'string' as  _type, 'digital,being,digital being' as _defaultValue
+		  ) union all 
+		 (SELECT 'discord' as client, 'loadDiscordLogger' as _name, 'string' as  _type, 'false' as _defaultValue
+		  ) union all 
+		 (SELECT 'twilio' as client,  'twilioAccountSID' as _name, 'string' as  _type, '' as _defaultValue
+		  ) union all 
+		 (SELECT 'twilio' as client, 'twiolioPhoneNumber' as _name, 'string' as  _type, '' as _defaultValue
+		  ) union all 
+		 (SELECT 'twilio' as client, 'twiolioAuthToken' as _name, 'string' as  _type, '' as _defaultValue
+		  ) union all 
+		 (SELECT 'twilio' as client, 'twiolioPhoneNumber' as _name, 'string' as  _type, '' as _defaultValue
+		  ) union all 
+		 (SELECT 'telegram' as client, 'telegramBotToken' as _name, 'string' as  _type, '' as _defaultValue
+		  ) union all 
+		 (SELECT 'xr-engine' as client, 'xrEngineURL' as _name, 'string' as  _type, 'https://dev.theoverlay.io/location/bot' as _defaultValue
+		  ) union all 
+		 (SELECT 'whatsapp' as client, 'whatsappBotName' as _name, 'string' as  _type, '' as _defaultValue
+		  ) union all 
+		 (SELECT 'harmony' as client, 'harmonyURL' as _name, 'string' as  _type, '' as _defaultValue
+		  ) union all 
+		 (SELECT 'zoom' as client, 'zoomInvitationLink' as _name, 'string' as  _type, '' as _defaultValue
+		  ) union all 
+		 (SELECT 'zoom' as client, 'zoomPassword' as _name, 'string' as  _type, '' as _defaultValue
+		  ) union all 
+		 (SELECT 'messenger' as client, 'messengerToken' as _name, 'string' as  _type, '' as _defaultValue
+		  ) union all 
+		 (SELECT 'messenger' as client, 'messengerVerifyToken' as _name, 'string' as  _type, '' as _defaultValue
+		  ) union all 
+		 (SELECT 'reddit' as client, 'redditAppID' as _name, 'string' as  _type, '' as _defaultValue
+		  ) union all 
+		 (SELECT 'reddit' as client, 'redditAppSecretID' as _name, 'string' as  _type, '' as _defaultValue
+		  ) union all 
+		 (SELECT 'reddit' as client, 'redditUsername' as _name, 'string' as  _type, '' as _defaultValue
+		  ) union all 
+		 (SELECT 'reddit' as client, 'redditPassword' as _name, 'string' as  _type, '' as _defaultValue
+		  ) union all 
+		 (SELECT 'reddit' as client, 'redditOAthToken' as _name, 'string' as  _type, '' as _defaultValue
+		  ) union all 
+		 (SELECT 'instagram' as client, 'instagramUsername' as _name, 'string' as  _type, '' as _defaultValue
+		  ) union all 
+		 (SELECT 'instagram' as client, 'instagramPassword' as _name, 'string' as  _type, '' as _defaultValue
+		  )
+         ) t
+    WHERE NOT EXISTS (SELECT * FROM client_settings);
