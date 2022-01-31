@@ -35,7 +35,7 @@ async function evaluateTerminalCommands(message, speaker, agent, res, client, ch
 
         else if (message === "/dump") { // If a user types dump, show them logs of convo
                 // Read conversation history
-                const conversation = database.instance.getConversation(agent, speaker, client, channel, false);
+                const conversation = await database.instance.getConversation(agent, speaker, client, channel, false);
                 // If there is a response (i.e. this came from a web client, not local terminal)
                 const result = { result: conversation };
                 if (res) {
@@ -58,7 +58,9 @@ async function evaluateTerminalCommands(message, speaker, agent, res, client, ch
 
 //returns the agents' configs in json format
 async function getConfigurationSettingsForAgent(agent) {
-        return JSON.parse((await database.instance.getAgentsConfig(agent)).toString());
+        const config = JSON.parse((await database.instance.getAgentsConfig(agent)).toString());
+        console.log(config);
+        return config;
 }
 
 // Slice the conversation and store any more than the window size in the archive
@@ -85,6 +87,7 @@ async function archiveFacts(speaker, agent) {
         const { speakerFactsWindowSize, agentFactsWindowSize } = getConfigurationSettingsForAgent(agent);
 
         const existingSpeakerFacts = (await database.instance.getSpeakersFacts(agent, speaker)).toString().trim().replaceAll('\n\n', '\n');
+        log("Existing facts about speaker:", existingSpeakerFacts)
         const speakerFacts = existingSpeakerFacts == "" ? "" : existingSpeakerFacts; // If no facts, don't inject
         const speakerFactsLines = speakerFacts.split('\n');  // Slice the facts and store any more than the window size in the archive
         if (speakerFactsLines.length > speakerFactsWindowSize) {
@@ -157,6 +160,7 @@ const defaultAgent = process.env.AGENT
 
 //handles the input from a client according to a selected agent and responds
 export async function handleInput(message, speaker, agent, res, clientName, channelId) {
+        let start = Date.now()
         log("Handling input: " + message);
         agent = agent ?? defaultAgent
 
@@ -196,18 +200,25 @@ export async function handleInput(message, speaker, agent, res, clientName, chan
         // Archive previous conversation and facts to keep context window small
         archiveConversation(speaker, agent, conversation, clientName, channelId);
         archiveFacts(speaker, agent, conversation);
+        let stop = Date.now()
+        log(`Time Taken to execute load data = ${(stop - start)/1000} seconds`);
+        start = Date.now()
 
         const context = (await generateContext(speaker, agent, conversation, message)).replaceAll('\n\n', '\n');
-        log('Context: ' + context);
+        // log('Context:');
+        // log(context)
         // TODO: Wikipedia?
+        stop = Date.now()
+        log(`Time Taken to execute create context = ${(stop - start)/1000} seconds`);
+        start = Date.now()
 
-        // searchWikipedia(text.Input) .then( (out) => { console.log("**** WEAVIATE: " + JSON.stringify(out)); currentState = states.READY; });
+        // searchWikipedia(text.Input) .then( (out) => { log("**** WEAVIATE: " + JSON.stringify(out)); currentState = states.READY; });
 
         // Print the context to the console if running indev mode
         // if (process.env.DEBUG == "TRUE") {
-        //         console.log("*********************** CONTEXT");
-        //         console.log(context);
-        //         console.log("***********************");
+        //         log("*********************** CONTEXT");
+        //         log(context);
+        //         log("***********************");
         // };
 
         // Create a data object to pass to the transformer API
@@ -223,7 +234,9 @@ export async function handleInput(message, speaker, agent, res, clientName, chan
 
         // Call the transformer API
         const { success, choice } = await makeCompletionRequest(data, speaker, agent, "conversation");
-
+        stop = Date.now()
+        log(`Time Taken to execute openai request = ${(stop - start)/1000} seconds`);
+        start = Date.now()
         database.instance.setConversation(agent, clientName, channelId, speaker, message, false);
         // If it fails, tell speaker they had an error
         if (!success) {
@@ -261,6 +274,8 @@ export async function handleInput(message, speaker, agent, res, clientName, chan
         
         // Write to conversation to the database
         database.instance.setConversation(agent, clientName, channelId, agent, response, false);
-        console.log("responding with message", response);
+        log("responding with message", response);
+        stop = Date.now()
+        log(`Time Taken to execute save data = ${(stop - start)/1000} seconds`);
         return respondWithMessage(agent, response, res);
 }

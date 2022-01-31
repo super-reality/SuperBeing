@@ -14,6 +14,11 @@ export async function keywordExtractor(input, agent) {
         return_changed_case: true,
         remove_duplicates: true
     });
+
+    if (keywords.length == []) {
+        return [];
+    }
+    
     const result = await makeModelRequest(input, "flair/pos-english");
 
     const skw = await database.instance.getIgnoredKeywords(agent);

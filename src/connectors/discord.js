@@ -2,6 +2,7 @@
 import Discord, { Intents } from 'discord.js'
 import emoji from "emoji-dictionary"
 import emojiRegex from 'emoji-regex'
+import { EventEmitter } from 'events';
 import { handleInput } from '../cognition/handleInput.js'
 import { database } from "../database/database.js"
 import customConfig from '../utilities/customConfig.js'
@@ -428,7 +429,7 @@ export const messageCreate = async (client, message) => {
     }, message.content.length)
 
     const response = await handleInput(message.content, message.author.username, customConfig.instance.get('agent') ?? "Agent", null, 'discord', channel.id);
-    await handlePing(message.id, channel.id, response, addPing)
+    messageEvent.emit('new_message', message.id, channel.id, response, addPing);
 };
 
 //Event that is triggered when a message is deleted
@@ -1022,6 +1023,7 @@ export function moreThanOneInConversation() {
 }
 
 export let client = undefined
+export let messageEvent = undefined;
 
 export const createDiscordClient = () => {
     const t = customConfig.instance.get('discord_api_token');
@@ -1053,6 +1055,11 @@ export const createDiscordClient = () => {
     client.on("messageUpdate", messageUpdate.bind(null, client));
     client.on("presenceUpdate", presenceUpdate.bind(null, client));
 
+    messageEvent = new EventEmitter();
+    messageEvent.on('new_message', async function(messageId, channelId, response, addPing) {  
+        handlePing(messageId, channelId, response, addPing);
+    });
+
     client.on('interactionCreate', async interaction => {
         log("Handling interaction", interaction);
         handleSlashCommand(client, interaction)
@@ -1079,20 +1086,25 @@ export const createDiscordClient = () => {
     client.commands.set("unban", unban);
 
     setInterval(() => {
+        const channelIds = [];
+
         client.channels.cache.forEach(async (channel) => {
-            log(channel.topic + ' - ' + (channel.topic?.toLowerCase() === 'daily discussion'));
-            if (channel.topic?.toLowerCase() === 'daily discussion');
-            {
-                if (discussionChannels[channel.id] === undefined || !discussionChannels) {
-                    const resp = await handleInput('Tell me about ' + getRandomTopic(), 'bot', customConfig.instance.get('agent') ?? "Agent", null, 'discord', channel.id);
-                    channel.send(resp);
-                    discussionChannels[channel.id] = { timeout: setTimeout(() => {
-                        delete discussionChannels[channel.id]
-                    }, 1000 * 3600 * 4),
-                    responded: false };
-                }
-                
+            if (!channel || !channel.topic) return;
+            if (channel === undefined || channel.topic === undefined) return;
+            if (channel.topic.length < 0 || channel.topic.toLowerCase() !== 'daily discussion') return;
+            if (channelIds.includes(channel.id)) return; 
+            
+            console.log('sending to channel with topic: ' + channel.topic);
+            channelIds.push(channel.id);
+            if (discussionChannels[channel.id] === undefined || !discussionChannels) {
+                discussionChannels[channel.id] = { timeout: setTimeout(() => {
+                    delete discussionChannels[channel.id]
+                }, 1000 * 3600 * 4),
+                responded: false };
+                const resp = await handleInput('Tell me about ' + getRandomTopic(), 'bot', customConfig.instance.get('agent') ?? "Agent", null, 'discord', channel.id);
+                channel.send(resp);
             }
+            
         })
     }, 1000 * 3600 );
   

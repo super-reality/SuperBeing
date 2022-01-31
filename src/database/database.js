@@ -178,8 +178,8 @@ export class database {
         })
     }
 
-    async updateMessage(client_name, chat_id, message_id, newContent, upadteTime) {
-        if (upadteTime) {
+    async updateMessage(client_name, chat_id, message_id, newContent, updateTime) {
+        if (updateTime) {
             const date = new Date();
             const utc = new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds());
             const utcStr = date.getDate() + '/' + (date.getMonth() + 1) + '/' + date.getFullYear() + ' ' + utc.getHours() + ':' + utc.getMinutes() + ':' + utc.getSeconds()
