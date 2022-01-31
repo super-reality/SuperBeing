@@ -1,4 +1,5 @@
 import { handleInput } from '../cognition/handleInput.js';
+import { clientSettingsToInstance } from '../connectors/utils.js';
 import { createWikipediaAgent } from '../connectors/wikipedia.js';
 import { database } from '../database/database.js';
 import { defaultAgent } from '../index.js';
@@ -330,6 +331,52 @@ export async function registerRoutes(app) {
             await database.instance.setXrEngineRoomPrompt(data.xr);
 
             return res.send('ok');
+        } catch (e) {
+            error(e);
+            return res.send('internal error');
+        }
+    });
+
+    app.get('/get_agent_instances', async function (req, res) {
+        try {
+            const instanceId = req.query.instanceId;
+            const isNum = /^\d+$/.test(instanceId);
+            const _instanceId = isNum ? parseInt(instanceId) ? parseInt(instanceId) >= 1 ? parseInt(instanceId) : 1 : 1 : 1;
+            let data = await database.instance.getAgentInstance(_instanceId);
+            if (data === undefined || !data) {
+                let newId = _instanceId;
+                while (await database.instance.instanceIdExists(newId) || newId <= 0) {
+                    newId++;
+                }
+
+                data = {
+                    id: newId,
+                    personality: '',
+                    clients: clientSettingsToInstance(await database.instance.getAllClientSettings()),
+                    enabled: true
+                }
+            }
+            console.log(data);
+            return res.send(data);
+        } catch (e) {
+            error(e);
+            return res.send('internal error');
+        }
+    });
+
+    app.post('/update_agent_instances', async function (req, res) {
+        console.log('data');
+        console.log(req.data);
+        const data = req.body.data;
+        const instanceId = data.id;
+        const personality = data.personality.trim();
+        const clients = data.clients;
+        const enabled = data.enabled;
+
+        try {
+            await database.instance.updateAgentInstances(instanceId, personality, clients, enabled);
+            res.send('ok');
+            process.exit(1);
         } catch (e) {
             error(e);
             return res.send('internal error');

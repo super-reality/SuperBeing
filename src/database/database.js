@@ -1533,6 +1533,100 @@ export class database {
         }
     }
 
+    async getAgentInstances() {
+        const query = 'SELECT * FROM agent_instance';
+
+        const rows = await this.client.query(query);
+        if (rows && rows.rows && rows.rows.length > 0) {
+            return rows.rows;
+        } else {
+            return [];
+        }
+    }
+    async getAgentInstance(id) {
+        const query = 'SELECT * FROM agent_instance WHERE id=$1';
+        const values = [id];
+
+        const rows = await this.client.query(query, values);
+        if (rows && rows.rows && rows.rows.length > 0) {
+            return rows.rows[0];
+        } else {
+            return undefined;
+        }
+    }
+    async instanceIdExists(id) {
+        const query = 'SELECT * FROM agent_instance WHERE id=$1';
+        const values = [id];
+
+        const rows = await this.client.query(query, values);
+        return rows && rows.rows && rows.rows.length > 0;
+    }
+    async deleteAgentInstance(id) {
+        const query = 'DELETE FROM agent_instance WHERE id=$1';
+        const values = [id];
+
+        await this.client.query(query, values);
+    }
+    async updateAgentInstances(id, personality, clients, enabled) {
+        clients = JSON.stringify(clients).replaceAll('\\', '');
+        const check = 'SELECT * FROM agent_instance WHERE id=$1';
+        const cvalues = [id];
+
+        const rows = await this.client.query(check, cvalues);
+        if (rows && rows.rows && rows.rows.length > 0) {
+            const query = 'UPDATE agent_instance SET personality=$1, clients=$2, _enabled=$3 WHERE id=$4';
+            const values = [personality, clients, enabled, id];
+
+            await this.client.query(query, values);
+        } else {
+            const query = 'INSERT INTO agent_instance(id, personality, clients, _enabled) VALUES($1, $2, $3, $4)';
+            const values = [id, personality, clients, enabled];
+
+            await this.client.query(query, values);
+        }
+    }
+
+    async getClientSettings(client) {
+        const query = 'SELECT * FROM client_settings WHERE client=$1';
+        const values = [client];
+
+        const rows = await this.client.query(query, values);
+        if (rows && rows.rows && rows.rows.length > 0) {
+            const res = [];
+            for(let i = 0; i < rows.rows.length; i++) {
+                res.push({ name: rows.rows[i]._name, type: rows.roes[i]._type, defaultValue: rows.rows[i]._defaultValue }); //type is string or bool
+            }
+            return res;
+        } else {
+            return [];
+        }
+    }
+    async getAllClientSettings() {
+        const query = 'SELECT * FROM client_settings';
+
+        const rows = await this.client.query(query);
+        if (rows && rows.rows && rows.rows.length > 0) {
+            const res = [];
+            for(let i = 0; i < rows.rows.length; i++) {
+                res.push({ client: rows.rows[i].client, name: rows.rows[i]._name, type: rows.rows[i]._type, defaultValue: rows.rows[i]._defaultvalue }); //type is string or bool
+            }
+            return res;
+        } else {
+            return [];
+        }
+    }
+
+    //remove from the settings the client settings and make a new table with settings and for key add the client, soit loops using the client as key and then the objects in the client renderer
+    //clients will be an object like this:
+    /*
+        [
+            { client: discord, enabled: boolean, settings: [{ name: 'name', value: 'string' }, { name: 'age', value: 'number' }] },
+            { client: discord, enabled: boolean, settings: [{ name: 'name', value: 'string' }, { name: 'age', value: 'number' }] },
+            { client: discord, enabled: boolean, settings: [{ name: 'name', value: 'string' }, { name: 'age', value: 'number' }] },
+            { client: discord, enabled: boolean, settings: [{ name: 'name', value: 'string' }, { name: 'age', value: 'number' }] }
+        ]
+    */
+
     // async getChatFilterData(init) {
     //     const query = "SELECT * FROM chat_filter"
 
