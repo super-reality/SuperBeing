@@ -737,11 +737,23 @@ export class database {
             return '';
         }
     }
+    async setAgentsFactsSummarization(facts) {   
+        const check = 'SELECT * FROM agent_fact_summarization WHERE agent=$1';
+        const cvalues = [ 'common' ];
+
+        const test = await this.client.query(check, cvalues);
+        if (test && test.rows && test.rows.length > 0) {
+            await this.client.query('UPDATE agent_fact_summarization SET _sum=$1 WHERE agent=$2', [facts, 'common']);
+        } else {
+            await this.client.query('INSERT INTO agent_fact_summarization(agent, _sum) VALUES($1, $2)', ['common', facts]);
+        }
+    }
     async getAgentsFactsSummarization() {
-        const query = 'SELECT * FROM agent_fact_summarization';
+        const query = 'SELECT * FROM agent_fact_summarization WHERE agent=$1';
+        const values = [ 'common' ];
         
-        const rows = await this.client.query(query);
-        if (rows && rows.length > 0) {
+        const rows = await this.client.query(query, values);
+        if (rows && rows.rows && rows.rows.length > 0) {
             return rows.rows[0]._sum;
         } else {
             return '';
@@ -753,9 +765,31 @@ export class database {
 
         const rows = await this.client.query(query, values);
         if (rows && rows.rows && rows.rows.length > 0) {
+            if (rows.rows[0].config.length <= 0) {
+                return this.getAgentsConfig('common');
+            }
+
             return rows.rows[0].config;
         } else {
             return this.getAgentsConfig('common');
+        }
+    }
+    async setAgentsConfig(agent, config) {
+        const check = 'SELECT * FROM agent_config WHERE agent=$1'
+        const cvalues = [ agent ]
+
+        const test = await this.client.query(check, cvalues);
+
+        if (test && test.rows && test.rows.length > 0) {
+            const query = 'UPDATE agent_config SET config=$1 WHERE agent=$2'
+            const values = [config, agent];
+
+            await this.client.query(query, values);
+        } else {
+            const query = 'INSERT INTO agent_config(agent, config) VALUES($1, $2)'
+            const values = [agent, config];
+
+            await this.client.query(query, values);
         }
     }
 
@@ -1382,6 +1416,216 @@ export class database {
         const rows = await this.client.query(query, values);
         return rows && rows.rows && rows.rows.length > 0;
     }
+
+    async set3dWorldUnderstandingPrompt(prompt) {
+        const query = 'SELECT * FROM _3d_world_understanding_prompt';
+        
+        const rows = await this.client.query(query);
+        if (rows && rows.rows && rows.rows.length > 0) {
+            const query2 = 'UPDATE _3d_world_understanding_prompt SET _prompt=$1';
+            const values2 = [prompt];
+
+            await this.client.query(query2, values2);
+        }
+        else {
+            const query2 = 'INSERT INTO _3d_world_understanding_prompt(_prompt) VALUES($1)';
+            const values2 = [prompt];
+
+            await this.client.query(query2, values2);
+        }
+    }
+    async get3dWorldUnderstandingPrompt() { 
+        const query = 'SELECT * FROM _3d_world_understanding_prompt';
+        
+        const rows = await this.client.query(query);
+        if (rows && rows.rows && rows.rows.length > 0) {
+            return rows.rows[0]._prompt;
+        }
+        else {
+            return '';
+        }
+    }
+
+    async setFactSummarizationPrompt(prompt) {
+        const query = 'SELECT * FROM fact_summarization_prompt';
+        
+        const rows = await this.client.query(query);
+        if (rows && rows.rows && rows.rows.length > 0) {
+            const query2 = 'UPDATE fact_summarization_prompt SET _prompt=$1';
+            const values2 = [prompt];
+
+            await this.client.query(query2, values2);
+        }
+        else {
+            const query2 = 'INSERT INTO fact_summarization_prompt(_prompt) VALUES($1)';
+            const values2 = [prompt];
+
+            await this.client.query(query2, values2);
+        }
+    }
+    async getFactSummarizationPrompt() {
+        const query = 'SELECT * FROM fact_summarization_prompt';
+        
+        const rows = await this.client.query(query);
+        if (rows && rows.rows && rows.rows.length > 0) {
+            return rows.rows[0]._prompt;
+        }
+        else {
+            return '';
+        }
+    }
+
+    async setOpinionFormPrompt(prompt) {
+        const query = 'SELECT * FROM opinion_form_prompt';
+        
+        const rows = await this.client.query(query);
+        if (rows && rows.rows && rows.rows.length > 0) {
+            const query2 = 'UPDATE opinion_form_prompt SET _prompt=$1';
+            const values2 = [prompt];
+
+            await this.client.query(query2, values2);
+        }
+        else {
+            const query2 = 'INSERT INTO opinion_form_prompt(_prompt) VALUES($1)';
+            const values2 = [prompt];
+
+            await this.client.query(query2, values2);
+        }
+    }
+    async getOpinionFormPrompt() {
+        const query = 'SELECT * FROM opinion_form_prompt';
+        
+        const rows = await this.client.query(query);
+        if (rows && rows.rows && rows.rows.length > 0) {
+            return rows.rows[0]._prompt;
+        }
+        else {
+            return '';
+        }
+    }
+
+    async setXrEngineRoomPrompt(prompt) {
+        const query = 'SELECT * FROM xr_engine_room_prompt';
+        
+        const rows = await this.client.query(query);
+        if (rows && rows.rows && rows.rows.length > 0) {
+            const query2 = 'UPDATE xr_engine_room_prompt SET _prompt=$1';
+            const values2 = [prompt];
+
+            await this.client.query(query2, values2);
+        }
+        else {
+            const query2 = 'INSERT INTO xr_engine_room_prompt(_prompt) VALUES($1)';
+            const values2 = [prompt];
+
+            await this.client.query(query2, values2);
+        }
+    }
+    async getXrEngineRoomPrompt() {
+        const query = 'SELECT * FROM xr_engine_room_prompt';
+        
+        const rows = await this.client.query(query);
+        if (rows && rows.rows && rows.rows.length > 0) {
+            return rows.rows[0]._prompt;
+        }
+        else {
+            return '';
+        }
+    }
+
+    async getAgentInstances() {
+        const query = 'SELECT * FROM agent_instance';
+
+        const rows = await this.client.query(query);
+        if (rows && rows.rows && rows.rows.length > 0) {
+            return rows.rows;
+        } else {
+            return [];
+        }
+    }
+    async getAgentInstance(id) {
+        const query = 'SELECT * FROM agent_instance WHERE id=$1';
+        const values = [id];
+
+        const rows = await this.client.query(query, values);
+        if (rows && rows.rows && rows.rows.length > 0) {
+            return rows.rows[0];
+        } else {
+            return undefined;
+        }
+    }
+    async instanceIdExists(id) {
+        const query = 'SELECT * FROM agent_instance WHERE id=$1';
+        const values = [id];
+
+        const rows = await this.client.query(query, values);
+        return rows && rows.rows && rows.rows.length > 0;
+    }
+    async deleteAgentInstance(id) {
+        const query = 'DELETE FROM agent_instance WHERE id=$1';
+        const values = [id];
+
+        await this.client.query(query, values);
+    }
+    async updateAgentInstances(id, personality, clients, enabled) {
+        clients = JSON.stringify(clients).replaceAll('\\', '');
+        const check = 'SELECT * FROM agent_instance WHERE id=$1';
+        const cvalues = [id];
+
+        const rows = await this.client.query(check, cvalues);
+        if (rows && rows.rows && rows.rows.length > 0) {
+            const query = 'UPDATE agent_instance SET personality=$1, clients=$2, _enabled=$3 WHERE id=$4';
+            const values = [personality, clients, enabled, id];
+
+            await this.client.query(query, values);
+        } else {
+            const query = 'INSERT INTO agent_instance(id, personality, clients, _enabled) VALUES($1, $2, $3, $4)';
+            const values = [id, personality, clients, enabled];
+
+            await this.client.query(query, values);
+        }
+    }
+
+    async getClientSettings(client) {
+        const query = 'SELECT * FROM client_settings WHERE client=$1';
+        const values = [client];
+
+        const rows = await this.client.query(query, values);
+        if (rows && rows.rows && rows.rows.length > 0) {
+            const res = [];
+            for(let i = 0; i < rows.rows.length; i++) {
+                res.push({ name: rows.rows[i]._name, type: rows.roes[i]._type, defaultValue: rows.rows[i]._defaultValue }); //type is string or bool
+            }
+            return res;
+        } else {
+            return [];
+        }
+    }
+    async getAllClientSettings() {
+        const query = 'SELECT * FROM client_settings';
+
+        const rows = await this.client.query(query);
+        if (rows && rows.rows && rows.rows.length > 0) {
+            const res = [];
+            for(let i = 0; i < rows.rows.length; i++) {
+                res.push({ client: rows.rows[i].client, name: rows.rows[i]._name, type: rows.rows[i]._type, defaultValue: rows.rows[i]._defaultvalue }); //type is string or bool
+            }
+            return res;
+        } else {
+            return [];
+        }
+    }
+
+    //remove from the settings the client settings and make a new table with settings and for key add the client, soit loops using the client as key and then the objects in the client renderer
+    //clients will be an object like this:
+    /*
+        [
+            { client: discord, enabled: boolean, settings: [{ name: 'name', value: 'string' }, { name: 'age', value: 'number' }] },
+            { client: discord, enabled: boolean, settings: [{ name: 'name', value: 'string' }, { name: 'age', value: 'number' }] },
+            { client: discord, enabled: boolean, settings: [{ name: 'name', value: 'string' }, { name: 'age', value: 'number' }] },
+            { client: discord, enabled: boolean, settings: [{ name: 'name', value: 'string' }, { name: 'age', value: 'number' }] }
+        ]
+    */
 
     // async getChatFilterData(init) {
     //     const query = "SELECT * FROM chat_filter"

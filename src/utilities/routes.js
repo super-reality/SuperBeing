@@ -1,4 +1,5 @@
 import { handleInput } from '../cognition/handleInput.js';
+import { clientSettingsToInstance } from '../connectors/utils.js';
 import { createWikipediaAgent } from '../connectors/wikipedia.js';
 import { database } from '../database/database.js';
 import { defaultAgent } from '../index.js';
@@ -283,5 +284,102 @@ export async function registerRoutes(app) {
 
         }
         await handleInput(message, speaker, agent, res, 'web', id)
+    });
+
+    app.get('/get_agents_config', async function (req, res) {
+        try {
+        return res.send(await database.instance.getAgentsConfig('common'));
+        } catch (e) {
+            error(e);
+            return res.send('internal error');
+        }
+    });
+    app.post('/set_agents_config', async function (req, res) {
+        const data = req.body.data;
+
+        try {
+            await database.instance.setAgentsConfig('common', data);
+            return res.send('ok');
+        } catch (e) {
+            error(e);
+            return res.send('internal error');
+        }
+    });
+
+    app.get('/get_prompts', async function (req, res) { 
+        try {
+            const data = {
+                _3d_world: await database.instance.get3dWorldUnderstandingPrompt(),
+                fact: await database.instance.getAgentsFactsSummarization(),
+                opinion: await database.instance.getOpinionFormPrompt(),
+                xr: await database.instance.getXrEngineRoomPrompt(),
+            }
+
+            return res.send(data);
+        } catch (e) {
+            error(e);
+            return res.send('internal error');
+        }
+    });
+    app.post('/set_prompts', async function (req, res) {
+        const data = req.body.data;
+
+        try {
+            await database.instance.set3dWorldUnderstandingPrompt(data._3d_world);
+            await database.instance.setAgentsFactsSummarization(data.fact);
+            await database.instance.setOpinionFormPrompt(data.opinion);
+            await database.instance.setXrEngineRoomPrompt(data.xr);
+
+            return res.send('ok');
+        } catch (e) {
+            error(e);
+            return res.send('internal error');
+        }
+    });
+
+    app.get('/get_agent_instances', async function (req, res) {
+        try {
+            const instanceId = req.query.instanceId;
+            const isNum = /^\d+$/.test(instanceId);
+            const _instanceId = isNum ? parseInt(instanceId) ? parseInt(instanceId) >= 1 ? parseInt(instanceId) : 1 : 1 : 1;
+            let data = await database.instance.getAgentInstance(_instanceId);
+            if (data === undefined || !data) {
+                let newId = _instanceId;
+                while (await database.instance.instanceIdExists(newId) || newId <= 0) {
+                    newId++;
+                }
+
+                data = {
+                    id: newId,
+                    personality: '',
+                    clients: clientSettingsToInstance(await database.instance.getAllClientSettings()),
+                    enabled: true
+                }
+            }
+            console.log(data);
+            return res.send(data);
+        } catch (e) {
+            error(e);
+            return res.send('internal error');
+        }
+    });
+
+    app.post('/update_agent_instances', async function (req, res) {
+        console.log('data');
+        console.log(req.data);
+        const data = req.body.data;
+        const instanceId = data.id;
+        const personality = data.personality.trim();
+        const clients = data.clients;
+        const enabled = data.enabled;
+
+        try {
+            await database.instance.updateAgentInstances(instanceId, personality, clients, enabled);
+            res.send('ok');
+            process.exit(1);
+        } catch (e) {
+            error(e);
+            return res.send('internal error');
+        }
     });
 }

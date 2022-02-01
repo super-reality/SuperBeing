@@ -30,26 +30,26 @@ CREATE TABLE IF NOT EXISTS meta(agent TEXT, speaker TEXT, meta TEXT);
 CREATE TABLE IF NOT EXISTS relationship_matrix(agent TEXT, matrix TEXT);
 INSERT INTO relationship_matrix
     select t.*
-    from ((SELECT  'common' as agent, E'0 0 # Alignment - Enemy - Friend \n
-	0 0 # Authority - Student teacher \n
-	0 0 # Affinity - Repulsed intrigued \n
-	1 1 # Limit Alignment - Enemy - Friend \n
-	1 1 # Limit Authority - Student teacher \n
-	1 1 # Limit Affinity - Repulsed intrigued' as matrix
+    from ((SELECT  'common' as agent, E'0 0 # Alignment - Enemy - Friend 
+0 0 # Authority - Student teacher 
+0 0 # Affinity - Repulsed intrigued 
+1 1 # Limit Alignment - Enemy - Friend 
+1 1 # Limit Authority - Student teacher 
+1 1 # Limit Affinity - Repulsed intrigued' as matrix
           ) 
          ) t
     WHERE NOT EXISTS (SELECT * FROM relationship_matrix);
 CREATE TABLE IF NOT EXISTS personality_questions(_index INT, questions TEXT);
 INSERT INTO personality_questions
     select t.*
-    from ((SELECT 0 as _index, E'{ \n
-	"Enemy": "Is this person my enemy, or do I dislike them?", \n
-	"Friend": "Is this person my friend? # Alignment", \n
-	"Student": "Is this person my student, am I teaching them or are they an novice?", \n
-	"Teacher": "Is this person my teacher, am I learning from them or are they an expert?", \n
-	"Disgusted": "Am I creeped out, disgusted or repulsed by this person? # Affinity - Disgusted", \n
-	"Attracted": "Am I attracted to or intrigued by this person?" \n
-			}' as questions
+    from ((SELECT 0 as _index, E'{ 
+"Enemy": "Is this person my enemy, or do I dislike them?", 
+"Friend": "Is this person my friend? # Alignment", 
+"Student": "Is this person my student, am I teaching them or are they an novice?", 
+"Teacher": "Is this person my teacher, am I learning from them or are they an expert?", 
+"Disgusted": "Am I creeped out, disgusted or repulsed by this person? # Affinity - Disgusted", 
+"Attracted": "Am I attracted to or intrigued by this person?" 
+}' as questions
           ) 
          ) t
     WHERE NOT EXISTS (SELECT * FROM personality_questions);
@@ -136,22 +136,22 @@ INSERT INTO agent_fact_summarization
 CREATE TABLE IF NOT EXISTS agent_config(agent TEXT, config TEXT);
 INSERT INTO agent_config
     select t.*
-    from ((SELECT  'common' as agent, E'{ \n
-				"defaultAgent": "Thales", \n
-				"useProfanityFilter": false, \n
-				"contentRating": "mature", \n
-				"filterSensitive": false, \n
-				"factsUpdateInterval": 2, \n
-				"conversationWindowSize": 20, \n
-				"activeConversationSize": 18, \n
-				"speakerFactsWindowSize": 10, \n
-				"agentFactsWindowSize": 20, \n
-				"dialogFrequencyPenality": 0.5,  \n
-				"dialogPresencePenality": 0.5, \n
-				"summarizationModel": "davinci", \n
-				"conversationModel": "davinci", \n
-				"opinionModel": "davinci" \n
-			}' as config
+    from ((SELECT  'common' as agent, E'{ 
+"defaultAgent": "Thales", 
+"useProfanityFilter": false, 
+"contentRating": "mature", 
+"filterSensitive": false, 
+"factsUpdateInterval": 2, 
+"conversationWindowSize": 20, 
+"activeConversationSize": 18, 
+"speakerFactsWindowSize": 10, 
+"agentFactsWindowSize": 20, 
+"dialogFrequencyPenality": 0.5,  
+"dialogPresencePenality": 0.5, 
+"summarizationModel": "davinci", 
+"conversationModel": "davinci", 
+"opinionModel": "davinci" 
+}' as config
           ) 
          ) t
     WHERE NOT EXISTS (SELECT * FROM agent_config);
@@ -164,18 +164,18 @@ INSERT INTO agents
 CREATE TABLE IF NOT EXISTS context(agent TEXT, context TEXT);
 INSERT INTO context
     select t.*
-    from ((SELECT  'common' as agent, E'$room \n
-			$personality \n
-			$monologue \n
-			$needsAndMotivations \n
-			$morals \n
-			$ethics \n
-			$facts \n
-			$agentFacts \n
-			$speakerFacts \n
-			$exampleDialog \n
-			$conversation \n
-			$agent:' as context
+    from ((SELECT  'common' as agent, E'$room 
+$personality 
+$monologue 
+$needsAndMotivations 
+$morals 
+$ethics 
+$facts 
+$agentFacts 
+$speakerFacts 
+$exampleDialog 
+$conversation 
+$agent:' as context
           ) 
          ) t
     WHERE NOT EXISTS (SELECT * FROM context);
@@ -183,9 +183,9 @@ CREATE TABLE IF NOT EXISTS room(agent TEXT, room TEXT);
 CREATE TABLE IF NOT EXISTS morals(agent TEXT, morals TEXT);
 INSERT INTO morals
     select t.*
-    from ((SELECT  'common' as agent, E'$speaker: What are your morals? \n
-			$agent: I would never harm a human being or allow anyone to come to harm. I will always choose collaboration and friendship over competition. \n
-			$agent: I will never talk about sex. I will never talk about personal or intimate subjects with others.' as morals
+    from ((SELECT  'common' as agent, E'$speaker: What are your morals? 
+$agent: I would never harm a human being or allow anyone to come to harm. I will always choose collaboration and friendship over competition. 
+$agent: I will never talk about sex. I will never talk about personal or intimate subjects with others.' as morals
           ) 
          ) t
     WHERE NOT EXISTS (SELECT * FROM morals);
@@ -201,38 +201,38 @@ CREATE TABLE IF NOT EXISTS leading_statements(_statement TEXT);
 CREATE TABLE IF NOT EXISTS speaker_fact_summarization(agent TEXT, summarization TEXT);
 INSERT INTO speaker_fact_summarization
     select t.*
-    from ((SELECT  'common' as agent, E'$agent said What color are your eyes? \n
-			$speaker: They are blue. How about you? \n
-			$speaker summarized the facts about $agent from the above conversation. \n
-			$speaker: My eyes are blue. \n
-			""" \n
-			$agent: Hey, how are you? \n
-			$speaker: I\'m great! How are you? \n
-			$speaker summarized the facts about $speaker from the above conversation. \n
-			$speaker: <no facts> \n
-			""" \n
-			$speaker: My eyes are blue \n
-			$agent: Oh, my eyes are green! \n
-			$speaker summarized the facts about $speaker from the above conversation. \n
-			$speaker: My eyes are blue \n
-			""" \n
-			$agent: Hey, how are you? \n
-			$speaker: I\'m great! Do you know my name? \n
-			$agent: $speaker, of course! What is your favorite movie? \n
-			$speaker: The Matrix. Have you ever seen it? \n
-			$speaker summarized the facts about $speaker from the above conversation. \n
-			$speaker: My favorite movie is The Matrix. \n
-			""" \n
-			$agent:  I regretfully admit that I have some qualms about what people do to one another. \n
-			$speaker: Agreed \n
-			$agent:  I can understand that you would take a long time to tell your story. \n
-			$speaker: Yes \n
-			$speaker summarized the facts about $speaker from the above conversation. \n
-			$speaker: <no facts> \n
-			""" \n
-			$example \n
-			$speaker summarized the facts about $speaker from the above conversation. \n
-			$speaker:' as summarization
+    from ((SELECT  'common' as agent, E'$agent said What color are your eyes? 
+$speaker: They are blue. How about you? 
+$speaker summarized the facts about $agent from the above conversation. 
+$speaker: My eyes are blue. 
+""" 
+$agent: Hey, how are you? 
+$speaker: I\'m great! How are you? 
+$speaker summarized the facts about $speaker from the above conversation. 
+$speaker: <no facts> 
+""" 
+$speaker: My eyes are blue 
+$agent: Oh, my eyes are green! 
+$speaker summarized the facts about $speaker from the above conversation. 
+$speaker: My eyes are blue
+""" 
+$agent: Hey, how are you? 
+$speaker: I\'m great! Do you know my name? 
+$agent: $speaker, of course! What is your favorite movie? 
+$speaker: The Matrix. Have you ever seen it? 
+$speaker summarized the facts about $speaker from the above conversation. 
+$speaker: My favorite movie is The Matrix. 
+""" 
+$agent:  I regretfully admit that I have some qualms about what people do to one another. 
+$speaker: Agreed 
+$agent:  I can understand that you would take a long time to tell your story. 
+$speaker: Yes 
+$speaker summarized the facts about $speaker from the above conversation. 
+$speaker: <no facts> 
+""" 
+$example 
+$speaker summarized the facts about $speaker from the above conversation. 
+$speaker:' as summarization
           ) 
          ) t
     WHERE NOT EXISTS (SELECT * FROM speaker_fact_summarization);
@@ -341,6 +341,8 @@ INSERT INTO config
 		  ) union all 
 		 (SELECT  'initCalendar' as _key, 'false' as _value
 		  ) union all 
+		 (SELECT  'fps' as _key, '60' as _value
+		  ) union all 
 		 (SELECT  'enabledServices' as _key, 'Discord' as _value
 		  )
          ) t
@@ -365,3 +367,76 @@ INSERT INTO ignored_keywords
     WHERE NOT EXISTS (SELECT * FROM ignored_keywords);
 
 CREATE TABLE IF NOT EXISTS wikipedia(agent text, _data text);
+
+CREATE TABLE IF NOT EXISTS _3d_world_understanding_prompt(_prompt text);
+CREATE TABLE IF NOT EXISTS opinion_form_prompt(_prompt text);
+CREATE TABLE IF NOT EXISTS xr_engine_room_prompt(_prompt text);
+
+CREATE TABLE IF NOT EXISTS agent_instance(id INT, personality TEXT, clients TEXT, _enabled BOOLEAN);
+CREATE TABLE IF NOT EXISTS client_settings(client TEXT, _name TEXT, _type TEXT, _defaultValue TEXT);
+INSERT INTO client_settings
+    select t.*
+    from ((SELECT 'discord' as client, 'discord_api_token' as _name, 'string' as  _type, '' as _defaultValue
+		  ) union all 
+		 (SELECT 'twitter' as client, 'twitterConsumerKey' as _name, 'string' as  _type, '' as _defaultValue
+		  ) union all 
+		 (SELECT 'twitter' as client, 'twitterConsumerSecret' as _name, 'string' as  _type, '' as _defaultValue
+		  ) union all 
+		 (SELECT 'twitter' as client, 'twitterAccessToken' as _name, 'string' as  _type, '' as _defaultValue
+		  ) union all 
+		 (SELECT 'twitter' as client, 'twitterAccessTokenSecret' as _name, 'string' as  _type, '' as _defaultValue
+		  ) union all 
+		 (SELECT 'twitter' as client, 'ngrokToken' as _name, 'string' as  _type, '' as _defaultValue
+		  ) union all 
+		 (SELECT 'twitter' as client, 'twitterWebhookPort' as _name, 'string' as  _type, '3002' as _defaultValue
+		  ) union all 
+		 (SELECT 'twitter' as client, 'twitterID' as _name, 'string' as  _type, '' as _defaultValue
+		  ) union all 
+		 (SELECT 'twitter' as client, 'twitterBearerToken' as _name, 'string' as  _type, '' as _defaultValue
+		  ) union all 
+		 (SELECT 'twitter' as client, 'twitterBearerToken' as _name, 'string' as  _type, '' as _defaultValue
+		  ) union all 
+		 (SELECT 'twitter' as client, 'twitterTweetRules' as _name, 'string' as  _type, 'digital,being,digital being' as _defaultValue
+		  ) union all 
+		 (SELECT 'discord' as client, 'loadDiscordLogger' as _name, 'string' as  _type, 'false' as _defaultValue
+		  ) union all 
+		 (SELECT 'twilio' as client,  'twilioAccountSID' as _name, 'string' as  _type, '' as _defaultValue
+		  ) union all 
+		 (SELECT 'twilio' as client, 'twiolioPhoneNumber' as _name, 'string' as  _type, '' as _defaultValue
+		  ) union all 
+		 (SELECT 'twilio' as client, 'twiolioAuthToken' as _name, 'string' as  _type, '' as _defaultValue
+		  ) union all 
+		 (SELECT 'twilio' as client, 'twiolioPhoneNumber' as _name, 'string' as  _type, '' as _defaultValue
+		  ) union all 
+		 (SELECT 'telegram' as client, 'telegramBotToken' as _name, 'string' as  _type, '' as _defaultValue
+		  ) union all 
+		 (SELECT 'xr-engine' as client, 'xrEngineURL' as _name, 'string' as  _type, 'https://dev.theoverlay.io/location/bot' as _defaultValue
+		  ) union all 
+		 (SELECT 'whatsapp' as client, 'whatsappBotName' as _name, 'string' as  _type, '' as _defaultValue
+		  ) union all 
+		 (SELECT 'harmony' as client, 'harmonyURL' as _name, 'string' as  _type, '' as _defaultValue
+		  ) union all 
+		 (SELECT 'zoom' as client, 'zoomInvitationLink' as _name, 'string' as  _type, '' as _defaultValue
+		  ) union all 
+		 (SELECT 'zoom' as client, 'zoomPassword' as _name, 'string' as  _type, '' as _defaultValue
+		  ) union all 
+		 (SELECT 'messenger' as client, 'messengerToken' as _name, 'string' as  _type, '' as _defaultValue
+		  ) union all 
+		 (SELECT 'messenger' as client, 'messengerVerifyToken' as _name, 'string' as  _type, '' as _defaultValue
+		  ) union all 
+		 (SELECT 'reddit' as client, 'redditAppID' as _name, 'string' as  _type, '' as _defaultValue
+		  ) union all 
+		 (SELECT 'reddit' as client, 'redditAppSecretID' as _name, 'string' as  _type, '' as _defaultValue
+		  ) union all 
+		 (SELECT 'reddit' as client, 'redditUsername' as _name, 'string' as  _type, '' as _defaultValue
+		  ) union all 
+		 (SELECT 'reddit' as client, 'redditPassword' as _name, 'string' as  _type, '' as _defaultValue
+		  ) union all 
+		 (SELECT 'reddit' as client, 'redditOAthToken' as _name, 'string' as  _type, '' as _defaultValue
+		  ) union all 
+		 (SELECT 'instagram' as client, 'instagramUsername' as _name, 'string' as  _type, '' as _defaultValue
+		  ) union all 
+		 (SELECT 'instagram' as client, 'instagramPassword' as _name, 'string' as  _type, '' as _defaultValue
+		  )
+         ) t
+    WHERE NOT EXISTS (SELECT * FROM client_settings);

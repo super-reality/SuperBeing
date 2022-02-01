@@ -105,3 +105,32 @@ export function getRandomTopic() {
   const topics = customConfig.instance.get('discussion_channel_topics').split('|');
   return topics[getRandomNumber(0, topics.length - 1)];
 }
+
+export function randomInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+export function randomFloat(min, max) {
+  return Math.random() * (max - min + 1) + min;
+}
+
+export function clientSettingsToInstance(settings) {
+  let res = [];
+
+  for (let i = 0; i < settings.length; i++) {
+    res = addSettingForClient(res, settings[i].client, { _name: settings[i].name, _value: settings[i].defaultValue });
+  }
+
+  return res;
+}
+
+export function addSettingForClient(array, client, setting) {
+  for (let i = 0; i < array.length; i++) {
+    if (array[i].client === client) {
+      array[i].settings.push({ name: setting._name, value: setting._value });
+      return array;
+    }
+  }
+
+  array.push({ client: client, enabled: false, settings: [{ name: setting._name, value: setting._defaultValue }] });
+  return array;
+}

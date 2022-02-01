@@ -8,6 +8,7 @@ import roomManager from "./utilities/roomManager.js";
 import { runClients } from "./utilities/runClients.js";
 import { initClassifier, initProfanityClassifier } from "./utilities/textClassifier.js";
 import { error } from './utilities/logger.js';
+import worldManager from "./world/worldManager.js";
 
 new cors_server(process.env.CORS_PORT, '0.0.0.0');
 
@@ -29,7 +30,7 @@ const db = new database();
     console.log("initLogger")
 
     await initLogger();
-    console.log("roomManager")
+    new worldManager(1, customConfig.instance.getInt('fps'));
 
     new roomManager();
     console.log("agent")
@@ -60,5 +61,5 @@ const db = new database();
 })();
 
 process.on('unhandledRejection', err => {
-    error('Unhandled Rejection:' + err);
+    error('Unhandled Rejection:' + err + ' - ' + err.stack);
 });
