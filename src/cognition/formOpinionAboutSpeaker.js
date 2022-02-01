@@ -2,7 +2,7 @@ import { makeModelRequest } from "../utilities/makeModelRequest.js";
 import { sigmoid } from "../utilities/sigmoid.js";
 import { readRelationshipMatrix, writeRelationshipMatrix } from "./relationshipMatrix.js";
 
-export async function formOpinionAboutSpeaker(speaker, agent, input) {
+export async function formOpinionAboutSpeaker(speaker, agent, inputs) {
     const relationshipMatrix = await readRelationshipMatrix(speaker, agent);
     // console.log("relationshipMatrix is", relationshipMatrix);
     // Make huggingface request to BART
@@ -13,15 +13,9 @@ export async function formOpinionAboutSpeaker(speaker, agent, input) {
 
     const decay = 0.001; // Decay rate of relationships as you chat with agent
 
-const inputs = input;
-    console.log("inputs are ", inputs);
-    // TODO:
     const parameters = {
         candidate_labels: ["Enemy", "Friend", "Student", "Teacher", "Repulsed", "Attracted", "Honest", "Manipulative"]
     }
-
-
-console.log("Evaluating input", input)
 
     // 1. Send hugging face request and get response
     const result = await makeModelRequest(inputs, "facebook/bart-large-mnli", parameters);
