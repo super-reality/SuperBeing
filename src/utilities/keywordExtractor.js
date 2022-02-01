@@ -1,6 +1,6 @@
 import keyword_extractor from "keyword-extractor";
 import { makeWeaviateRequest } from "../connectors/wikipedia.js";
-import { database } from "../database/database.js";
+import { database } from "../database.js";
 import { makeModelRequest } from "./makeModelRequest.js";
 import { classifyText } from './textClassifier.js';
 

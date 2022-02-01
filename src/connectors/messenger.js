@@ -1,6 +1,6 @@
 import request from 'request';
 import { handleInput } from '../cognition/handleInput.js';
-import { database } from "../database/database.js";
+import { database } from "../database.js";
 import customConfig from '../utilities/customConfig.js';
 import { error, log } from '../utilities/logger.js';
 import { getRandomEmptyResponse } from "./utils.js";

@@ -4,7 +4,7 @@ import { summarizeAndStoreFactsAboutSpeaker } from "./summarizeAndStoreFactsAbou
 import { makeCompletionRequest } from "../utilities/makeCompletionRequest.js";
 import { evaluateTextAndRespondIfToxic } from "./profanityFilter.js";
 import keywordExtractor from '../utilities/keywordExtractor.js';
-import { database } from '../database/database.js';
+import { database } from '../database.js';
 import { capitalizeFirstLetter } from "../connectors/utils.js";
 import { isInFastMode } from '../index.js';
 import { log } from "../utilities/logger.js";

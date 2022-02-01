@@ -1,5 +1,5 @@
 import { handleInput } from "../cognition/handleInput.js";
-import { database } from "../database/database.js";
+import { database } from "../database.js";
 import customConfig from "../utilities/customConfig.js";
 import roomManager from "../utilities/roomManager.js";
 import { classifyText } from "../utilities/textClassifier.js";

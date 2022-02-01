@@ -1,7 +1,7 @@
 import glob from "glob";
 import weaviate from "weaviate-client";
 import wiki from 'wikipedia';
-import { database } from '../database/database.js';
+import { database } from '../database.js';
 import { error, log } from "../utilities/logger.js";
 import {
   makeCompletionRequest

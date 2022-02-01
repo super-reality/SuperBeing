@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { config } from "dotenv";
 import { makeModelRequest } from "./makeModelRequest.js";
-import { database } from '../database/database.js';
+import { database } from '../database.js';
 import customConfig from './customConfig.js';
 import { error } from './logger.js';
 config();

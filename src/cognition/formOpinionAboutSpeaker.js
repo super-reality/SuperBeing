@@ -1,5 +1,5 @@
-import { database } from "../database/database.js";
-import readRelationshipMatrix from "../database/readRelationshipMatrix.js";
+import { database } from "../database.js";
+import readRelationshipMatrix from "./relationshipMatrix.js";
 
 export async function formOpinionAboutSpeaker(speaker, agent, input) {
     let meta = await database.instance.getRelationshipMatrix(agent);

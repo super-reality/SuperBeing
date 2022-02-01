@@ -1,4 +1,4 @@
-import { database } from "../database/database.js";
+import { database } from "../database.js";
 
 //The config of the server, which gets the data from the database, it replaces most of .env variables for easier use
 export class customConfig {

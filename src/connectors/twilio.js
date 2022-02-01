@@ -1,6 +1,6 @@
 import Twilio from 'twilio';
 import { handleInput } from '../cognition/handleInput.js';
-import { database } from '../database/database.js';
+import { database } from '../database.js';
 import customConfig from '../utilities/customConfig.js';
 import { log } from '../utilities/logger.js';
 import { getRandomEmptyResponse } from './utils.js';

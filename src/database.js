@@ -1,10 +1,10 @@
 import pg from 'pg';
-import { initProfanityFilter } from '../cognition/profanityFilter.js';
+import { initProfanityFilter } from './cognition/profanityFilter.js';
 import fs from 'fs';
-import { rootDir } from '../utilities/rootDir.js';
-import customConfig from '../utilities/customConfig.js';
-import { getRandomNumber } from '../connectors/utils.js';
-import { log } from '../utilities/logger.js';
+import { rootDir } from './utilities/rootDir.js';
+import customConfig from './utilities/customConfig.js';
+import { getRandomNumber } from './connectors/utils.js';
+import { log } from './utilities/logger.js';
 const { Client } = pg;
 
 export class database {

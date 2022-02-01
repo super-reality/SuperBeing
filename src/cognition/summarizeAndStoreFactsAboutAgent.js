@@ -1,4 +1,4 @@
-import { database } from "../database/database.js";
+import { database } from "../database.js";
 import { makeCompletionRequest } from "../utilities/makeCompletionRequest.js";
 
 export async function summarizeAndStoreFactsAboutAgent(speaker, agent, input) {

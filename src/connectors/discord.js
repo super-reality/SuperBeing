@@ -4,7 +4,7 @@ import emoji from "emoji-dictionary"
 import emojiRegex from 'emoji-regex'
 import { EventEmitter } from 'events';
 import { handleInput } from '../cognition/handleInput.js'
-import { database } from "../database/database.js"
+import { database } from "../database.js"
 import customConfig from '../utilities/customConfig.js'
 import { error, log } from '../utilities/logger.js'
 import roomManager from '../utilities/roomManager.js'

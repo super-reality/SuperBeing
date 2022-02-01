@@ -3,7 +3,7 @@ import grawlix from 'grawlix';
 import grawlixRacism from 'grawlix-racism';
 import { makeCompletionRequest } from "../utilities/makeCompletionRequest.js";
 import { makeModelRequest } from "../utilities/makeModelRequest.js";
-import { database } from '../database/database.js';
+import { database } from '../database.js';
 import customConfig from '../utilities/customConfig.js';
 import { classifyProfanityText } from '../utilities/textClassifier.js';
 import { log } from '../utilities/logger.js';

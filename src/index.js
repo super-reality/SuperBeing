@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-import { database } from "./database/database.js";
+import { database } from "./database.js";
 import cors_server from "./utilities/cors-server.js";
 import { customConfig } from './utilities/customConfig.js';
 import { createExpressServer } from './utilities/expressServer.js';

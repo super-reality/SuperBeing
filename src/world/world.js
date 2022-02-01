@@ -1,5 +1,5 @@
 import { randomInt } from "../connectors/utils.js";
-import { database } from "../database/database.js";
+import { database } from "../database.js";
 import agent from "./agent.js";
 import gameObject from "./gameObject.js";
 

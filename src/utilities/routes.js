@@ -1,7 +1,7 @@
 import { handleInput } from '../cognition/handleInput.js';
 import { clientSettingsToInstance } from '../connectors/utils.js';
 import { createWikipediaAgent } from '../connectors/wikipedia.js';
-import { database } from '../database/database.js';
+import { database } from '../database.js';
 import { defaultAgent } from '../index.js';
 import customConfig from './customConfig.js';
 import { error } from './logger.js';
