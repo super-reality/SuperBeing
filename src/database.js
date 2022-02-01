@@ -595,60 +595,36 @@ export class database {
             return '';
         }
     }
-    async setRelationshipMatrix(agent, matrix) {
-        const check = 'SELECT * FROM relationship_matrix WHERE agent=$1'
-        const cvalues = [ agent ]
+    async setRelationshipMatrix(speaker, agent, matrix) {
+        const check = 'SELECT * FROM relationship_matrix WHERE speaker=$1 AND agent=$2'
+        const cvalues = [ speaker, agent ]
 
         const test = await this.client.query(check, cvalues);
         let query = '';
         let values = [];
 
         if (test && test.rows && test.rows.length > 0) {
-            query = "UPDATE relationship_matrix SET matrix=$1 WHERE agent=$2"
-            values = [matrix, agent];
+            query = "UPDATE relationship_matrix SET matrix=$1 WHERE speaker=$2 AND agent=$3"
+            values = [matrix, speaker, agent];
         } else {
-            query = "INSERT INTO relationship_matrix(agent, matrix) VALUES($1, $2)"
-            values = [agent, matrix];
+            query = "INSERT INTO relationship_matrix(speaker, agent, matrix) VALUES($1, $2, $3)"
+            values = [speaker, agent, matrix];
         }
 
         await this.client.query(query, values);
     }
-    async getRelationshipMatrix(agent) {
-        const query = 'SELECT * FROM relationship_matrix WHERE agent=$1'
-        const values = [agent];
+    async getRelationshipMatrix(speaker, agent) {
+        const query = 'SELECT * FROM relationship_matrix WHERE speaker=$1 AND agent=$2'
+        const values = [speaker, agent];
 
         const row = await this.client.query(query, values);
         if (row && row.rows && row.rows.length > 0) {
             return row.rows[0].matrix;
         } else {
-            return this.getRelationshipMatrix('common');
+            return this.getRelationshipMatrix(speaker, 'common');
         }
     }
-    async setPersonalityQuestions(questions) {
-        const res = await this.getPersonalityQuestions();
-        let query = '';
-        let values = [];
 
-        if (res.length > 0) {
-            query = "UPDATE personality_questions SET questions=$1 WHERE index=$2"
-            values = [questions, 0];
-        } else {
-            query = "INSERT INTO personality_questions(_index, questions) VALUES($1, $2)"
-            values = [0, questions];
-        }
-
-        await this.client.query(query, values);
-    }
-    async getPersonalityQuestions() {
-        const query = 'SELECT * FROM personality_questions WHERE _index=0'
-        
-        const row = await this.client.query(query);
-        if (row && row.rows && row.rows.length > 0) {
-            return row.rows[0].questions;
-        } else {
-            return '';
-        }
-    }
     async setSpeakerProfaneResponses(agent, responses) {
         const query = "INSERT INTO speaker_profane_responses(agent, response) VALUES($1, $2)"
         const values = [agent, responses];

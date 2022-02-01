@@ -1,54 +1,43 @@
 import { database } from "../database.js";
-import readRelationshipMatrix from "./relationshipMatrix.js";
+import { makeModelRequest } from "../utilities/makeModelRequest.js";
+import { writeRelationshipMatrix, readRelationshipMatrix } from "./relationshipMatrix.js";
 
 export async function formOpinionAboutSpeaker(speaker, agent, input) {
-    let meta = await database.instance.getRelationshipMatrix(agent);
+    const relationshipMatrix = await readRelationshipMatrix(speaker, agent);
 
-    // check if metafile has personality meta in it
-    if(!meta.relationshipMatrix) {
-        meta = await readRelationshipMatrix(speaker, agent);
+    // Make huggingface request to BART
+
+    // response is 0 - 1 for each classification
+
+    const alpha = 0.01; // how much better or worse does the bot start to feel about someone?
+
+    const decay = 0.0001;
+
+    // TODO:
+    const params = {
+        candidateLabels: "Enemy, Friend, Student, Teacher, Repulsed, Attracted, Honest, Manipulative"
     }
 
-    // Ask some questions about the conversation
-    const personalityQuestion = database.instance.getPersonalityQuestions();  
-    
-    
-// {
-//     "Enemy": "Is this person my enemy, or do I dislike them?",
-//     "Friend": "Is this person my friend? # Alignment",
-//     "Student": "Is this person my student, am I teaching them or are they an novice?",
-//     "Teacher": "Is this person my teacher, am I learning from them or are they an expert?",
-//     "Disgusted": "Am I creeped out, disgusted or repulsed by this person? # Affinity - Disgusted",
-//     "Attracted": "Am I attracted to or intrigued by this person?"
-// }
+    const options = {
+        wait_for_model: true
+    }
 
-    // Positive or negative or each value?
+    // 1. Send hugging face request and get response
+    const result = await makeModelRequest(input, "MoritzLaurer/mDeBERTa-v3-base-mnli-xnli", params, options);
+    console.log("Result");
+    console.log(result);
 
-    // Update the personality matrix
+    // 2. for each key in response
+    // multiply value by sigmoid, then by alpha, then subtract decay
+    // 3. add to current relationship matrix
 
-    // Save
-    await database.instance.setRelationshipMatrix(agent, JSON.stringify(meta));
+    for (const key in Object.keys(result)) {
+        relationshipMatrix[key] = Math.floor(relationshipMatrix[key] + sigmoid(result[key]) * alpha - decay);
+    }
 
+    console.log("New relationshipMatrix");
+    console.log(relationshipMatrix)
 
-    // Take the input and send out a summary request
-    // const prompt = doPrompt() // agentFactSummarizationPrompt.join('\n').replaceAll( "$speaker", speaker).replaceAll( "$agent", agent).replaceAll( "$example", input);
-
-    // const data = {
-    //     "prompt": prompt,
-    //     "temperature": 0.0,
-    //     "max_tokens": 20,
-    //     "top_p": 1,
-    //     "frequency_penalty": 0.8,
-    //     "presence_penalty": 0.3,
-    //     "stop": ["\"\"\""]
-    // };
-
-    // const { opinionModel } = JSON.parse(fs.readFileSync(rootDir + "/agents/common/config.json").toString());
-
-    // const { success, choice } = await makeCompletionRequest(data, speaker, agent, "opinion", opinionModel);
-    // if (success && choice.text != "" && !choice.text.includes("no facts")) {
-    //     fs.appendFileSync(agentFactsFile, (agent + ": " + choice.text + "\n").replace("\n\n", "\n"));
-    // }
+    // 4. store result in database
+    await writeRelationshipMatrix(speaker, agent, JSON.stringify(meta));
 }
-
-//ESRB rating 

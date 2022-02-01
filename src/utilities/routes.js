@@ -37,7 +37,6 @@ export async function registerRoutes(app) {
             monologue: (await database.instance.getMonologue(agent)).trim(),
             needsAndMotivation: (await database.instance.getNeedsAndMotivations(agent)).trim(),
             personality: (await database.instance.getPersonality(agent)).trim(),
-            relationshipMatrix: (await database.instance.getRelationshipMatrix(agent)).trim(),
             room: (await database.instance.getRoom(agent)).trim(),
             startingPhrases: (await database.instance.getStartingPhrases(agent)).trim(),
             ignoredKeywords: (await database.instance.getIgnoredKeywordsData(agent)).trim(),
@@ -58,7 +57,6 @@ export async function registerRoutes(app) {
             await database.instance.setMonologue(agentName, data.monologue);
             await database.instance.setNeedsAndMotivations(agentName, data.needsAndMotivation);
             await database.instance.setPersonality(agentName, data.personality);
-            await database.instance.setRelationshipMatrix(agentName, data.relationshipMatrix);
             await database.instance.setRoom(agentName, data.room);
             await database.instance.setStartingPhrases(agentName, data.startingPhrases);
             await database.instance.setIgnoredKeywords(agentName, data.ignoredKeywords);
@@ -194,8 +192,6 @@ export async function registerRoutes(app) {
             await database.instance.setNeedsAndMotivations(agentName, data.needsAndMotivation);
             if (!data.personality || data.personality === undefined) data.personality = '';
             await database.instance.setPersonality(agentName, data.personality);
-            if (!data.relationshipMatrix || data.relationshipMatrix === undefined) data.relationshipMatrix = '';
-            await database.instance.setRelationshipMatrix(agentName, data.relationshipMatrix);
             if (!data.room || data.room === undefined) data.room = '';
             await database.instance.setRoom(agentName, data.room);
             if (!data.startingPhrases || data.startingPhrases === undefined) data.startingPhrases = '';

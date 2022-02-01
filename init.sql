@@ -27,32 +27,7 @@ CREATE TABLE IF NOT EXISTS speakers_facts_archive(agent TEXT, speaker TEXT, fact
 CREATE TABLE IF NOT EXISTS agent_facts(agent TEXT, facts TEXT);
 CREATE TABLE IF NOT EXISTS agent_facts_archive(agent TEXT, facts TEXT);
 CREATE TABLE IF NOT EXISTS meta(agent TEXT, speaker TEXT, meta TEXT);
-CREATE TABLE IF NOT EXISTS relationship_matrix(agent TEXT, matrix TEXT);
-INSERT INTO relationship_matrix
-    select t.*
-    from ((SELECT  'common' as agent, E'0 0 # Alignment - Enemy - Friend 
-0 0 # Authority - Student teacher 
-0 0 # Affinity - Repulsed intrigued 
-1 1 # Limit Alignment - Enemy - Friend 
-1 1 # Limit Authority - Student teacher 
-1 1 # Limit Affinity - Repulsed intrigued' as matrix
-          ) 
-         ) t
-    WHERE NOT EXISTS (SELECT * FROM relationship_matrix);
-CREATE TABLE IF NOT EXISTS personality_questions(_index INT, questions TEXT);
-INSERT INTO personality_questions
-    select t.*
-    from ((SELECT 0 as _index, E'{ 
-"Enemy": "Is this person my enemy, or do I dislike them?", 
-"Friend": "Is this person my friend? # Alignment", 
-"Student": "Is this person my student, am I teaching them or are they an novice?", 
-"Teacher": "Is this person my teacher, am I learning from them or are they an expert?", 
-"Disgusted": "Am I creeped out, disgusted or repulsed by this person? # Affinity - Disgusted", 
-"Attracted": "Am I attracted to or intrigued by this person?" 
-}' as questions
-          ) 
-         ) t
-    WHERE NOT EXISTS (SELECT * FROM personality_questions);
+CREATE TABLE IF NOT EXISTS relationship_matrix(speaker TEXT, agent TEXT, matrix TEXT);
 CREATE TABLE IF NOT EXISTS speaker_profane_responses(agent TEXT, response TEXT);
 INSERT INTO speaker_profane_responses
     select t.*

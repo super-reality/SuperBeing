@@ -45,7 +45,6 @@ export async function createWikipediaAgent(speaker, name, personality, facts) {
 
           database.instance.setDefaultEthics(name);
           database.instance.setDefaultNeedsAndMotivations(name);
-          database.instance.setRelationshipMatrix(name, await database.instance.getRelationshipMatrix('common'));
           
         stop = Date.now()
         log(`Time Taken to execute save data = ${(stop - start)/1000} seconds`);
