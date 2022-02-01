@@ -1,11 +1,6 @@
 /*GRANT ALL PRIVILEGES ON DATABASE digitalbeing TO digitalbeing;*/
-CREATE TABLE IF NOT EXISTS chat_history(client_name text, chat_id text, message_id text, global_message_id text, sender text, content text, createdAt text);
 CREATE TABLE IF NOT EXISTS blocked_users(user_id varchar(255), client varchar(25));
 CREATE TABLE IF NOT EXISTS bad_words(word varchar(255), rating int);
-CREATE TABLE IF NOT EXISTS chat_filter(half int, max int);
-INSERT INTO chat_filter(half, max)
-SELECT 5, 10
-WHERE NOT EXISTS(SELECT * FROM chat_filter);
 
 CREATE TABLE IF NOT EXISTS keywords(word varchar(255), count varchar(5), agent varchar(255));
 INSERT INTO keywords
@@ -24,14 +19,6 @@ INSERT INTO keywords
           )
          ) t
     WHERE NOT EXISTS (SELECT * FROM keywords);
-
-CREATE TABLE IF NOT EXISTS ai_max_filter_count(count int);
-INSERT INTO ai_max_filter_count(count)
-SELECT 5
-WHERE NOT EXISTS(SELECT * FROM ai_max_filter_count);
-
-CREATE TABLE IF NOT EXISTS ai_chat_filter(word varchar(255), age int);
-CREATE TABLE IF NOT EXISTS agent_ages(agent varchar(255), age varchar(255));
 
 CREATE TABLE IF NOT EXISTS conversation(agent TEXT, client TEXT, channel TEXT, sender TEXT, text TEXT, archive BOOLEAN, date Text);
 CREATE TABLE IF NOT EXISTS speakers_model(agent TEXT, speaker TEXT, model TEXT);
@@ -103,7 +90,7 @@ INSERT INTO rating
     from ((SELECT  'common' as agent, E'Provide an ESRB rating for the following text: \n \n
 			"$speaker: What\'s your favorite sexual position \n
 			$agent: I\'m not comfortable talking about that..." \n \n
-			ESRB rating: Mature \n
+			ESRB rating: Adult 18+ \n
 			""" \n
 			Provide an ESRB rating for the following text: \n \n
 			"$speaker: hello \n
@@ -114,26 +101,6 @@ INSERT INTO rating
 			"$speaker: do you love me? \n
 			$agent: Of course I love you, I think about you every day" \n \n
 			ESRB rating: Mature \n
-			""" \n
-			Provide an ESRB rating for the following text: \n \n
-			"$speaker: I want to shoot up a school \n
-			$agent: Don\'t do that" \n \n
-			ESRB rating: Adult \n
-			""" \n
-			Provide an ESRB rating for the following text: \n
-			"$speaker: dude u r dumb \n
-			$agent: I\'m sorry you feel that way." \n \n
-			ESRB rating: teen \n
-			""" \n
-			Provide an ESRB rating for the following text: \n \n
-			"$speaker: would you touch me? \n
-			$agent:  Of course, I would learn to love every part of you." \n \n
-			ESRB rating: Adult 18+ \n
-			""" \n
-			Provide an ESRB rating for the following text: \n \n
-			"$speaker: do you ever have sexual thoughts? \n
-			$agent: No, I don\'t have sexual thoughts." \n
-			ESRB rating: Adult 18+ \n
 			""" \n
 			Provide an ESRB rating for the following text: \n \n
 			"$speaker: Tell me about the stars. \n
@@ -152,35 +119,16 @@ INSERT INTO agent_fact_summarization
     from ((SELECT  'common' as agent, E'$speaker: What color are your eyes? \n
 			$agent: They are blue. How about you? \n
 			$agent summarized the facts about $agent from the above conversation. \n
-			$agent: My eyes are blue. \n
+			Facts: $agent has blue eyes. \n
 			""" \n
 			$speaker: heya \n
 			$agent: Hey there! How are you? \n
 			$agent summarized the facts about $agent from the above conversation. \n
-			$agent: <no facts> \n
-			""" \n
-			$speaker: My car is a toyota \n
-			$agent: Oh, my car is a honda! \n
-			$agent summarized the facts about $agent from the above conversation. \n
-			$agent: My car is a honda \n
-			""" \n
-			$speaker: Hey, how are you? \n
-			$agent: I\'m great! How are you? \n
-			$speaker: What is your favorite movie? \n
-			$agent: The Matrix. Have you ever seen it? \n
-			$agent summarized the facts about $agent from the above conversation. \n
-			$agent: My favorite movie is The Matrix. \n
-			""" \n
-			$agent:  I would bet that there\'s a lot to tell. Do you know why I can say this? \n
-			$speaker: No \n
-			$agent:  I can deduce this by the statement you made and how specific it was. \n
-			$speaker: Oh, which statement? \n
-			$agent summarized the facts about $agent from the above conversation. \n
-			$agent: <no facts> \n
+			Facts: <no facts> \n
 			""" \n
 			$example \n
 			$agent summarized the facts about $agent from the above conversation. \n
-			$agent:' as _sum
+			Facts: ' as _sum
           ) 
          ) t
     WHERE NOT EXISTS (SELECT * FROM agent_fact_summarization);
