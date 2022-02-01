@@ -201,7 +201,8 @@ CREATE TABLE IF NOT EXISTS leading_statements(_statement TEXT);
 CREATE TABLE IF NOT EXISTS speaker_fact_summarization(agent TEXT, summarization TEXT);
 INSERT INTO speaker_fact_summarization
     select t.*
-    from ((SELECT  'common' as agent, E'$agent said What color are your eyes? 
+    from ((SELECT  'common' as agent,
+E'$agent said What color are your eyes? 
 $speaker: They are blue. How about you? 
 $speaker summarized the facts about $agent from the above conversation. 
 $speaker: My eyes are blue. 
@@ -372,7 +373,7 @@ CREATE TABLE IF NOT EXISTS _3d_world_understanding_prompt(_prompt text);
 CREATE TABLE IF NOT EXISTS opinion_form_prompt(_prompt text);
 CREATE TABLE IF NOT EXISTS xr_engine_room_prompt(_prompt text);
 
-CREATE TABLE IF NOT EXISTS agent_instance(id INT, personality TEXT, clients TEXT, _enabled BOOLEAN);
+CREATE TABLE IF NOT EXISTS agent_instance(id INT PRIMARY KEY, personality TEXT, clients TEXT, enabled BOOLEAN);
 CREATE TABLE IF NOT EXISTS client_settings(client TEXT, _name TEXT, _type TEXT, _defaultValue TEXT);
 INSERT INTO client_settings
     select t.*

@@ -620,7 +620,6 @@ class XREngineBot {
     exec(fn) {
         this.catchAndScreenShot(() => fn(this)).catch((e) => {
             error("Failed to run. Check botError.png if it exists. Error:", e)
-            process.exit(-1)
         })
     }
 

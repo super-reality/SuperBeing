@@ -1574,16 +1574,22 @@ export class database {
 
         const rows = await this.client.query(check, cvalues);
         if (rows && rows.rows && rows.rows.length > 0) {
-            const query = 'UPDATE agent_instance SET personality=$1, clients=$2, _enabled=$3 WHERE id=$4';
+            const query = 'UPDATE agent_instance SET personality=$1, clients=$2, enabled=$3 WHERE id=$4';
             const values = [personality, clients, enabled, id];
 
             await this.client.query(query, values);
         } else {
-            const query = 'INSERT INTO agent_instance(id, personality, clients, _enabled) VALUES($1, $2, $3, $4)';
+            const query = 'INSERT INTO agent_instance(id, personality, clients, enabled) VALUES($1, $2, $3, $4)';
             const values = [id, personality, clients, enabled];
 
             await this.client.query(query, values);
         }
+    }
+
+    async createAgentInstance() {
+            const query = 'INSERT INTO agent_instance(personality, clients, enabled) VALUES($1, $2, $3)';
+            const values = ["common", {}, false];
+            await this.client.query(query, values);
     }
 
     async getClientSettings(client) {

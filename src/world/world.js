@@ -17,7 +17,7 @@ export class world extends gameObject {
         console.log(agents);
         console.log(agents.length);
         for (let i = 0; i < agents.length; i++) {
-            if (agents[i]._enabled) {
+            if (agents[i].enabled) {
                 const _agent = new agent(i, agents[i].personality, agents[i].clients);
                 this.objects[i] = _agent;
                 //init clients

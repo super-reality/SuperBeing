@@ -211,7 +211,7 @@ export async function registerRoutes(app) {
     });
 
     //return the configurations of the server
-    app.get('/get_config', async function(req, res) {
+    app.get('/config', async function(req, res) {
         const data = {
             config: customConfig.instance.allToArray()
         };
@@ -220,7 +220,7 @@ export async function registerRoutes(app) {
     });
 
     //updates the config values and restarts the server afterwords
-    app.post('/update_config', async function(req, res) {
+    app.put('/config', async function(req, res) {
         const data = req.body.config;
 
         try {
@@ -229,33 +229,33 @@ export async function registerRoutes(app) {
             }
 
             res.send('ok');
-            process.exit(1);
+            console.log("TODO: Not exiting process here, we need to make sure we set config properly in this process")
         } catch (e) {
             error(e);
             return res.send('internal error');
         }
     });
 
-    app.post('/delete_config', async function(req, res) {
+    app.delete('/config', async function(req, res) {
         const data = req.body.data;
 
         try {
             await customConfig.instance.delete(data.key);
             res.send('ok');
-            process.exit(1);
+            console.log("TODO: Not exiting process here, we need to make sure we set config properly in this process")
         } catch (e) {
             error(e);
             return res.send('internal error');
         }
     });
 
-    app.post('/add_config', async function(req, res) {
+    app.post('/config', async function(req, res) {
         const data = req.body.data;
 
         try {
             await customConfig.instance.set(data.key, data.value);
             res.send('ok');
-            process.exit(1);
+            console.log("TODO: Not exiting process here, we need to make sure we set config properly in this process")
         } catch (e) {
             error(e);
             return res.send('internal error');
@@ -286,7 +286,7 @@ export async function registerRoutes(app) {
         await handleInput(message, speaker, agent, res, 'web', id)
     });
 
-    app.get('/get_agents_config', async function (req, res) {
+    app.get('/agentConfig', async function (req, res) {
         try {
         return res.send(await database.instance.getAgentsConfig('common'));
         } catch (e) {
@@ -294,7 +294,7 @@ export async function registerRoutes(app) {
             return res.send('internal error');
         }
     });
-    app.post('/set_agents_config', async function (req, res) {
+    app.post('/agentConfig', async function (req, res) {
         const data = req.body.data;
 
         try {
@@ -306,7 +306,7 @@ export async function registerRoutes(app) {
         }
     });
 
-    app.get('/get_prompts', async function (req, res) { 
+    app.get('/prompts', async function (req, res) { 
         try {
             const data = {
                 _3d_world: await database.instance.get3dWorldUnderstandingPrompt(),
@@ -321,7 +321,7 @@ export async function registerRoutes(app) {
             return res.send('internal error');
         }
     });
-    app.post('/set_prompts', async function (req, res) {
+    app.post('/prompts', async function (req, res) {
         const data = req.body.data;
 
         try {
@@ -337,7 +337,17 @@ export async function registerRoutes(app) {
         }
     });
 
-    app.get('/get_agent_instances', async function (req, res) {
+    app.get('/agentInstances', async function (req, res) {
+        try {
+            let data = await database.instance.getAgentInstances();
+            return res.send(data);
+        } catch (e) {
+            error(e);
+            return res.send('internal error');
+        }
+    });
+
+    app.get('/agentInstance', async function (req, res) {
         try {
             const instanceId = req.query.instanceId;
             const isNum = /^\d+$/.test(instanceId);
@@ -364,19 +374,25 @@ export async function registerRoutes(app) {
         }
     });
 
-    app.post('/update_agent_instances', async function (req, res) {
+    app.post('/agentInstance', async function (req, res) {
         console.log('data');
         console.log(req.data);
         const data = req.body.data;
         const instanceId = data.id;
-        const personality = data.personality.trim();
+        const personality = data.personality?.trim();
         const clients = data.clients;
         const enabled = data.enabled;
+
+        if(!instanceId){
+            await database.instance.createAgentInstance();
+            res.send('ok');
+            console.log("TODO: Not exiting process here, we need to make sure we set config properly in this process")
+        }
 
         try {
             await database.instance.updateAgentInstances(instanceId, personality, clients, enabled);
             res.send('ok');
-            process.exit(1);
+            console.log("TODO: Not exiting process here, we need to make sure we set config properly in this process")
         } catch (e) {
             error(e);
             return res.send('internal error');
