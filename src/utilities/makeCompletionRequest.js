@@ -19,7 +19,7 @@ export async function makeCompletionRequest(data, speaker, agent, type, engine, 
                         wait_for_model: true
                 }
                 const response = await makeModelRequest(data.prompt, "EleutherAI/gpt-j-6B", params, options);
-
+                console.log("response", response.body)
                 const responseModified = { success: true, choice: { text: response[0].generated_text.split('\n')[0] } };
                 return responseModified;
         } else {

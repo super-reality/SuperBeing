@@ -256,16 +256,17 @@ export async function handleInput(message, speaker, agent, res, clientName, chan
 
         //every some messages it gets the facts for the user and the agent
         if (meta.messages % factsUpdateInterval == 0) {
-                formOpinionAboutSpeaker(speaker, agent);
 
                 const conversation = (await database.instance.getConversation(agent, speaker, clientName, channelId, false)).toString().trim();
                 const conversationLines = conversation.split('\n');
 
-                const speakerConversationLines = conversationLines.filter(line => line != "" && line != "\n").slice(conversationLines.length - (factsUpdateInterval * 2)).join("\n");
-                const agentConversationLines = conversationLines.filter(line => line != "" && line != "\n").slice(conversationLines.length - factsUpdateInterval * 2).join("\n");
+                const updatedConversationLines = conversationLines.filter(line => line != "" && line != "\n").slice(conversationLines.length - factsUpdateInterval * 2).join("\n");
+                console.log("Forming an opinion about speaker")
+                formOpinionAboutSpeaker(speaker, agent, updatedConversationLines);
+                console.log("Formed an opinion about speaker")
 
-                summarizeAndStoreFactsAboutSpeaker(speaker, agent, speakerConversationLines);
-                summarizeAndStoreFactsAboutAgent(speaker, agent, agentConversationLines + choice.text);
+                summarizeAndStoreFactsAboutSpeaker(speaker, agent, updatedConversationLines);
+                summarizeAndStoreFactsAboutAgent(speaker, agent, updatedConversationLines + choice.text);
         }
         
         database.instance.setMeta(agent, speaker, meta);

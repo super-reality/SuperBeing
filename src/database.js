@@ -618,11 +618,7 @@ export class database {
         const values = [speaker, agent];
 
         const row = await this.client.query(query, values);
-        if (row && row.rows && row.rows.length > 0) {
-            return row.rows[0].matrix;
-        } else {
-            return this.getRelationshipMatrix(speaker, 'common');
-        }
+            return row && row.rows[0] ? JSON.parse(row.rows[0].matrix) : null;
     }
 
     async setSpeakerProfaneResponses(agent, responses) {

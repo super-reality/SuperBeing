@@ -76,7 +76,7 @@ export async function runClients() {
        import('../connectors/xrengine.js').then(module => module.default());
     }
     // Terminal
-    if (enabled_services.includes('terminal')) {
+    if (enabled_services.includes('terminal') || process.env.TERMINAL) {
       const agent = customConfig.instance.get('agents')?.replace('_', ' ') || process.env.AGENT;
       initTerminal(agent);
     }
