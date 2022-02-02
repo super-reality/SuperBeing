@@ -10,6 +10,7 @@ export class worldManager {
     worlds = {};
 
     constructor(worldCount, fps) {
+        fps = fps || 60;
         worldManager.instance = this;
         worldManager.deltaTime = 1.0 / fps;
         

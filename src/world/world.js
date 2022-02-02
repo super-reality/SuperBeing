@@ -14,13 +14,11 @@ export class world extends gameObject {
     async onCreate() {
         super.onCreate();
         const agents = await database.instance.getAgentInstances();
-        console.log(agents);
-        console.log(agents.length);
+        
         for (let i = 0; i < agents.length; i++) {
-            if (agents[i].enabled) {
-                const _agent = new agent(i, agents[i].personality, agents[i].clients);
+            if (agents[i]._enabled) {
+                const _agent = new agent(this.generateId(), agents[i].personality, JSON.parse(agents[i].clients));
                 this.objects[i] = _agent;
-                //init clients
             }
         }
     }
@@ -64,6 +62,13 @@ export class world extends gameObject {
     }
     objectExists(id) {
         return this.objects[id] !== undefined && this.objects[id] === null;
+    }
+    generateId() {
+        let id = randomInt(0, 10000);
+        while (this.objectExists(id)) {
+            id = randomInt(0, 10000);
+        }
+        return id;
     }
 }
 

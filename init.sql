@@ -348,7 +348,7 @@ CREATE TABLE IF NOT EXISTS _3d_world_understanding_prompt(_prompt text);
 CREATE TABLE IF NOT EXISTS opinion_form_prompt(_prompt text);
 CREATE TABLE IF NOT EXISTS xr_engine_room_prompt(_prompt text);
 
-CREATE TABLE IF NOT EXISTS agent_instance(id INT PRIMARY KEY, personality TEXT, clients TEXT, enabled BOOLEAN);
+CREATE TABLE IF NOT EXISTS agent_instance(id INT PRIMARY KEY, personality TEXT, clients TEXT, _enabled BOOLEAN);
 CREATE TABLE IF NOT EXISTS client_settings(client TEXT, _name TEXT, _type TEXT, _defaultValue TEXT);
 INSERT INTO client_settings
     select t.*

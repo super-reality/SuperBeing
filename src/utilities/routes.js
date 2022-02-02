@@ -362,7 +362,6 @@ export async function registerRoutes(app) {
                     enabled: true
                 }
             }
-            console.log(data);
             return res.send(data);
         } catch (e) {
             error(e);
@@ -371,8 +370,6 @@ export async function registerRoutes(app) {
     });
 
     app.post('/agentInstance', async function (req, res) {
-        console.log('data');
-        console.log(req.data);
         const data = req.body.data;
         const instanceId = data.id;
         const personality = data.personality?.trim();

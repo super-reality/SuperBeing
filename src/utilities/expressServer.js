@@ -5,11 +5,12 @@ import { registerRoutes } from "./routes.js";
 import { log } from "./logger.js";
 
 export let app;
+export let router;
 
 export async function createExpressServer() {
     //creates an express servr and enables CORs for it
     app = express();
-    const router = express.Router();
+    router = express.Router();
         
     const server = createServer(app);
         

@@ -1,6 +1,6 @@
 import puppeteer from 'puppeteer';
 import fs from 'fs';
-import { log } from '../utilities/logger';
+import { log } from '../utilities/logger.js';
 
 //The default browser class for puppeteer, it can be used to build other clients with puppeteer
 export async function browserWindow(options) {

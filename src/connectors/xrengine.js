@@ -1,258 +1,250 @@
 import { handleInput } from "../cognition/handleInput.js";
 import { database } from "../database.js";
-import customConfig from "../utilities/customConfig.js";
 import roomManager from "../utilities/roomManager.js";
 import { classifyText } from "../utilities/textClassifier.js";
 import { browserWindow, PageUtils } from './browser.js';
-import { detectOsOption, getRandomEmptyResponse, startsWithCapital } from "./utils.js";
+import { detectOsOption, getRandomEmptyResponse, getSetting, startsWithCapital } from "./utils.js";
 import { defaultAgent } from "../index.js";
 import { error, log, warn } from "../utilities/logger.js";
 
-export const UsersInRange = {}
-export const UsersInHarassmentRange = {}
-export const UsersInIntimateRange = {}
-export const UsersLookingAt = {}
+export class xrengine_client {
+    UsersInRange = {}
+    UsersInHarassmentRange = {}
+    UsersInIntimateRange = {}
+    UsersLookingAt = {}
 
-export const prevMessage = {}
-export const prevMessageTimers = {}
-export const messageResponses = {}
-export const conversation = {}
-export const chatHistory = {}
+    prevMessage = {}
+    prevMessageTimers = {}
+    messageResponses = {}
+    conversation = {}
+    chatHistory = {}
 
-export function onMessageDeleted(chatId, messageId) {
-    if (messageResponses[chatId] !== undefined && messageResponses[chatId][messageId] !== undefined) {
-        delete messageResponses[chatId][messageId]
+    onMessageDeleted(chatId, messageId) {
+        if (this.messageResponses[chatId] !== undefined && this.messageResponses[chatId][messageId] !== undefined) {
+            delete this.messageResponses[chatId][messageId]
+        }
     }
-}
-export function onMessageResponseUpdated(chatId, messageId, newResponse) {
-    if (messageResponses[chatId] === undefined) messageResponses[chatId] = {}
-    messageResponses[chatId][messageId] = newResponse
-}
+    onMessageResponseUpdated(chatId, messageId, newResponse) {
+        if (this.messageResponses[chatId] === undefined) this.messageResponses[chatId] = {}
+        this.messageResponses[chatId][messageId] = newResponse
+    }
 
-export function getMessage(chatId, messageId) {
-    return chatId.messages.fetchMessage(messageId)
-}
+    getMessage(chatId, messageId) {
+        return chatId.messages.fetchMessage(messageId)
+    }
 
-export function isInConversation(user) {
-    return conversation[user] !== undefined && conversation[user].isInConversation === true
-}
+    isInConversation(user) {
+        return this.conversation[user] !== undefined && this.conversation[user].isInConversation === true
+    }
 
-export function sentMessage(user) {
-    for (let c in conversation) {
-        if (c === user) continue
-        if (conversation[c] !== undefined && conversation[c].timeOutFinished === true) {
-            exitConversation(c)
+    sentMessage(user) {
+        for (let c in this.conversation) {
+            if (c === user) continue
+            if (this.conversation[c] !== undefined && this.conversation[c].timeOutFinished === true) {
+                this.exitConversation(c)
+            }
+        }
+
+        if (this.conversation[user] === undefined) {
+            this.conversation[user] = { timeoutId: undefined, timeOutFinished: true, isInConversation: true }
+            if (this.conversation[user].timeoutId !== undefined) clearTimeout(this.conversation[user].timeoutId)
+            this.conversation[user].timeoutId = setTimeout(() => {
+                log('conversation for ' + user + ' ended')
+                if (this.conversation[user] !== undefined) {
+                    this.conversation[user].timeoutId = undefined
+                    this.conversation[user].timeOutFinished = true
+                }
+            }, 720000)
+        } else {
+            this.conversation[user].timeoutId = setTimeout(() => {
+                log('conversation for ' + user + ' ended')
+                if (this.conversation[user] !== undefined) {
+                    this.conversation[user].timeoutId = undefined
+                    this.conversation[user].timeOutFinished = true
+                }
+            }, 720000)
         }
     }
 
-    if (conversation[user] === undefined) {
-        conversation[user] = { timeoutId: undefined, timeOutFinished: true, isInConversation: true }
-        if (conversation[user].timeoutId !== undefined) clearTimeout(conversation[user].timeoutId)
-        conversation[user].timeoutId = setTimeout(() => {
-            log('conversation for ' + user + ' ended')
-            if (conversation[user] !== undefined) {
-                conversation[user].timeoutId = undefined
-                conversation[user].timeOutFinished = true
-            }
-        }, 720000)
-    } else {
-        conversation[user].timeoutId = setTimeout(() => {
-            log('conversation for ' + user + ' ended')
-            if (conversation[user] !== undefined) {
-                conversation[user].timeoutId = undefined
-                conversation[user].timeOutFinished = true
-            }
-        }, 720000)
-    }
-}
-
-export function exitConversation(user) {
-    if (conversation[user] !== undefined) {
-        if (conversation[user].timeoutId !== undefined) clearTimeout(conversation[user].timeoutId)
-        conversation[user].timeoutId = undefined
-        conversation[user].timeOutFinished = true
-        conversation[user].isInConversation = false
-        delete conversation[user]
-        roomManager.instance.removeUser(user, 'discord');
-    }
-}
-
-export function moreThanOneInConversation() {
-    let count = 0
-    for (let c in conversation) {
-        if (conversation[c] === undefined) continue
-        if (conversation[c].isInConversation !== undefined && conversation[c].isInConversation === true && conversation[c].timeOutFinished === false) count++
-    }
-
-    return count > 1
-}
-
-export function getResponse(chatId, message) {
-    if (messageResponses[chatId] === undefined) return undefined
-    return messageResponses[chatId][message]
-}
-
-export async function getChatHistory(chatId, length) {
-    return await database.instance.getHistory(length, 'xr-engine', chatId)
-}
-export async function addMessageToHistory(chatId, messageId, senderName, content) {
-    await database.instance.addMessageInHistory('xr-engine', chatId, messageId, senderName, content)
-}
-export async function deleteMessageFromHistory(chatId, messageId) {
-    await database.instance.deleteMessage('xr-engine', chatId, messageId)
-}
-export async function updateMessage(chatId, messageId, newContent) {
-    await database.instance.updateMessage('xr-engine', chatId, messageId, newContent, true)
-}
-export async function wasHandled(chatId, messageId, foundCallback, notFoundCallback) {
-    return await database.instance.messageExists2('xr-engine', chatId, messageId, foundCallback, notFoundCallback)
-}
-
-export async function saveIfHandled(chatId, messageId, sender, content, timestamp) {
-    return await database.instance.messageExists('xr-engine', chatId, messageId, sender, content, timestamp)
-}
-
-export function isInRange(user) {
-    return UsersInRange[user] !== undefined || UsersInHarassmentRange[user] !== undefined || UsersInIntimateRange[user] !== undefined
-}
-
-export async function handleMessages(messages, bot) {
-    for (let i = 0; i < messages.length; i++) {
-        if (messages[i].text.includes('[') && messages[i].text.includes(']')) continue
-        else if (messages[i].text.includes('joined the layer') || messages[i].text.includes('left the layer') || messages[i].text.length === 0) continue
-        else if (messages[i].text.includes('in harassment range with')) continue
-        else if (messages[i].text.includes('in range with')) continue
-        else if (messages[i].text.includes('looking at')) continue
-        else if (messages[i].text.includes('in intimate range')) continue
-        else if (messages[i].text.startsWith('/') || messages[i].text.startsWith(' /')) continue
-        else if (messages[i].senderName === bot.name ||
-            (messages[i].sender !== undefined && messages[i].sender.id === bot.userId) ||
-            (messages[i].author !== undefined && messages[i].author[1] === bot.userId)) {
-            addMessageToHistory(messages[i].channelId, messages[i].id, customConfig.instance.get('botName'), messages[i].text)
-            continue
+    exitConversation(user) {
+        if (this.conversation[user] !== undefined) {
+            if (this.conversation[user].timeoutId !== undefined) clearTimeout(this.conversation[user].timeoutId)
+            this.conversation[user].timeoutId = undefined
+            this.conversation[user].timeOutFinished = true
+            this.conversation[user].isInConversation = false
+            delete this.conversation[user]
+            roomManager.instance.removeUser(user, 'discord');
         }
-        await wasHandled(messages[i].channelId, messages[i].id, () => {
-            return
-        }, async () => {
-            const date = Date.now() / 1000
-            const msgDate = messages[i].updatedAt
-            const diff = date - msgDate
-            const hours_diff = Math.ceil(diff / 3600)
-            const mins_diff = Math.ceil((diff - hours_diff) / 60)
-            if (mins_diff > 12 || (mins_diff <= 5 && hours_diff > 1)) {
-                const date = new Date(msgDate);
-                const utc = new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds());
-                const utcStr = date.getDate() + '/' + (date.getMonth() + 1) + '/' + date.getFullYear() + ' ' + utc.getHours() + ':' + utc.getMinutes() + ':' + utc.getSeconds()
-                saveIfHandled(messages[i].channelId, messages[i].id, messages[i].senderName !== undefined ? messages[i].senderName : messages[i].sender.name, messages[i].text, utcStr)
+    }
+
+    moreThanOneInConversation() {
+        let count = 0
+        for (let c in this.conversation) {
+            if (this.conversation[c] === undefined) continue
+            if (this.conversation[c].isInConversation !== undefined && 
+                this.conversation[c].isInConversation === true && 
+                this.conversation[c].timeOutFinished === false) count++
+        }
+
+        return count > 1
+    }
+
+    getResponse(chatId, message) {
+        if (this.messageResponses[chatId] === undefined) return undefined
+        return this.messageResponses[chatId][message]
+    }
+
+    async getChatHistory(chatId, length) {
+        return await database.instance.getHistory(length, 'xr-engine', chatId)
+    }
+    async addMessageToHistory(chatId, messageId, senderName, content) {
+        await database.instance.addMessageInHistory('xr-engine', chatId, messageId, senderName, content)
+    }
+    async deleteMessageFromHistory(chatId, messageId) {
+        await database.instance.deleteMessage('xr-engine', chatId, messageId)
+    }
+    async updateMessage(chatId, messageId, newContent) {
+        await database.instance.updateMessage('xr-engine', chatId, messageId, newContent, true)
+    }
+    async wasHandled(chatId, messageId, foundCallback, notFoundCallback) {
+        return await database.instance.messageExists2('xr-engine', chatId, messageId, foundCallback, notFoundCallback)
+    }
+
+    async saveIfHandled(chatId, messageId, sender, content, timestamp) {
+        return await database.instance.messageExists('xr-engine', chatId, messageId, sender, content, timestamp)
+    }
+
+    isInRange(user) {
+        return this.UsersInRange[user] !== undefined || this.UsersInHarassmentRange[user] !== undefined || this.UsersInIntimateRange[user] !== undefined
+    }
+
+    async handleMessages(messages, bot) {
+        for (let i = 0; i < messages.length; i++) {
+            if (messages[i].text.includes('[') && messages[i].text.includes(']')) continue
+            else if (messages[i].text.includes('joined the layer') || messages[i].text.includes('left the layer') || messages[i].text.length === 0) continue
+            else if (messages[i].text.includes('in harassment range with')) continue
+            else if (messages[i].text.includes('in range with')) continue
+            else if (messages[i].text.includes('looking at')) continue
+            else if (messages[i].text.includes('in intimate range')) continue
+            else if (messages[i].text.startsWith('/') || messages[i].text.startsWith(' /')) continue
+            else if (messages[i].senderName === bot.name ||
+                (messages[i].sender !== undefined && messages[i].sender.id === bot.userId) ||
+                (messages[i].author !== undefined && messages[i].author[1] === bot.userId)) {
+                    this.addMessageToHistory(messages[i].channelId, messages[i].id, this.agent.name, messages[i].text)
+                continue
+            }
+            await wasHandled(messages[i].channelId, messages[i].id, () => {
                 return
-            }
+            }, async () => {
+                const date = Date.now() / 1000
+                const msgDate = messages[i].updatedAt
+                const diff = date - msgDate
+                const hours_diff = Math.ceil(diff / 3600)
+                const mins_diff = Math.ceil((diff - hours_diff) / 60)
+                if (mins_diff > 12 || (mins_diff <= 5 && hours_diff > 1)) {
+                    const date = new Date(msgDate);
+                    const utc = new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds());
+                    const utcStr = date.getDate() + '/' + (date.getMonth() + 1) + '/' + date.getFullYear() + ' ' + utc.getHours() + ':' + utc.getMinutes() + ':' + utc.getSeconds()
+                    this.saveIfHandled(messages[i].channelId, messages[i].id, messages[i].senderName !== undefined ? messages[i].senderName : messages[i].sender.name, messages[i].text, utcStr)
+                    return
+                }
 
-            const _sender = messages[i].senderName !== undefined ? messages[i].senderName : messages[i].sender.name
-            let content = messages[i].text
-            log('handling message: ' + content)
-            await addMessageToHistory(messages[i].channelId, messages[i].id, _sender, content)
-            log("Message added to history")
-            let addPing = false
-            let _prev = undefined
-            _prev = prevMessage[messages[i].channelId]
-            prevMessage[messages[i].channelId] = _sender
-            if (prevMessageTimers[messages[i].channelId] !== undefined) clearTimeout(prevMessageTimers[messages[i].channelId])
-            prevMessageTimers[messages[i].channelId] = setTimeout(() => prevMessage[messages[i].channelId] = '', 120000)
+                const _sender = messages[i].senderName !== undefined ? messages[i].senderName : messages[i].sender.name
+                let content = messages[i].text
+                log('handling message: ' + content)
+                await this.addMessageToHistory(messages[i].channelId, messages[i].id, _sender, content)
+                log("Message added to history")
+                let addPing = false
+                let _prev = undefined
+                _prev = this.prevMessage[messages[i].channelId]
+                this.prevMessage[messages[i].channelId] = _sender
+                if (this.prevMessageTimers[messages[i].channelId] !== undefined) clearTimeout(this.prevMessageTimers[messages[i].channelId])
+                this.prevMessageTimers[messages[i].channelId] = setTimeout(() => this.prevMessage[messages[i].channelId] = '', 120000)
 
-            addPing = (_prev !== undefined && _prev !== '' && _prev !== _sender) || moreThanOneInConversation()
+                addPing = (_prev !== undefined && _prev !== '' && _prev !== _sender) || this.moreThanOneInConversation()
 
-            let startConv = false
-            let startConvName = ''
-            const trimmed = content.trimStart()
-            if (trimmed.toLowerCase().startsWith('hi')) {
-                const parts = trimmed.split(' ')
-                if (parts.length > 1) {
-                    if (!startsWithCapital(parts[1])) {
-                        startConv = true
+                let startConv = false
+                let startConvName = ''
+                const trimmed = content.trimStart()
+                if (trimmed.toLowerCase().startsWith('hi')) {
+                    const parts = trimmed.split(' ')
+                    if (parts.length > 1) {
+                        if (!startsWithCapital(parts[1])) {
+                            startConv = true
+                        }
+                        else {
+                            startConv = false
+                            startConvName = parts[1]
+                        }
                     }
                     else {
-                        startConv = false
-                        startConvName = parts[1]
+                        if (trimmed.toLowerCase() === 'hi') {
+                            startConv = true
+                        }
                     }
                 }
+
+                if (!startConv) {
+                    if (startConvName.length > 0) {
+                        this.exitConversation(_sender)
+                        this.exitConversation(startConvName)
+                    }
+                }
+
+                const isUserNameMention = content.toLowerCase().replace(',', '').replace('.', '').replace('?', '').replace('!', '').match(bot.username_regex)
+                const isInDiscussion = isInConversation(_sender)
+                if (!content.startsWith('!')) {
+                    if (isUserNameMention) { log('is user mention'); content = '!ping ' + content.replace(bot.username_regex, '').trim() }
+                    else if (isInDiscussion || startConv) content = '!ping ' + content
+                }
+
+                if (content.startsWith('!ping')) sentMessage(_sender)
                 else {
-                    if (trimmed.toLowerCase() === 'hi') {
-                        startConv = true
-                    }
-                }
-            }
+                    if (content === '!ping ' || !content.startsWith('!ping'))
+                    {
+                        if (roomManager.instance.agentCanResponse(user, 'xrengine')) {
+                            content = '!ping ' + content;
+                            sentMessage(_sender)
+                        }
+                        else {
+                            const oldChat = database.instance.getConversation(defaultAgent, _sender, 'xrengine', msg.chat.id, false);
+                            if (oldChat !== undefined && oldChat.length > 0) {
+                                const context = await classifyText(values);
+                                const ncontext = await classifyText(content);
+                                log('c1: ' + context + ' c2: ' + ncontext);
 
-            if (!startConv) {
-                if (startConvName.length > 0) {
-                    exitConversation(_sender)
-                    exitConversation(startConvName)
-                }
-            }
-
-            const isUserNameMention = content.toLowerCase().replace(',', '').replace('.', '').replace('?', '').replace('!', '').match(bot.username_regex)
-            const isInDiscussion = isInConversation(_sender)
-            if (!content.startsWith('!')) {
-                if (isUserNameMention) { log('is user mention'); content = '!ping ' + content.replace(bot.username_regex, '').trim() }
-                else if (isInDiscussion || startConv) content = '!ping ' + content
-            }
-
-            if (content.startsWith('!ping')) sentMessage(_sender)
-            else {
-                if (content === '!ping ' || !content.startsWith('!ping'))
-                {
-                    if (roomManager.instance.agentCanResponse(user, 'xrengine')) {
-                        content = '!ping ' + content;
-                        sentMessage(_sender)
-                    }
-                    else {
-                        const oldChat = database.instance.getConversation(defaultAgent, _sender, 'xrengine', msg.chat.id, false);
-                        if (oldChat !== undefined && oldChat.length > 0) {
-                            const context = await classifyText(values);
-                            const ncontext = await classifyText(content);
-                            log('c1: ' + context + ' c2: ' + ncontext);
-
-                            if (context == ncontext) {
-                                roomManager.instance.userTalkedSameTopic(_sender, 'xrengine');
-                                if (roomManager.instance.agentCanResponse(_sender, 'xrengine')) {
-                                    content = '!ping ' + content;
-                                    sentMessage(_sender)
+                                if (context == ncontext) {
+                                    roomManager.instance.userTalkedSameTopic(_sender, 'xrengine');
+                                    if (roomManager.instance.agentCanResponse(_sender, 'xrengine')) {
+                                        content = '!ping ' + content;
+                                        this.sentMessage(_sender)
+                                    } else {
+                                        return;
+                                    }
                                 } else {
                                     return;
                                 }
-                            } else {
-                                return;
                             }
                         }
+                    } else {
+                        roomManager.instance.userGotInConversationFromAgent(_sender);
                     }
-                } else {
-                    roomManager.instance.userGotInConversationFromAgent(_sender);
                 }
-            }
-            log('content: ' + content + ' sender: ' + _sender)
+                log('content: ' + content + ' sender: ' + _sender)
 
-            const dateNow = new Date();
-            var utc = new Date(dateNow.getUTCFullYear(), dateNow.getUTCMonth(), dateNow.getUTCDate(), dateNow.getUTCHours(), dateNow.getUTCMinutes(), dateNow.getUTCSeconds());
-            const utcStr = dateNow.getDate() + '/' + (dateNow.getMonth() + 1) + '/' + dateNow.getFullYear() + ' ' + utc.getHours() + ':' + utc.getMinutes() + ':' + utc.getSeconds()
-
-            log("Sending out input");
-
-            const response = await handleInput(content.replace('!ping', ''), _sender, customConfig.instance.get('agent') ?? "Agent", null, 'xr-engine', messages[i].channelId);
-            log("Handling response");
-            await handleXREngineResponse(response, addPing, _sender)
-
-        })
-
+                const response = await handleInput(content.replace('!ping', ''), _sender, this.agent.name ?? "Agent", null, 'xr-engine', messages[i].channelId);
+                await this.handleXREngineResponse(response, addPing, _sender)
+            })
+        }
     }
-}
 
-
-    async function handleXREngineResponse(responses, addPing, _sender) {
+    async handleXREngineResponse(responses, addPing, _sender) {
         log('response: ' + responses)
         if (responses !== undefined && responses.length <= 2000 && responses.length > 0) {
             let text = responses
             while (text === undefined || text === '' || text.replace(/\s/g, '').length === 0) text = getRandomEmptyResponse()
             if (addPing) text = _sender + ' ' + text
-            xrengineBot.sendMessage(text)
+            this.xrengineBot.sendMessage(text)
         }
         else if (responses.length > 2000) {
             const lines = []
@@ -274,7 +266,7 @@ export async function handleMessages(messages, bot) {
                             text = _sender + ' ' + text
                             addPing = false
                         }
-                        xrengineBot.sendMessage(text)
+                        this.xrengineBot.sendMessage(text)
                     }
                 }
             }
@@ -283,31 +275,36 @@ export async function handleMessages(messages, bot) {
             let emptyResponse = getRandomEmptyResponse()
             while (emptyResponse === undefined || emptyResponse === '' || emptyResponse.replace(/\s/g, '').length === 0) emptyResponse = getRandomEmptyResponse()
             if (addPing) emptyResponse = _sender + ' ' + emptyResponse
-            xrengineBot.sendMessage(emptyResponse)
+            this.xrengineBot.sendMessage(emptyResponse)
         }
     }
 
-const doTests = false
-let xrengineBot = null;
+    doTests = false
+    xrengineBot = null;
+    agent;
+    settings;
 
-async function createXREngineClient() {
-    //generateVoice('hello there', (buf, path) => {}, false)
-    log('creating xr engine client')
-    xrengineBot = new XREngineBot({ headless: true });
+    async createXREngineClient(agent, settings) {
+        this.agent = agent;
+        this.settings = settings;
+        //generateVoice('hello there', (buf, path) => {}, false)
+        log('creating xr engine client')
+        this.xrengineBot = new XREngineBot({ headless: true, agent: agent, settings, settings });
 
-    log("Preparing to connect to ", customConfig.instance.get('xrEngineURL'));
-    xrengineBot.delay(Math.random() * 100000);
-    log("Connecting to server...");
-    await xrengineBot.launchBrowser();
-    const XRENGINE_URL = customConfig.instance.get('xrEngineURL') || 'https://localhost:3000/location/test';
-    xrengineBot.enterRoom(XRENGINE_URL, { name: "TestBot" })
-    log('bot fully loaded')
+        log("Preparing to connect to ", getSetting(settings, 'xrEngineURL'));
+        this.xrengineBot.delay(Math.random() * 100000);
+        log("Connecting to server...");
+        await this.xrengineBot.launchBrowser();
+        const XRENGINE_URL = getSetting(settings, 'xrEngineURL') || 'https://localhost:3000/location/test';
+        this.xrengineBot.enterRoom(XRENGINE_URL, { name: "TestBot" })
+        log('bot fully loaded')
+    }
 }
 
 /**
- * Main class for creating a bot.
- */
-class XREngineBot {
+     * Main class for creating a bot.
+     */
+ class XREngineBot {
     activeChannel;
     headless;
     name;
@@ -320,16 +317,22 @@ class XREngineBot {
     chatHistory = [];
     avatars = ['Alissa', 'Cornelius', 'James_ReadyPlayerMe', 'Jamie', 'Mogrid', 'Warrior']
     username_regex
+    agent;
+    settings
     constructor({
         name = "Bot",
         fakeMediaPath = "",
         headless = true,
-        autoLog = true } = {}
+        autoLog = true,
+        agent,
+        settings } = {},
     ) {
         this.headless = headless;
         this.name = name;
         this.autoLog = autoLog;
         this.fakeMediaPath = fakeMediaPath;
+        this.agent = agent;
+        this.settings = settings;
         setInterval(() => this.instanceMessages(), 1000)
     }
 
@@ -638,6 +641,7 @@ class XREngineBot {
                 `--use-file-for-fake-video-capture=${this.fakeMediaPath}/video.y4m`,
                 `--use-file-for-fake-audio-capture=${this.fakeMediaPath}/audio.wav`,
                 '--disable-web-security=1',
+                '--ignoreHTTPSErrors: true',
                 //     '--use-fake-device-for-media-stream',
                 //     '--use-file-for-fake-video-capture=/Users/apple/Downloads/football_qcif_15fps.y4m',
                 //     // '--use-file-for-fake-audio-capture=/Users/apple/Downloads/BabyElephantWalk60.wav',
@@ -772,9 +776,9 @@ class XREngineBot {
         await this.page.goto(parsedUrl, { waitUntil: 'domcontentloaded' });
 
         /* const granted = await this.page.evaluate(async () => {
-             return (await navigator.permissions.query({ name: 'camera' })).state;
-         });
-         log('Granted:', granted);*/
+            return (await navigator.permissions.query({ name: 'camera' })).state;
+        });
+        log('Granted:', granted);*/
     }
 
     /** Enters the room specified, enabling the first microphone and speaker found
@@ -793,7 +797,7 @@ class XREngineBot {
             name = this.name
         }
 
-        this.username_regex = new RegExp(customConfig.instance.get('botName'), 'ig')
+        this.username_regex = new RegExp(this.agent.name, 'ig')
 
         if (this.headless) {
             // Disable rendering for headless, otherwise chromium uses a LOT of CPU
@@ -827,13 +831,13 @@ class XREngineBot {
         this.activeChannel = await this.evaluate(() => {
             const chatState = globalThis.chatState;
             if (chatState === undefined) {
-                log('chat state is undefined');
+                console.log('chat state is undefined');
                 return;
             }
             const channelState = chatState.channels;
             const channels = channelState.channels.value;
             const activeChannelMatch = Object.entries(channels).find(([key, channel]) => channels[key].channelType === 'instance');
-            log("activeChannelMatch: ", activeChannelMatch);
+            console.log("activeChannelMatch: ", activeChannelMatch);
             if (activeChannelMatch && activeChannelMatch.length > 0) {
                 const res = deepCopy(activeChannelMatch[1]);
 
@@ -942,5 +946,3 @@ class XREngineBot {
         }
     }
 }
-
-export default createXREngineClient

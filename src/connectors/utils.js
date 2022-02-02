@@ -134,3 +134,13 @@ export function addSettingForClient(array, client, setting) {
   array.push({ client: client, enabled: false, settings: [{ name: setting._name, value: setting._defaultValue }] });
   return array;
 }
+
+export function getSetting(settings, key) {
+  for (let i = 0; i < settings.length; i++) {
+    if (settings[i].name === key) {
+      return settings[i].value;
+    }
+  }
+
+  return undefined;
+}

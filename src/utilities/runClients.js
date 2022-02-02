@@ -33,7 +33,7 @@ export async function runClients() {
 
     //based on which clients are added in the array, it will run its script
     // Discord support
-    if (enabled_services.includes('discord')) {
+    /*if (enabled_services.includes('discord')) {
         import('../connectors/discord.js').then(module => module.default());
         if (customConfig.instance.getBool('initCalendar')) {
          await initCalendar();
@@ -83,5 +83,5 @@ export async function runClients() {
     // Zoom support
     if (enabled_services.includes('zoom')) {
        await require('./zoom/zoom-client').createZoomClient();
-    }
+    }*/
 }

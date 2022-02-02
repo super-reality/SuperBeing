@@ -2,7 +2,7 @@ import fs from 'fs';
 import { rootDir } from './rootDir.js';
 import { google } from 'googleapis';
 import customConfig from './customConfig.js';
-import { sendMessageToChannel } from '../connectors/discord.js';
+//import { sendMessageToChannel } from '../connectors/discord.js';
 import { log } from './logger.js';
 
 //to generate a google token you can use https://developers.google.com/oauthplayground/
@@ -52,7 +52,7 @@ function listEvents() {
                 const diffMs = (eventDate - now);
                 const diffMins = Math.round(((diffMs % 86400000) % 3600000) / 60000);
                 if (diffMins <= 60 && diffMins > 0) {
-                    sendMessageToChannel(customConfig.instance.get('discord_calendar_channel'), event.summary + ' is starting in ' + diffMins + ' minutes!');
+                    //sendMessageToChannel(customConfig.instance.get('discord_calendar_channel'), event.summary + ' is starting in ' + diffMins + ' minutes!');
                 }
             }
           });

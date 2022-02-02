@@ -1,35 +1,38 @@
 import { launch } from "puppeteer-stream";
-import customConfig from "../utilities/customConfig.js";
 import { log } from "../utilities/logger.js";
-import { detectOsOption } from "./utils.js";
-let Xvfb  = require('xvfb')
+import { detectOsOption, getSetting } from "./utils.js";
+import Xvfb from 'xvfb';
 
-let zoomObj = undefined
-export const createZoomClient = async (messageResponseHandler) => {
-    var xvfb = new Xvfb ();
-    await xvfb.start(async function(err, xvfbProcess) {
-        if (err) {
-            log(err)
-            xvfb.stop(function(_err) {
-                if (_err) log(_err) 
-            });
-        }
+export class zoom_client {
+    async createZoomClient(agent, settings) {
+        var xvfb = new Xvfb ();
+        await xvfb.start(async function(err, xvfbProcess) {
+            if (err) {
+                log(err)
+                xvfb.stop(function(_err) {
+                    if (_err) log(_err) 
+                });
+            }
 
-        log('started virtual window')
-        zoomObj = new zoom(messageResponseHandler)
-        await zoomObj.init();
-    });
+            log('started virtual window')
+            const zoomObj = new zoom(agent, settings)
+            await zoomObj.init();
+        });
+    }
 }
 
+
 export class zoom {
-    messageResponseHandler;
+    agent;
+    settings;
     fakeMediaPath
 
     browser
     page
 
-    constructor (messageResponseHandler, fakeMediaPath = "") {
-        this.messageResponseHandler = messageResponseHandler
+    constructor (agent, settings, fakeMediaPath = "") {
+        this.agent = agent;
+        this.settings = settings;
         this.fakeMediaPath = fakeMediaPath
     }
     
@@ -44,7 +47,8 @@ export class zoom {
                 //`--use-file-for-fake-video-capture=${this.fakeMediaPath}video.y4m`,
                 //`--use-file-for-fake-audio-capture=${this.fakeMediaPath}test_audio.wav`,
                 '--disable-web-security',
-                '--autoplay-policy=no-user-gesture-required'
+                '--autoplay-policy=no-user-gesture-required',
+                '--ignoreHTTPSErrors: true'
             ],
             defaultViewport: {
                 width: 1920,
@@ -56,19 +60,20 @@ export class zoom {
 
         this.browser = await launch(options)
         this.page = await this.browser.newPage()
-        this.page.on('console', (log) => log(log._text));
+        this.page.on('console', (log) => console.log(log._text));
     
         this.page.setViewport({ width: 0, height: 0 })
         await this.page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36')
-        await this.navigate(customConfig.instance.get('zoomInvitationLink'))
+        await this.navigate(getSetting(this.settings, 'zoomInvitationLink'));
         await this.delay(20000)
-        await this.typeMessage('inputname', customConfig.instance.get('botName'), false)
+        await this.typeMessage('inputname', agent.name
+        , false)
         await this.clickElementById('button', 'joinBtn')
         await this.delay(20000)
         await this.clickElementById('button', 'wc_agree1')
         await this.delay(20000)
         try {
-            await this.typeMessage('inputpasscode', customConfig.instance.get('zoomPassword'), false)
+            await this.typeMessage('inputpasscode', getSetting(this.settings, 'zoomPassword'), false)
             await this.clickElementById('button', 'joinBtn')
             await this.delay(20000)
         } catch (ex) {}
@@ -177,30 +182,30 @@ export class zoom {
         log(`Clicking for a ${selector} matching ${id}`)
         
         await this.page.evaluate(
-          (selector, id) => {
+        (selector, id) => {
             let matches = Array.from(document.querySelectorAll(selector))
             let singleMatch = matches.find((button) => button.id === id)
             let result
             if (singleMatch && singleMatch.click) {
-              log('normal click')
-              result = singleMatch.click()
+            log('normal click')
+            result = singleMatch.click()
             }
             if (singleMatch && !singleMatch.click) {
-              log('on click')
-              result = singleMatch.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+            log('on click')
+            result = singleMatch.dispatchEvent(new MouseEvent('click', { bubbles: true }))
             }
             if (!singleMatch) {
-              log('event click', matches.length)
-             if (matches.length > 0) {
-                  const m = matches[0]
-                  result = m.dispatchEvent(new MouseEvent('click', { bubbles: true }))
-              }
+            log('event click', matches.length)
+            if (matches.length > 0) {
+                const m = matches[0]
+                result = m.dispatchEvent(new MouseEvent('click', { bubbles: true }))
             }
-          },
-          selector,
-          id
+            }
+        },
+        selector,
+        id
         )
-      }
+    }
 
     async clickElementByClass(elemType, classSelector) {
         await this.clickSelectorClassRegex(elemType || 'button', classSelector);
@@ -223,7 +228,7 @@ export class zoom {
             await this.init()
         }
 
-        let parsedUrl = new URL(url.includes('https') ? url : `https://${url}`);
+        let parsedUrl = new URL(url?.includes('https') ? url : `https://${url}`);
         if (searchParams !== undefined) {
             for(let x in searchParams) {
                 parsedUrl.searchParams.set(x, searchParams[x])
