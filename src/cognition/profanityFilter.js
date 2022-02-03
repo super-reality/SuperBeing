@@ -136,12 +136,12 @@ export async function evaluateTextAndRespondIfToxic(speaker, agent, textIn, eval
         return { isProfane: true, response };
     }
 
-    if (!isProfane) {
+    /*if (!isProfane) {
         const r = classifyProfanityText(textInt);
         if (r === 'profane') {
             return { isProfane: true, response: await filterWithOpenAI(speaker, agent, textInt) };
         }
-    }
+    }*/
 
     return { isProfane: false, response: null };
 }
