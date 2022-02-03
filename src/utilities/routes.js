@@ -371,15 +371,18 @@ export async function registerRoutes(app) {
 
     app.post('/agentInstance', async function (req, res) {
         const data = req.body.data;
-        const instanceId = data.id;
+        let instanceId = data.id;
         const personality = data.personality?.trim();
-        const clients = data.clients;
+        let clients = data.clients;
         const enabled = data.enabled;
 
-        if(!instanceId){
-            await database.instance.createAgentInstance();
-            res.send('ok');
-            console.log("TODO: Not exiting process here, we need to make sure we set config properly in this process")
+        if (!instanceId || instanceId === undefined || instanceId <= 0) {
+            while (await database.instance.instanceIdExists(instanceId) || instanceId <= 0) {
+                instanceId++;
+            }
+        }
+        if (!clients || clients === undefined || clients === 'none') {
+            clients = clientSettingsToInstance(await database.instance.getAllClientSettings());
         }
 
         try {

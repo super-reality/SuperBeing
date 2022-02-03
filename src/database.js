@@ -1546,22 +1546,36 @@ export class database {
 
         const rows = await this.client.query(check, cvalues);
         if (rows && rows.rows && rows.rows.length > 0) {
-            const query = 'UPDATE agent_instance SET personality=$1, clients=$2, _enabled=$3 WHERE id=$4';
-            const values = [personality, clients, enabled, id];
+            const query = 'UPDATE agent_instance SET personality=$1, clients=$2, _enabled=$3, lastUpdated=$4 WHERE id=$5';
+            const values = [personality, clients, enabled, new Date(), id];
 
             await this.client.query(query, values);
         } else {
-            const query = 'INSERT INTO agent_instance(id, personality, clients, _enabled) VALUES($1, $2, $3, $4)';
-            const values = [id, personality, clients, enabled];
+            const query = 'INSERT INTO agent_instance(id, personality, clients, _enabled, lastUpdated) VALUES($1, $2, $3, $4, $5)';
+            const values = [id, personality, clients, enabled, new Date()];
 
             await this.client.query(query, values);
         }
     }
+    async getLastUpdatedInstances() {
+        const query = 'SELECT * FROM agent_instance';
+        
+        const rows = await this.client.query(query);
+        if (rows && rows.rows && rows.rows.length > 0) {
+            const res = [];
+            for(let i = 0; i < rows.rows.length; i++) {
+                res.push({ id: rows.rows[i].id, lastUpdated: rows.rows[i].lastupdated });
+            }
+            return res;
+        } else {
+            return [];
+        }
+    }
+    async setInstanceUpdated(id) {
+        const query = 'UPDATE agent_instance SET lastUpdated=$1 WHERE id=$2';
+        const values = [new Date(), id];
 
-    async createAgentInstance() {
-            const query = 'INSERT INTO agent_instance(personality, clients, _enabled) VALUES($1, $2, $3)';
-            const values = ["common", {}, false];
-            await this.client.query(query, values);
+        await this.client.query(query, values);
     }
 
     async getClientSettings(client) {

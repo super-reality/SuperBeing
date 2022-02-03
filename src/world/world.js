@@ -1,14 +1,20 @@
 import { randomInt } from "../connectors/utils.js";
 import { database } from "../database.js";
 import agent from "./agent.js";
+import { initAgentsLoop } from "./agentsLoop.js";
 import gameObject from "./gameObject.js";
+import time from "./time.js";
 
 export class world extends gameObject { 
+    static instance;
     id = -1;
     objects = {};
 
-    constructor(_id) {
-        super(_id);
+    constructor() {
+        super(0);
+        world.instance = this;
+        new time();
+        this.onCreate();
     }
 
     async onCreate() {
@@ -17,8 +23,31 @@ export class world extends gameObject {
         
         for (let i = 0; i < agents.length; i++) {
             if (agents[i]._enabled) {
-                const _agent = new agent(this.generateId(), agents[i].personality, JSON.parse(agents[i].clients));
+                const _agent = new agent(agents[i].id, agents[i].personality, JSON.parse(agents[i].clients));
                 this.objects[i] = _agent;
+            }
+        }
+
+        initAgentsLoop(async (id) => {
+            this.updateInstance(id);
+        }, async (id) => {
+            this.lateUpdateInstance(id);
+        })
+    }
+
+    async updateInstance(id) {
+        for(let i = 0; i < this.objects.length; i++) {
+            if (this.objects[i].id === id) {
+                this.objects[i].onUpdate();
+                return;
+            }
+        }
+    }
+    async lateUpdateInstance(id) {
+        for(let i = 0; i < this.objects.length; i++) {
+            if (this.objects[i].id === id) {
+                this.objects[i].onLateUpdate();
+                return;
             }
         }
     }
