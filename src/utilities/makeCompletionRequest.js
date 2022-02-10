@@ -35,6 +35,8 @@ async function makeOpenAIGPT3Request(data, speaker, agent, type, engine, log = t
                 'Authorization': 'Bearer ' + API_KEY
         };
         try {
+                console.log(data);
+                console.log(headers)
                 const gptEngine = engine ?? JSON.parse(((await database.instance.getAgentsConfig('common')).toString())).summarizationModel;
                 const resp = await axios.post(
                         `https://api.openai.com/v1/engines/${gptEngine}/completions`,
