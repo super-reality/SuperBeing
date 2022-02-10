@@ -56,8 +56,7 @@ async function makeOpenAIGPT3Request(data, speaker, agent, type, engine, log = t
                 }
         }
         catch (err) {
-                console.log('error: ' + err);
-                console.log('error 2: ' + err.resp);
+                console.log('error: ' + JSON.stringify(err));
                 return { success: false };
         }
 }
