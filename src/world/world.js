@@ -14,8 +14,7 @@ export class world extends gameObject {
     async onCreate() {
         super.onCreate();
         const agents = await database.instance.getAgentInstances();
-        console.log(agents);
-        console.log(agents.length);
+        
         for (let i = 0; i < agents.length; i++) {
             if (agents[i].enabled) {
                 const _agent = new agent(i, agents[i].personality, agents[i].clients);
