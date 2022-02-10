@@ -41,8 +41,16 @@ async function makeOpenAIGPT3Request(data, speaker, agent, type, engine, log = t
                 if (typeof data.presence_penalty === 'string') {
                         data.presence_penalty = parseFloat(data.presence_penalty);
                 }
-                console.log(JSON.stringify(data));
-                console.log(headers)
+                if (typeof data.temperature === 'string') {
+                        data.temperature = parseFloat(data.temperature);
+                }
+                if (typeof data.max_tokens === 'string') {
+                        data.max_tokens = parseFloat(data.max_tokens);
+                }
+                if (typeof data.top_p === 'string') {
+                        data.top_p = parseFloat(data.top_p);
+                }
+
                 const gptEngine = engine ?? JSON.parse(((await database.instance.getAgentsConfig('common')).toString())).summarizationModel;
                 const resp = await axios.post(
                         `https://api.openai.com/v1/engines/${gptEngine}/completions`,
