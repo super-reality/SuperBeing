@@ -9,7 +9,6 @@ import { runClients } from "./utilities/runClients.js";
 import { initClassifier, initProfanityClassifier } from "./utilities/textClassifier.js";
 import { error } from './utilities/logger.js';
 import worldManager from "./world/worldManager.js";
-import { init } from "./utilities/makeCompletionRequest.js";
 
 new cors_server(process.env.CORS_PORT, '0.0.0.0');
 
@@ -35,7 +34,6 @@ const db = new database();
 
     new roomManager();
     console.log("agent")
-    init()
 
     const agent = customConfig.instance.get('agent')?.replace('_', ' ');
     defaultAgent = agent;
