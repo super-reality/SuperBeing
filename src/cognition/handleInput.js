@@ -59,7 +59,6 @@ async function evaluateTerminalCommands(message, speaker, agent, res, client, ch
 //returns the agents' configs in json format
 async function getConfigurationSettingsForAgent(agent) {
         const config = JSON.parse((await database.instance.getAgentsConfig(agent)).toString());
-        console.log(config);
         return config;
 }
 
@@ -204,7 +203,8 @@ export async function handleInput(message, speaker, agent, res, clientName, chan
         log(`Time Taken to execute load data = ${(stop - start)/1000} seconds`);
         start = Date.now()
 
-        const context = (await generateContext(speaker, agent, conversation, message)).replaceAll('\n\n', '\n');
+        const context = (await generateContext(speaker, agent, conversation, message)).replace(/(\r\n|\r|\n)+/g, '$1');      
+        console.log(context)
         // log('Context:');
         // log(context)
         // TODO: Wikipedia?
