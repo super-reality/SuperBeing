@@ -152,7 +152,7 @@ async function generateContext(speaker, agent, conversation, message) {
                 .replaceAll('$keywords', kdata)
                 .replaceAll("$agent", agent)
                 .replaceAll("$speaker", speaker)
-                .replaceAll("$conversation", conversation);
+                .replaceAll("$conversation", conversation).replaceAll('\\n', '\n').replaceAll('\\t', '\t');
 }
 
 const defaultAgent = process.env.AGENT
