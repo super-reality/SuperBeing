@@ -35,6 +35,12 @@ async function makeOpenAIGPT3Request(data, speaker, agent, type, engine, log = t
                 'Authorization': 'Bearer ' + API_KEY
         };
         try {
+                if (typeof data.frequency_penalty === 'string') {
+                        data.frequency_penalty = parseFloat(data.frequency_penalty);
+                }
+                if (typeof data.presence_penalty === 'string') {
+                        data.presence_penalty = parseFloat(data.presence_penalty);
+                }
                 console.log(JSON.stringify(data));
                 console.log(headers)
                 const gptEngine = engine ?? JSON.parse(((await database.instance.getAgentsConfig('common')).toString())).summarizationModel;
